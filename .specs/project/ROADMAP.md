@@ -37,7 +37,7 @@
 
 **Persistência MVP** — IN PROGRESS
 
-- Listagem/abertura/remoção de cópias HTML guardadas pela app (**RF-015** subset, via serviço `evidence_documents` + índice JSON); ver [evidence-history-mvp](../features/evidence-history-mvp/tasks.md).
+- Índice de cópias HTML em **SQLite** (`evidence_documents_index.sqlite3`; migração automática desde `evidence_documents/index.json` quando a base está vazia).
 - SQLite para templates/histórico/preferências conforme PRD §15 — planeado incrementalmente
 
 **Infraestrutura app** — IN PROGRESS *(scaffolding existe)*

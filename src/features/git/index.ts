@@ -1,4 +1,4 @@
-export { BranchList } from "./components/branch-list";
+export { ScopeCommitsStep, BranchList } from "./components/branch-list";
 export { EvidenceCreationWizard } from "./components/evidence-creation-wizard";
 export { RepositorySection } from "./components/repository-section";
 export { useRepositoryScopeSummary } from "./hooks/use-repository-scope-summary";

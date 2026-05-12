@@ -1,14 +1,36 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { BranchList } from "./branch-list";
+import type { RepositoryScopeSummaryState } from "../hooks/use-repository-scope-summary";
 import { resetGitStore } from "../test/store-reset";
 import { useGitStore } from "../store/git-store";
+import { ScopeCommitsStep } from "./scope-commits-step";
 
-describe("BranchList", () => {
+function idleScope(
+  partial: Partial<RepositoryScopeSummaryState> = {},
+): RepositoryScopeSummaryState {
+  const noop = () => {};
+  return {
+    repositoryPath: null,
+    baseBranch: null,
+    compareBranch: null,
+    data: null,
+    loading: false,
+    error: null,
+    sameBranch: false,
+    technicalNarrative: "",
+    technicalNarrativeGenerated: "",
+    technicalNarrativeIsCustomized: false,
+    setTechnicalNarrative: noop,
+    resetTechnicalNarrativeToGenerated: noop,
+    ...partial,
+  };
+}
+
+describe("ScopeCommitsStep", () => {
   beforeEach(() => resetGitStore());
 
-  it("indica lista vazia por filtro", () => {
+  it("indica lista vazia por filtro de branches", () => {
     useGitStore.setState({
       repositoryPath: "/repo",
       branches: [{ name: "main", isHead: true }],
@@ -16,7 +38,7 @@ describe("BranchList", () => {
       detached: false,
       branchFilter: "zzz",
     });
-    render(<BranchList />);
+    render(<ScopeCommitsStep scope={idleScope()} />);
     expect(screen.getByTestId("empty-filter")).toBeInTheDocument();
   });
 
@@ -33,7 +55,7 @@ describe("BranchList", () => {
       baseBranch: "main",
       compareBranch: "dev",
     });
-    render(<BranchList />);
+    render(<ScopeCommitsStep scope={idleScope({ sameBranch: false })} />);
     expect(screen.getByTestId("scope-base-ref")).toHaveValue("main");
     expect(screen.getByTestId("scope-compare-ref")).toHaveValue("dev");
   });
@@ -48,7 +70,9 @@ describe("BranchList", () => {
       baseBranch: "main",
       compareBranch: "main",
     });
-    render(<BranchList />);
-    expect(screen.getAllByTestId("compare-same-warning").length).toBeGreaterThanOrEqual(1);
+    render(<ScopeCommitsStep scope={idleScope({ sameBranch: true })} />);
+    expect(
+      screen.getAllByTestId("compare-same-warning").length,
+    ).toBeGreaterThanOrEqual(1);
   });
 });

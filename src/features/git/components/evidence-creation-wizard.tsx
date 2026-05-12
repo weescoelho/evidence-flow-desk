@@ -10,7 +10,7 @@ import { SavedEvidenceDocumentsPanel } from "@/features/document";
 import { EvidenceScreenshotsSection } from "@/features/evidence";
 import { cn } from "@/lib/utils";
 
-import { BranchList } from "./branch-list";
+import { ScopeCommitsStep } from "./scope-commits-step";
 import { RepositorySection } from "./repository-section";
 import { ScopeAnalysisPanel } from "./scope-analysis-panel";
 import { ScopeDocumentPreviewPanel } from "./scope-document-preview-panel";
@@ -192,7 +192,25 @@ export function EvidenceCreationWizard() {
             </div>
           </>
         ) : null}
-        {step === 2 ? <BranchList /> : null}
+        {step === 2 ? (
+          <>
+            <ScopeCommitsStep scope={scope} />
+            <div
+              role="note"
+              aria-label="Dados locais e privacidade"
+              className="flex items-center gap-2.5 rounded-[10px] border border-[#E4E4E7] bg-[#F4F4F5] px-3.5 py-3"
+            >
+              <Info
+                className="size-[18px] shrink-0 text-[#5946DB]"
+                aria-hidden
+              />
+              <p className="font-mono text-[12px] leading-snug text-[#71717A]">
+                Somente dados locais. Nada sai da máquina sem a sua confirmação ao
+                usar IA ou integrações.
+              </p>
+            </div>
+          </>
+        ) : null}
         {step === 3 ? (
           <>
             <ScopeAnalysisPanel scope={scope} />

@@ -1,15 +1,18 @@
 use std::fs;
-use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use rusqlite::{params, Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use uuid::Uuid;
 
 const ROOT_DIR: &str = "evidence_documents";
-const INDEX_FILE: &str = "index.json";
+/// Legado antes de SQLite (RF-015); migrado uma vez quando a base está vazia.
+const LEGACY_INDEX_FILE: &str = "index.json";
 const DOCUMENT_FILE: &str = "document.html";
+/// Metadamos em SQLite; blobs HTML ficam nos subdirectórios sob `ROOT_DIR`.
+const DB_FILE_NAME: &str = "evidence_documents_index.sqlite3";
 const DEFAULT_MAX_ENTRIES: usize = 50;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -46,6 +49,7 @@ pub struct SaveEvidenceDocumentResult {
 
 pub struct EvidenceDocumentsStore {
     root: PathBuf,
+    db_path: PathBuf,
     max_entries: usize,
 }
 
@@ -57,19 +61,100 @@ impl EvidenceDocumentsStore {
     fn for_app_with_max(app: &AppHandle, max_entries: usize) -> Result<Self, String> {
         let dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
         fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
-        Ok(Self {
-            root: dir.join(ROOT_DIR),
+        let root = dir.join(ROOT_DIR);
+        let db_path = dir.join(DB_FILE_NAME);
+        let store = Self {
+            root,
+            db_path,
             max_entries,
-        })
+        };
+        store.ensure_schema_and_maybe_migrate_legacy()?;
+        Ok(store)
     }
 
     #[cfg(test)]
-    fn with_root(root: PathBuf, max_entries: usize) -> Self {
-        Self { root, max_entries }
+    fn with_paths(root: PathBuf, db_path: PathBuf, max_entries: usize) -> Result<Self, String> {
+        fs::create_dir_all(&root).map_err(|e| e.to_string())?;
+        if let Some(p) = db_path.parent() {
+            fs::create_dir_all(p).map_err(|e| e.to_string())?;
+        }
+        let store = Self {
+            root,
+            db_path,
+            max_entries,
+        };
+        store.ensure_schema_and_maybe_migrate_legacy()?;
+        Ok(store)
     }
 
-    fn index_path(&self) -> PathBuf {
-        self.root.join(INDEX_FILE)
+    fn conn(&self) -> Result<Connection, String> {
+        let c = Connection::open(&self.db_path).map_err(|e| e.to_string())?;
+        c.execute_batch(
+            "PRAGMA foreign_keys = ON;
+             PRAGMA journal_mode = WAL;",
+        )
+        .map_err(|e| e.to_string())?;
+        Ok(c)
+    }
+
+    fn ensure_schema_and_maybe_migrate_legacy(&self) -> Result<(), String> {
+        fs::create_dir_all(&self.root).map_err(|e| e.to_string())?;
+        let mut conn = self.conn()?;
+        conn.execute_batch(
+            "CREATE TABLE IF NOT EXISTS saved_evidence_documents (
+                id TEXT PRIMARY KEY NOT NULL,
+                saved_at_ms INTEGER NOT NULL,
+                repository_path TEXT NOT NULL,
+                base_ref TEXT NOT NULL,
+                compare_ref TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_saved_ev_saved_at_desc
+                ON saved_evidence_documents(saved_at_ms DESC);
+            CREATE INDEX IF NOT EXISTS idx_saved_ev_saved_at_asc
+                ON saved_evidence_documents(saved_at_ms ASC);
+            ",
+        )
+        .map_err(|e| e.to_string())?;
+
+        Self::migrate_legacy_json_if_needed(&self.root, &mut conn)?;
+        Ok(())
+    }
+
+    fn migrate_legacy_json_if_needed(root: &Path, conn: &mut Connection) -> Result<(), String> {
+        let legacy = root.join(LEGACY_INDEX_FILE);
+        let count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM saved_evidence_documents", [], |r| r.get(0))
+            .map_err(|e| e.to_string())?;
+
+        if count > 0 || !legacy.exists() {
+            return Ok(());
+        }
+
+        let raw = fs::read_to_string(&legacy).map_err(|e| e.to_string())?;
+        let data: IndexFile = serde_json::from_str(&raw).unwrap_or_default();
+
+        let tx = conn.transaction().map_err(|e| e.to_string())?;
+        for e in &data.entries {
+            tx.execute(
+                "INSERT OR IGNORE INTO saved_evidence_documents
+                 (id, saved_at_ms, repository_path, base_ref, compare_ref)
+                 VALUES (?1, ?2, ?3, ?4, ?5)",
+                params![
+                    e.id,
+                    e.saved_at_ms,
+                    &e.repository_path,
+                    &e.base_ref,
+                    &e.compare_ref,
+                ],
+            )
+            .map_err(|e| e.to_string())?;
+        }
+        tx.commit().map_err(|e| e.to_string())?;
+
+        let backup_path = legacy.with_extension("json.migrated");
+        fs::rename(&legacy, &backup_path).map_err(|e| e.to_string())?;
+
+        Ok(())
     }
 
     fn doc_dir(&self, id: &str) -> PathBuf {
@@ -80,32 +165,59 @@ impl EvidenceDocumentsStore {
         self.doc_dir(id).join(DOCUMENT_FILE)
     }
 
-    fn read_index(&self) -> Result<Vec<IndexEntry>, String> {
-        let p = self.index_path();
-        if !p.exists() {
-            return Ok(Vec::new());
-        }
-        let raw = fs::read_to_string(&p).map_err(|e| e.to_string())?;
-        let data: IndexFile = serde_json::from_str(&raw).unwrap_or_default();
-        Ok(data.entries)
-    }
-
-    fn write_index(&self, entries: &[IndexEntry]) -> Result<(), String> {
-        fs::create_dir_all(&self.root).map_err(|e| e.to_string())?;
-        let data = IndexFile {
-            entries: entries.to_vec(),
-        };
-        let json = serde_json::to_string_pretty(&data).map_err(|e| e.to_string())?;
-        let mut f = fs::File::create(self.index_path()).map_err(|e| e.to_string())?;
-        f.write_all(json.as_bytes()).map_err(|e| e.to_string())?;
-        Ok(())
-    }
-
     fn now_ms() -> u64 {
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .map(|d| d.as_millis() as u64)
             .unwrap_or(0)
+    }
+
+    fn row_count(conn: &Connection) -> Result<i64, rusqlite::Error> {
+        conn.query_row("SELECT COUNT(*) FROM saved_evidence_documents", [], |r| r.get(0))
+    }
+
+    fn delete_oldest_row_and_disk(&self, conn: &Connection) -> Result<Option<String>, String> {
+        let id_opt: Option<String> = conn
+            .query_row(
+                "SELECT id FROM saved_evidence_documents
+                 ORDER BY saved_at_ms ASC, id ASC
+                 LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(|e| e.to_string())?;
+
+        let Some(id) = id_opt else {
+            return Ok(None);
+        };
+
+        let changed = conn
+            .execute("DELETE FROM saved_evidence_documents WHERE id = ?1", params![id])
+            .map_err(|e| e.to_string())?;
+        if changed == 0 {
+            return Err("Inconsistência ao eliminar documento mais antigo.".to_string());
+        }
+
+        let dir = self.doc_dir(&id);
+        if dir.exists() {
+            fs::remove_dir_all(&dir).map_err(|e| e.to_string())?;
+        }
+
+        Ok(Some(id))
+    }
+
+    /// Mantém menos de `max_entries` registos antes de inserir (comportamento igual ao índice JSON).
+    fn prune_until_under_capacity_before_insert(&self, conn: &Connection) -> Result<(), String> {
+        loop {
+            let count = Self::row_count(conn).map_err(|e| e.to_string())?;
+            if (count as usize) < self.max_entries {
+                return Ok(());
+            }
+            if self.delete_oldest_row_and_disk(conn)?.is_none() {
+                return Ok(());
+            }
+        }
     }
 
     pub fn save(
@@ -117,17 +229,8 @@ impl EvidenceDocumentsStore {
     ) -> Result<SaveEvidenceDocumentResult, String> {
         fs::create_dir_all(&self.root).map_err(|e| e.to_string())?;
 
-        let mut entries = self.read_index()?;
-        while entries.len() >= self.max_entries {
-            if let Some(old) = entries.pop() {
-                let dir = self.doc_dir(&old.id);
-                if dir.exists() {
-                    fs::remove_dir_all(&dir).map_err(|e| e.to_string())?;
-                }
-            } else {
-                break;
-            }
-        }
+        let conn = self.conn()?;
+        self.prune_until_under_capacity_before_insert(&conn)?;
 
         let id = Uuid::new_v4().to_string();
         let dir = self.doc_dir(&id);
@@ -138,17 +241,22 @@ impl EvidenceDocumentsStore {
 
         let html_path_str = normalize_path(&html_path);
 
-        entries.insert(
-            0,
-            IndexEntry {
-                id: id.clone(),
-                saved_at_ms: Self::now_ms(),
+        conn.execute(
+            "INSERT INTO saved_evidence_documents
+             (id, saved_at_ms, repository_path, base_ref, compare_ref)
+             VALUES (?1, ?2, ?3, ?4, ?5)",
+            params![
+                id,
+                Self::now_ms(),
                 repository_path,
                 base_ref,
                 compare_ref,
-            },
-        );
-        self.write_index(&entries)?;
+            ],
+        )
+        .map_err(|e| {
+            let _ = fs::remove_dir_all(&dir); // rollback directório novo
+            e.to_string()
+        })?;
 
         Ok(SaveEvidenceDocumentResult {
             id,
@@ -157,28 +265,53 @@ impl EvidenceDocumentsStore {
     }
 
     pub fn list(&self) -> Result<Vec<SavedEvidenceDocumentInfo>, String> {
-        let entries = self.read_index()?;
-        Ok(entries
-            .into_iter()
-            .map(|e| SavedEvidenceDocumentInfo {
+        let conn = self.conn()?;
+        let mut stmt = conn
+            .prepare(
+                "SELECT id, saved_at_ms, repository_path, base_ref, compare_ref
+                 FROM saved_evidence_documents
+                 ORDER BY saved_at_ms DESC, id DESC",
+            )
+            .map_err(|e| e.to_string())?;
+
+        let rows = stmt
+            .query_map([], |row| {
+                Ok(IndexEntry {
+                    id: row.get(0)?,
+                    saved_at_ms: row.get(1)?,
+                    repository_path: row.get(2)?,
+                    base_ref: row.get(3)?,
+                    compare_ref: row.get(4)?,
+                })
+            })
+            .map_err(|e| e.to_string())?;
+
+        let mut result = Vec::new();
+        for r in rows {
+            let e = r.map_err(|e| e.to_string())?;
+            result.push(SavedEvidenceDocumentInfo {
                 html_path: normalize_path(&self.html_path_for_id(&e.id)),
                 id: e.id,
                 saved_at_ms: e.saved_at_ms,
                 repository_path: e.repository_path,
                 base_ref: e.base_ref,
                 compare_ref: e.compare_ref,
-            })
-            .collect())
+            });
+        }
+
+        Ok(result)
     }
 
-    /// Remove uma entrada pelo id (UUID). Rejeita ids malformados para evitar path traversal.
+    /// Remove entrada e pasta no disco. Rejeita ids malformados (path traversal).
     pub fn remove_by_id(&self, id: &str) -> Result<(), String> {
         Uuid::parse_str(id).map_err(|_| "Identificador de documento inválido.".to_string())?;
 
-        let mut entries = self.read_index()?;
-        let before = entries.len();
-        entries.retain(|e| e.id != id);
-        if entries.len() == before {
+        let conn = self.conn()?;
+        let changed = conn
+            .execute("DELETE FROM saved_evidence_documents WHERE id = ?1", params![id])
+            .map_err(|e| e.to_string())?;
+
+        if changed == 0 {
             return Err("Documento não encontrado.".to_string());
         }
 
@@ -187,7 +320,7 @@ impl EvidenceDocumentsStore {
             fs::remove_dir_all(&dir).map_err(|e| e.to_string())?;
         }
 
-        self.write_index(&entries)
+        Ok(())
     }
 }
 
@@ -215,12 +348,17 @@ pub fn delete_document(app: &AppHandle, id: String) -> Result<(), String> {
 
 #[cfg(test)]
 mod tests {
+    use std::thread;
+    use std::time::Duration;
+
     use super::*;
 
     #[test]
     fn save_then_list_returns_entry_with_html_path() {
         let tmp = tempfile::tempdir().unwrap();
-        let store = EvidenceDocumentsStore::with_root(tmp.path().join(ROOT_DIR), 10);
+        let root = tmp.path().join(ROOT_DIR);
+        let db = tmp.path().join("test_evidence.sqlite3");
+        let store = EvidenceDocumentsStore::with_paths(root, db, 10).unwrap();
 
         let r = store
             .save(
@@ -256,16 +394,20 @@ mod tests {
     #[test]
     fn pruning_drops_oldest_when_at_capacity() {
         let tmp = tempfile::tempdir().unwrap();
-        let store = EvidenceDocumentsStore::with_root(tmp.path().join(ROOT_DIR), 2);
+        let root = tmp.path().join(ROOT_DIR);
+        let db = tmp.path().join("evidence.sqlite3");
+        let store = EvidenceDocumentsStore::with_paths(root, db, 2).unwrap();
 
         let first = store
             .save("a".into(), "r".into(), "a".into(), "b".into())
             .unwrap();
+        thread::sleep(Duration::from_millis(12));
         let second = store
             .save("b".into(), "r".into(), "a".into(), "b".into())
             .unwrap();
         assert_eq!(count_subdirs(&store.root), 2);
 
+        thread::sleep(Duration::from_millis(12));
         let third = store
             .save("c".into(), "r".into(), "a".into(), "b".into())
             .unwrap();
@@ -284,7 +426,9 @@ mod tests {
     #[test]
     fn remove_by_id_drops_entry_and_folder() {
         let tmp = tempfile::tempdir().unwrap();
-        let store = EvidenceDocumentsStore::with_root(tmp.path().join(ROOT_DIR), 10);
+        let root = tmp.path().join(ROOT_DIR);
+        let db = tmp.path().join("rm.sqlite3");
+        let store = EvidenceDocumentsStore::with_paths(root, db, 10).unwrap();
 
         let r = store
             .save("x".into(), "/r".into(), "a".into(), "b".into())
@@ -300,8 +444,52 @@ mod tests {
     #[test]
     fn remove_by_id_rejects_non_uuid() {
         let tmp = tempfile::tempdir().unwrap();
-        let store = EvidenceDocumentsStore::with_root(tmp.path().join(ROOT_DIR), 10);
+        let root = tmp.path().join(ROOT_DIR);
+        let db = tmp.path().join("rej.sqlite3");
+        let store = EvidenceDocumentsStore::with_paths(root, db, 10).unwrap();
         let err = store.remove_by_id("../etc").unwrap_err();
         assert!(err.contains("inválido"));
+    }
+
+    #[test]
+    fn migrates_legacy_index_json_into_sqlite() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path().join(ROOT_DIR);
+        fs::create_dir_all(&root).unwrap();
+        let legacy_path = root.join(LEGACY_INDEX_FILE);
+        let legacy = IndexFile {
+            entries: vec![
+                IndexEntry {
+                    id: Uuid::new_v4().to_string(),
+                    saved_at_ms: 100,
+                    repository_path: "/x".into(),
+                    base_ref: "m".into(),
+                    compare_ref: "f".into(),
+                },
+                IndexEntry {
+                    id: Uuid::new_v4().to_string(),
+                    saved_at_ms: 200,
+                    repository_path: "/y".into(),
+                    base_ref: "a".into(),
+                    compare_ref: "b".into(),
+                },
+            ],
+        };
+        let json = serde_json::to_string_pretty(&legacy).unwrap();
+        fs::write(&legacy_path, json).unwrap();
+
+        let db = tmp.path().join("migrate.sqlite3");
+        let store = EvidenceDocumentsStore::with_paths(root.clone(), db, 50).unwrap();
+
+        assert!(
+            !legacy_path.exists(),
+            "ficheiro legado deve ser renomeado após migração"
+        );
+        let migrated = legacy.entries.iter().map(|e| e.id.clone()).collect::<Vec<_>>();
+        let list = store.list().unwrap();
+        assert_eq!(list.len(), legacy.entries.len());
+        for row in list {
+            assert!(migrated.contains(&row.id));
+        }
     }
 }
