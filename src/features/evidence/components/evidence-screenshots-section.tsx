@@ -31,17 +31,17 @@ export function EvidenceScreenshotsSection() {
   return (
     <section
       aria-labelledby={inputId}
-      className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4"
+      className="flex flex-col gap-4 rounded-xl border border-[#E4E4E7] bg-white p-6 font-mono"
     >
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <h2
             id={inputId}
-            className="text-sm font-semibold text-foreground"
+            className="text-[14px] font-semibold text-[#18181B]"
           >
             Screenshots e comparação
           </h2>
-          <p className="text-xs text-muted-foreground">
+          <p className="mt-1 text-[12px] text-[#71717A]">
             Importe ficheiros ou anexe capturas; associe opcionalmente a um
             commit do escopo (RF-012 / RF-014).
           </p>
@@ -68,13 +68,13 @@ export function EvidenceScreenshotsSection() {
             type="button"
             disabled
             title="Automatização / Playwright — fase 2"
-            className="rounded-md border border-border bg-muted/40 px-3 py-1.5 text-xs font-medium text-muted-foreground"
+            className="rounded-[10px] border border-[#E4E4E7] bg-[#F4F4F5] px-3 py-1.5 text-[12px] font-medium text-[#71717A]"
           >
             Nova captura
           </button>
           <button
             type="button"
-            className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
+            className="rounded-[10px] border border-[#E4E4E7] bg-white px-3 py-1.5 text-[12px] font-medium text-[#18181B] hover:bg-[#F4F4F5]"
             onClick={() => fileRef.current?.click()}
           >
             Importar arquivo
@@ -83,7 +83,7 @@ export function EvidenceScreenshotsSection() {
       </div>
       {addWarnings.length > 0 ? (
         <ul
-          className="list-inside list-disc text-xs text-amber-700 dark:text-amber-400"
+          className="list-inside list-disc text-[12px] text-amber-700 dark:text-amber-400"
           data-testid="screenshot-add-warnings"
         >
           {addWarnings.map((w, i) => (
@@ -92,12 +92,12 @@ export function EvidenceScreenshotsSection() {
         </ul>
       ) : null}
       {lastAddError ? (
-        <p className="text-xs text-destructive" role="alert">
+        <p className="text-[12px] text-destructive" role="alert">
           {lastAddError}
         </p>
       ) : null}
       {attachments.length === 0 ? (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-[12px] text-[#71717A]">
           Nenhuma imagem anexada. Incluídas no documento de evidência e na
           exportação para PDF.
         </p>
@@ -106,26 +106,24 @@ export function EvidenceScreenshotsSection() {
           {attachments.map((a) => (
             <li
               key={a.id}
-              className="flex flex-col gap-2 rounded-md border border-border bg-background p-3 sm:flex-row"
+              className="flex flex-col gap-2 rounded-[10px] border border-[#E4E4E7] bg-[#F4F4F5] p-3 sm:flex-row"
             >
               <img
                 src={a.dataUrl}
                 alt={a.caption || a.fileName}
-                className="h-24 w-auto max-w-[200px] shrink-0 rounded border border-border object-contain"
+                className="h-24 w-auto max-w-[200px] shrink-0 rounded-[8px] border border-[#E4E4E7] bg-white object-contain"
               />
-              <div className="flex min-w-0 flex-1 flex-col gap-2 text-xs">
-                <p className="truncate font-mono text-muted-foreground">
-                  {a.fileName}
-                </p>
-                <label className="flex flex-col gap-1 text-muted-foreground">
+              <div className="flex min-w-0 flex-1 flex-col gap-2 text-[12px]">
+                <p className="truncate text-[#71717A]">{a.fileName}</p>
+                <label className="flex flex-col gap-1 text-[#71717A]">
                   Legenda
                   <input
                     value={a.caption}
                     onChange={(ev) => updateCaption(a.id, ev.target.value)}
-                    className="rounded-md border border-border bg-card px-2 py-1 text-foreground outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    className="rounded-[10px] border border-[#E4E4E7] bg-white px-2 py-1 text-[#18181B] outline-none focus-visible:ring-2 focus-visible:ring-[#5946DB]/35"
                   />
                 </label>
-                <label className="flex flex-col gap-1 text-muted-foreground">
+                <label className="flex flex-col gap-1 text-[#71717A]">
                   Associar a commit
                   <select
                     value={a.linkedCommitHash ?? ""}
@@ -135,7 +133,7 @@ export function EvidenceScreenshotsSection() {
                         ev.target.value ? ev.target.value : null,
                       )
                     }
-                    className="rounded-md border border-border bg-card px-2 py-1 font-mono text-foreground"
+                    className="rounded-[10px] border border-[#E4E4E7] bg-white px-2 py-1 font-mono text-[#18181B]"
                   >
                     <option value="">— Nenhum —</option>
                     {scopeCommits.map((c) => (

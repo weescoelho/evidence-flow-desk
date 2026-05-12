@@ -1,7 +1,8 @@
 # Estado do projeto — EvidenceFlow Desk
 
 **Última atualização:** 2026-05-12  
-**Trabalho atual:** Persistência RF-015 — índice de documentos guardados migrado para **SQLite** (`evidence_documents_index.sqlite3`); HTML continua em `evidence_documents/`; `index.json` legado migrado automaticamente para `.json.migrated`.
+**Trabalho atual:** Paridade UI do **passo 3** (template, escopo/diff, métricas, screenshots) com tokens `#E4E4E7` / `#71717A` alinhados a `fZdOT`/`UI-COMPONENTS` §10; persistência documentos em SQLite (`evidence_documents_index.sqlite3`).
+
 
 ---
 
