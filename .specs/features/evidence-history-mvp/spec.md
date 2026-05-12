@@ -17,4 +17,4 @@ Para cada entrada: abrir HTML no sistema (comportamento já suportado por `Saved
 
 ## Nota de implementação
 
-Armazenamento atual: índice JSON + ficheiros em `app_data_dir` (`services/evidence_documents.rs`). Migrar métricas/preferências para SQLite fica como evolução alinhada a PRD §15.
+Armazenamento: mesma BD `evidence_documents_index.sqlite3` — tabela `saved_evidence_documents` + ficheiros em `evidence_documents/<uuid>/`. Migração legada desde `index.json`. **RF-015 (incremental):** tabelas `evidence_preferences` (KV de preferências) e `evidence_templates` (presets integrados + personalizados com rótulo); comandos IPC `load_evidence_app_persisted_state`, `set_evidence_preference`, `create_evidence_custom_template`, `delete_evidence_custom_template`.

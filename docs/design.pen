@@ -2040,6 +2040,15 @@
               ]
             }
           ]
+        },
+        {
+          "type": "text",
+          "id": "CZxGx",
+          "fill": "#000000",
+          "content": "Ambiente\n—\nRepositório\n/home/wkm/www/previ/previ-ai-env/project/previ-app\nRef base\nfeature/PAPP-975\nRef comparação\nconfig-build-linux\nGerado em (UTC)\n2026-05-12T19:58:22.892Z",
+          "fontFamily": "Inter",
+          "fontSize": 12,
+          "fontWeight": "normal"
         }
       ]
     },
@@ -3065,7 +3074,6 @@
                             "fill": "$--border"
                           },
                           "layout": "vertical",
-                          "layoutIncludeStroke": true,
                           "children": [
                             {
                               "type": "frame",
@@ -6047,7 +6055,6 @@
                 "fill": "$--border"
               },
               "layout": "vertical",
-              "layoutIncludeStroke": true,
               "children": [
                 {
                   "type": "frame",

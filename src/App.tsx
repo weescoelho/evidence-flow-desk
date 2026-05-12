@@ -10,7 +10,11 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { EvidenceDocumentsLibraryView } from "@/features/document";
+import {
+  EvidenceDocumentsLibraryView,
+  useHydrateEvidenceAppState,
+  useEvidencePreferenceSync,
+} from "@/features/document";
 import { EvidenceCreationWizard, useGitStore } from "@/features/git";
 import { cn } from "@/lib/utils";
 
@@ -62,6 +66,9 @@ const SIDEBAR_NAV: readonly {
 function App() {
   const [activeSection, setActiveSection] = useState<SidebarNavId>("repos");
   const refreshRecentRepos = useGitStore((s) => s.refreshRecentRepos);
+
+  useHydrateEvidenceAppState();
+  useEvidencePreferenceSync();
 
   useEffect(() => {
     void refreshRecentRepos();

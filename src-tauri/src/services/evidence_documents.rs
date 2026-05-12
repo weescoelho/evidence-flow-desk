@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use uuid::Uuid;
 
-const ROOT_DIR: &str = "evidence_documents";
+pub(crate) const ROOT_DIR: &str = "evidence_documents";
 /// Legado antes de SQLite (RF-015); migrado uma vez quando a base está vazia.
 const LEGACY_INDEX_FILE: &str = "index.json";
 const DOCUMENT_FILE: &str = "document.html";
@@ -87,7 +87,7 @@ impl EvidenceDocumentsStore {
         Ok(store)
     }
 
-    fn conn(&self) -> Result<Connection, String> {
+    pub(crate) fn conn(&self) -> Result<Connection, String> {
         let c = Connection::open(&self.db_path).map_err(|e| e.to_string())?;
         c.execute_batch(
             "PRAGMA foreign_keys = ON;
@@ -117,6 +117,7 @@ impl EvidenceDocumentsStore {
         .map_err(|e| e.to_string())?;
 
         Self::migrate_legacy_json_if_needed(&self.root, &mut conn)?;
+        crate::services::evidence_app_state::ensure_app_state_tables(&conn)?;
         Ok(())
     }
 

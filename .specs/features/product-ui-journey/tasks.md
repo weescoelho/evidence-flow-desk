@@ -48,15 +48,15 @@
 
 | # | Tarefa | Requisito | Gate |
 |---|--------|-----------|------|
-| 4.1 | Preview: índice lateral + zoom + linha «Paginas / Atualiza ao mudar…» | UI-R04 | — |
-| 4.2 | Export: destino ficheiro, nome projeto, checkboxes PDF; faixa SQLite | UI-R05 | DOC-* |
+| 4.1 | Preview: índice lateral + zoom + linha «Páginas / Atualiza ao mudar…» | UI-R04 | `pnpm test` + `pnpm build` |
+| 4.2 | Export: destino ficheiro, nome projeto, checkboxes PDF; faixa SQLite | UI-R05 | `pnpm test` + `pnpm build` |
 
 ---
 
 ## Verificação global
 
 - [ ] Nenhum desvio **SPEC_DEVIATION** sem comentário em PR ou issue.
-- [ ] `pnpm test` + `pnpm build` após alterações de UI críticas.
+- [x] `pnpm test` + `pnpm build` após alterações de UI críticas **(2026-05-12, passos 4–5 / P2)**.
 
 ---
 
@@ -67,4 +67,5 @@
 | 2026-05-12 | **1.1** | Sidebar com 5 itens Lucide (`App.tsx`), estilo activo `Repositórios` = `docs/UI-COMPONENTS.md`; outros desactivados até rotas 06/07 e vistas globais. |
 | 2026-05-12 | **2.2–2.4** | `EvidenceCreationWizard`: `STEP_PAGE` (H1+sub por passo); tablist removida; stepper clicável; rodapé «Cancelar» (volta um passo; passo 1 inactivo) + primários UI-R02 + ícones; passo 5 aciona `exportPdfTriggerRef` → «Exportar PDF…». `App.tsx` já sem cabeçalho genérico duplicado. |
 | 2026-05-12 | **3.1–3.5 (MVP)** | Store `evidence-metadata-store`; `EvidenceDocumentMetadataSection`; `EvidenceNarrativeMetrics` (2 colunas); metadados no HTML (`build-evidence-html`); preview lê store em `ScopeDocumentPreviewPanel`; screenshots: título + Importar + Nova captura (stub); `resetSession` no `resetGitStore`. |
-| 2026-05-12 | Próximo | **4.1–4.2** (preview índice/zoom; export destino/checkboxes) ou faixa informativa dados locais no wizard. |
+| 2026-05-12 | **4.1–4.2** | `EvidenceDocumentPreview`: passo 4 com Sumário lateral + scroll (`id` nas secções HTML), barra «Páginas • zoom ±», copy «Atualiza ao mudar…»; passo 5 com destino (pasta via diálogo), nome do projeto → `<title>`, opções PDF (numerar páginas via `@page`; marca d’água desactivada F2), faixa SQLite; `buildEvidencePrintHtml(p, opts)`. |
+| 2026-05-12 | Próximo | **RF-015** preferências/templates SQLite; stubs **06/07** (UI-R06); QA vs `design-assets/X80A7.png`, `Kym43.png`. |

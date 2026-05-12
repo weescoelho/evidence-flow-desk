@@ -1,7 +1,7 @@
 # Estado do projeto — EvidenceFlow Desk
 
 **Última atualização:** 2026-05-12  
-**Trabalho atual:** Paridade UI do **passo 3** (template, escopo/diff, métricas, screenshots) com tokens `#E4E4E7` / `#71717A` alinhados a `fZdOT`/`UI-COMPONENTS` §10; persistência documentos em SQLite (`evidence_documents_index.sqlite3`).
+**Trabalho atual:** MVP narrativa/export + **RF-015** incremental (SQLite além do índice de documentos: preferências/templates, PDF silencioso quando existir especificação). Próximo alinhamento visual: stubs **06/07** ou QA passos 4–5 vs `design-assets/`.
 
 
 ---
@@ -68,4 +68,4 @@ _Nenhuma listada._
 
 - [x] Feature `git-repository-and-branches`: UAT T12; estado **Approved** em [tasks.md](../features/git-repository-and-branches/tasks.md).
 - [x] Feature `git-commits-and-changes`: UAT manual (refs branch/tag/SHA + atalhos) — **OK** 2026-05-12; [tasks.md](../features/git-commits-and-changes/tasks.md).
-- [ ] **RF-015 evolução** — preferências/templates no SQLite, PDF silencioso, ou metadados extra por documento (ver roadmap). *Entregue:* histórico na sidebar + SQLite para índice de cópias HTML + migração desde `index.json`.
+- [ ] **RF-015 evolução** — PDF silencioso ou metadados extra por linha em `saved_evidence_documents` (opcional). *Entregue:* histórico + índice HTML + migração `index.json`; **preferências KV** (`export.default_directory`, `evidence.active_template_id`, `evidence.change_id`, `evidence.environment`) + **templates personalizados** na mesma SQLite (`evidence_templates`); hidratação em `App` + sincronização debounced dos campos do passo 3; pasta de export persistida no passo 5.

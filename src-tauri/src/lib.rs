@@ -3,7 +3,9 @@ mod models;
 mod services;
 
 use commands::evidence::{
-    delete_saved_evidence_document, list_saved_evidence_documents, save_evidence_document,
+    create_evidence_custom_template, delete_evidence_custom_template,
+    delete_saved_evidence_document, list_saved_evidence_documents,
+    load_evidence_app_persisted_state, save_evidence_document, set_evidence_preference,
 };
 use commands::git::{
     get_repository_scope_summary, list_branches, recent_repositories_add,
@@ -26,6 +28,10 @@ pub fn run() {
             save_evidence_document,
             list_saved_evidence_documents,
             delete_saved_evidence_document,
+            load_evidence_app_persisted_state,
+            set_evidence_preference,
+            create_evidence_custom_template,
+            delete_evidence_custom_template,
             write_text_file,
         ])
         .run(tauri::generate_context!())

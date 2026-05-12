@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { EvidenceDocumentPayload } from "./build-evidence-html";
-import { buildEvidenceBodyHtml } from "./build-evidence-html";
+import { buildEvidenceBodyHtml, buildEvidencePrintHtml } from "./build-evidence-html";
 import { escapeHtml } from "./escape-html";
 
 function basePayload(over: Partial<EvidenceDocumentPayload> = {}): EvidenceDocumentPayload {
@@ -49,14 +49,27 @@ describe("escapeHtml", () => {
 });
 
 describe("buildEvidenceBodyHtml", () => {
-  it("inclui caminho e refs no corpo", () => {
+  it("não lista repositório nem refs nos metadados", () => {
     const html = buildEvidenceBodyHtml(basePayload());
-    expect(html).toContain("/tmp/repo");
-    expect(html).toContain("main");
-    expect(html).toContain("dev");
+    expect(html).not.toContain("Repositório");
+    expect(html).not.toContain("Ref base");
+    expect(html).not.toContain("Ref comparação");
+    expect(html).not.toContain("/tmp/repo");
+  });
+
+  it("inclui conteúdo principal do relatório nas secções seguintes", () => {
+    const html = buildEvidenceBodyHtml(basePayload());
     expect(html).toContain("feat: x");
     expect(html).toContain("CHG-1");
     expect(html).toContain("HML");
+  });
+
+  it("marca a tabela de arquivos e estilos para quebra de caminhos longos", () => {
+    const body = buildEvidenceBodyHtml(basePayload());
+    expect(body).toContain('class="evidence-files"');
+    const full = buildEvidencePrintHtml(basePayload());
+    expect(full).toContain("overflow-wrap");
+    expect(full).toContain("table.evidence-files");
   });
 
   it("escapa texto na secção de resumo técnico", () => {
@@ -84,5 +97,45 @@ describe("buildEvidenceBodyHtml", () => {
     expect(html).toContain("data:image/png;base64,xxx");
     expect(html).toContain("Legenda");
     expect(html).toContain("abcd123");
+  });
+
+  it("expõe ids de secção para o sumário do preview", () => {
+    const html = buildEvidenceBodyHtml(basePayload());
+    expect(html).toContain('id="evidence-section-meta"');
+    expect(html).toContain('id="evidence-section-summary"');
+    expect(html).toContain('id="evidence-section-commits"');
+    expect(html).toContain('id="evidence-section-files"');
+  });
+
+  it("inclui id da secção de screenshots quando existem anexos", () => {
+    const html = buildEvidenceBodyHtml(
+      basePayload({
+        screenshots: [
+          {
+            fileName: "x.png",
+            dataUrl: "data:image/png;base64,xxx",
+            caption: "L",
+            linkedCommitShort: null,
+          },
+        ],
+      }),
+    );
+    expect(html).toContain('id="evidence-section-screenshots"');
+  });
+});
+
+describe("buildEvidencePrintHtml", () => {
+  it("define o título do documento quando pedido", () => {
+    const html = buildEvidencePrintHtml(basePayload(), {
+      documentTitle: "Meu projeto — documento",
+    });
+    expect(html).toContain("<title>Meu projeto — documento</title>");
+  });
+
+  it("escapa o título do documento", () => {
+    const html = buildEvidencePrintHtml(basePayload(), {
+      documentTitle: "<invasão>",
+    });
+    expect(html).toContain("<title>&lt;invasão&gt;</title>");
   });
 });

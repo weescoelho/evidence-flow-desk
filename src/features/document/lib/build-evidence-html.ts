@@ -45,7 +45,11 @@ function safeImageDataUrl(url: string): string {
  * Reutilizado no preview (RF-010) e dentro do envoltório de impressão (RF-011).
  */
 export function buildEvidenceBodyHtml(p: EvidenceDocumentPayload): string {
-  const generatedAt = escapeHtml(new Date().toISOString());
+  const generatedAt = escapeHtml(new Date().toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }));
   const templateLine = escapeHtml(p.templateLabel.trim() || "padrão");
   const changeLine = escapeHtml(p.changeId.trim() || "—");
   const envLine = escapeHtml(p.environment.trim() || "—");
@@ -98,7 +102,7 @@ export function buildEvidenceBodyHtml(p: EvidenceDocumentPayload): string {
   const screenshotSection =
     p.screenshots.length === 0
       ? ""
-      : `<section class="screenshots">
+      : `<section id="evidence-section-screenshots" class="screenshots">
   <h2>Screenshots (${p.screenshots.length})</h2>
   ${p.screenshots
     .map((s) => {
@@ -121,30 +125,27 @@ export function buildEvidenceBodyHtml(p: EvidenceDocumentPayload): string {
 
   return `
 <header class="doc-header">
-  <h1>Evidência técnica — EvidenceFlow</h1>
+  <h1>Evidência técnica</h1>
   <p class="subtitle">Template <strong>${templateLine}</strong></p>
 </header>
 
-<section class="meta">
+<section id="evidence-section-meta" class="meta">
   <h2>Metadados</h2>
   <dl>
     <dt>Change ID / ticket</dt><dd>${changeLine}</dd>
     <dt>Ambiente</dt><dd>${envLine}</dd>
-    <dt>Repositório</dt><dd><code>${escapeHtml(p.repositoryPath)}</code></dd>
-    <dt>Ref base</dt><dd><code>${escapeHtml(p.baseRef)}</code></dd>
-    <dt>Ref comparação</dt><dd><code>${escapeHtml(p.compareRef)}</code></dd>
-    <dt>Gerado em (UTC)</dt><dd>${generatedAt}</dd>
+    <dt>Gerado em</dt><dd>${generatedAt}</dd>
   </dl>
 </section>
 
 ${truncNote}
 
-<section>
-  <h2>Resumo técnico (automático)</h2>
+<section id="evidence-section-summary">
+  <h2>Resumo técnico</h2>
   <pre class="technical">${escapeHtml(p.technicalSummary)}</pre>
 </section>
 
-<section>
+<section id="evidence-section-commits">
   <h2>Commits (${p.commits.length})</h2>
   <table>
     <thead><tr><th>Hash</th><th>Tipo</th><th>Autor</th><th>Resumo</th></tr></thead>
@@ -152,9 +153,9 @@ ${truncNote}
   </table>
 </section>
 
-<section>
+<section id="evidence-section-files">
   <h2>Arquivos (${p.files.length})</h2>
-  <table>
+  <table class="evidence-files">
     <thead><tr><th>Caminho</th><th>Estado</th><th>Linhas</th></tr></thead>
     <tbody>${fileRows}</tbody>
   </table>
@@ -162,9 +163,6 @@ ${truncNote}
 
 ${screenshotSection}
 
-<footer class="doc-footer">
-  <p>Documento gerado localmente. Revise antes de arquivar ou partilhar.</p>
-</footer>
 `.trim();
 }
 
@@ -193,6 +191,15 @@ const PRINT_STYLES = `
     border-radius: 4px;
   }
   table { width: 100%; border-collapse: collapse; font-size: 10pt; }
+  table.evidence-files {
+    table-layout: fixed;
+  }
+  table.evidence-files th:first-child,
+  table.evidence-files td:first-child {
+    width: 58%;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
   th, td { border: 1px solid #ccc; padding: 4pt 6pt; vertical-align: top; }
   th { background: #f0f0f0; text-align: left; }
   .warn { color: #7a5b00; background: #fff8e6; border: 1px solid #e6d08c; padding: 8pt; border-radius: 4px; }
@@ -217,20 +224,54 @@ const PRINT_STYLES = `
   }
 `;
 
-export function wrapPrintDocument(bodyHtml: string): string {
+/** Rodapés de página `@bottom-center`: suporte maioritariamente Chromium / impressão. */
+const PRINT_PAGE_NUMBER_STYLES = `
+  @media print {
+    @page {
+      margin: 14mm;
+      margin-bottom: 22mm;
+      @bottom-center {
+        content: counter(page);
+        font-size: 9pt;
+        font-family: system-ui, sans-serif;
+      }
+    }
+  }
+`;
+
+export type EvidencePrintHtmlOptions = {
+  /** `<title>` e referência ao projeto no exportador; escapado. */
+  documentTitle?: string;
+  /** Solicita números de página na impressão (suporte depende do motor de PDF). */
+  numberPagesPrint?: boolean;
+};
+
+export function wrapPrintDocument(
+  bodyHtml: string,
+  options?: EvidencePrintHtmlOptions,
+): string {
+  const rawTitle =
+    options?.documentTitle?.trim() || "Evidência técnica — EvidenceFlow";
+  const title = escapeHtml(rawTitle);
+  const styles =
+    PRINT_STYLES +
+    (options?.numberPagesPrint ? PRINT_PAGE_NUMBER_STYLES : "");
   return `<!DOCTYPE html>
 <html lang="pt">
 <head>
   <meta charset="utf-8" />
-  <title>Evidência técnica — EvidenceFlow</title>
-  <style>${PRINT_STYLES}</style>
+  <title>${title}</title>
+  <style>${styles}</style>
 </head>
-<body>
+<body class="evidence-print-root">
 ${bodyHtml}
 </body>
 </html>`;
 }
 
-export function buildEvidencePrintHtml(p: EvidenceDocumentPayload): string {
-  return wrapPrintDocument(buildEvidenceBodyHtml(p));
+export function buildEvidencePrintHtml(
+  p: EvidenceDocumentPayload,
+  options?: EvidencePrintHtmlOptions,
+): string {
+  return wrapPrintDocument(buildEvidenceBodyHtml(p), options);
 }
