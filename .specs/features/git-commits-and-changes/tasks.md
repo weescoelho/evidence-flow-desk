@@ -69,4 +69,4 @@ T1 ──→ T2 ──→ T3 ──→ T4
 | T3 | ✅ |
 | T4 — Refs livres (input + datalist) + atalhos nos commits; teste Rust tag | ✅ |
 
-**Próximo:** integração remota PR/MR (RF-003) ou **RF-006** (resumo técnico).
+**Próximo:** anexos (RF-012), templates adicionais, ou integração PR/MR; ver [document-export-mvp](../document-export-mvp/tasks.md).

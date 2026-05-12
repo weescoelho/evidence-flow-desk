@@ -1,7 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+import { EvidenceDocumentPreview } from "@/features/document";
 
 import { getRepositoryScopeSummary } from "../api/git.commands";
 import { parseGitCommandError } from "../api/parse-git-error";
+import { buildTechnicalSummary } from "../lib/technical-summary";
 import type { RepositoryScopeSummary } from "../types/git";
 import { useGitStore } from "../store/git-store";
 
@@ -71,6 +74,11 @@ export function ScopeSummary() {
       cancelled = true;
     };
   }, [repositoryPath, baseBranch, compareBranch, sameBranch]);
+
+  const technicalNarrative = useMemo(
+    () => (data ? buildTechnicalSummary(data) : ""),
+    [data],
+  );
 
   if (!repositoryPath) {
     return null;
@@ -205,6 +213,30 @@ export function ScopeSummary() {
               </ul>
             )}
           </div>
+          <div>
+            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Resumo técnico (automático)
+            </h3>
+            <p className="mb-2 text-[11px] text-muted-foreground">
+              Texto gerado localmente a partir dos commits e do agregado de
+              alterações (sem modelo de linguagem).
+            </p>
+            <pre
+              className="max-h-56 overflow-y-auto whitespace-pre-wrap rounded-md border border-border bg-muted/30 px-3 py-2 font-mono text-[11px] leading-relaxed text-foreground"
+              data-testid="technical-summary"
+            >
+              {technicalNarrative}
+            </pre>
+          </div>
+          <EvidenceDocumentPreview
+            repositoryPath={repositoryPath}
+            baseRef={baseBranch!}
+            compareRef={compareBranch!}
+            technicalSummary={technicalNarrative}
+            commits={data.commits}
+            files={data.files}
+            commitsTruncated={data.commitsTruncated}
+          />
         </div>
       ) : null}
     </section>

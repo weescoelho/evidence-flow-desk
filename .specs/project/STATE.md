@@ -1,7 +1,7 @@
 # Estado do projeto — EvidenceFlow Desk
 
 **Última atualização:** 2026-05-12  
-**Trabalho atual:** Feature `git-commits-and-changes` — slice RF-003 (refs livres + atalhos em commits) entregue; **PR/MR** e integrações remotas continuam fora do MVP. UAT manual recomendado em `pnpm tauri dev`.
+**Trabalho atual:** Template único + preview + exportação por impressão entregues em [document-export-mvp](../features/document-export-mvp/tasks.md). Próximo: anexos visuais (RF-012) ou PDF directo.
 
 ---
 
@@ -59,4 +59,4 @@ _Nenhuma listada._
 
 - [x] Feature `git-repository-and-branches`: UAT T12; estado **Approved** em [tasks.md](../features/git-repository-and-branches/tasks.md).
 - [ ] Feature `git-commits-and-changes`: UAT manual em `pnpm tauri dev` (refs distintas: branch, **tag** ou **SHA** nos campos livres; atalhos na lista de commits) — [tasks.md](../features/git-commits-and-changes/tasks.md).
-- [ ] Próximo produto desejável: **RF-006** (resumo técnico mínimo) ou integração **PR/MR** (RF-003 remoto) conforme roadmap.
+- [ ] Próximo produto desejável: **RF-012** (screenshots manuais) ou PDF sem diálogo de impressão / templates extra.

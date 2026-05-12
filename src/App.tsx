@@ -44,8 +44,9 @@ function App() {
             Repositório Git
           </h1>
           <p className="text-sm text-muted-foreground">
-            Valide uma pasta, mantenha um histórico recente, compare branches e
-            pré-visualize commits e ficheiros no escopo.
+            Valide uma pasta, compare refs, veja commits e ficheiros, gere resumo
+            técnico e pré-visualize o documento de evidência (incl. exportar PDF
+            via impressão).
           </p>
         </header>
         <RepositorySection />

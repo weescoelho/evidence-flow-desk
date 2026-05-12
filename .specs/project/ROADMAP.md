@@ -24,11 +24,10 @@
 - Extrair lista de commits (hash, autor, data, mensagem, tipo conventional) (RF-004)
 - Listar arquivos add/mod/del/rename + linhas +/- (RF-005)
 
-**Narrativa e documento** — PLANNED
+**Narrativa e documento** — IN PROGRESS *(resumo: [technical-summary-mvp](../features/technical-summary-mvp/spec.md); documento + PDF via impressão: [document-export-mvp](../features/document-export-mvp/spec.md))*
 
-- Resumo técnico simples (sem modelo LLM obrigatório no MVP) (RF-006 subset)
-- Pelo menos um template configurável limitado + export PDF (RF-009, RF-011 subset)
-- Preview quase em tempo real quando houver modelo de documento (RF-010 subset)
+- Resumo técnico simples sem LLM obrigatório (RF-006 subset)
+- Template único + preview + exportação «Guardar como PDF» via impressão (RF-009/010/011 subset)
 
 **Evidências visuais** — PLANNED
 
