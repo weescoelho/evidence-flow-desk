@@ -1,0 +1,12 @@
+---
+description: Vertical Slice e estrutura do app — ARCH-GUIDELINES
+globs: src/**/*.{ts,tsx},src-tauri/**/*
+alwaysApply: false
+---
+
+# `docs/ARCH-GUIDELINES.md`
+
+- **Função**: arquitetura por *vertical slice*, limites entre features, fluxo UI → feature → core/infraestrutura, Tauri/commands, estado, erros e testes.
+- **Ao** criar pastas/features, comandos IPC, serviços compartilhados ou pontes frontend/Rust **ler** este doc e preservar dependências permitidas (evitar dependência direta entre features).
+
+Detalhes de estilo linha-a-linha: `docs/CLEAN-CODE-GUIDELINES.md`. Produto/requisitos: `docs/prd.md`.

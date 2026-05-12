@@ -1,0 +1,12 @@
+---
+description: Tokens, tipografia e paridade visual — UI-COMPONENTS + design.pen
+globs: src/**/*.tsx,src/**/*.css
+alwaysApply: false
+---
+
+# `docs/UI-COMPONENTS.md` e design
+
+- **Função**: tokens (`$--*`), tipografia JetBrains Mono, grids, componentes de tela alinhados a `docs/design.pen`; referência rápida em `docs/design-assets/*.png`.
+- **Implementação**: mapear cores/radius para CSS vars como no doc; usar node IDs quando precisar bater especificação com o Pencil.
+
+`docs/design.pen` deve ser tratado pelo **MCP Pencil** (variáveis, batches, screenshot/export), não abrindo como ficheiro de texto arbitrário no editor.

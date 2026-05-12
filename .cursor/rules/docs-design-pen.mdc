@@ -1,0 +1,11 @@
+---
+description: Ficheiros .pen — apenas via MCP Pencil, não edição/leitura bruta
+globs: docs/**/*.pen
+alwaysApply: false
+---
+
+# `docs/design.pen` (Pencil)
+
+- Encriptado/composto para o formato Pencil — **não** confiar em leitura como texto nem em greps diretos sobre o `.pen`.
+- Para variáveis, nós ou export de layout: usar o **servidor MCP Pencil** (ex.: estado do editor, `open_document`, variáveis, batch get/design, screenshots/export para `docs/design-assets/`).
+- Regra de produto paralela para tokens e UI: `docs/UI-COMPONENTS.md`; mapa completo dos docs: regra `.cursor/rules/docs-catalogo.mdc`.

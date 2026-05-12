@@ -1,0 +1,11 @@
+---
+description: Manutenção coerente do PRD EvidenceFlow Desktop
+globs: docs/prd.md
+alwaysApply: false
+---
+
+# `docs/prd.md`
+
+- **Atribuição**: fonte de requisitos de produto — problema, visão, público, objetivos, stack e capacidades planejadas (evidências, Git, PDF, desktop local).
+- **Ao editar** este ficheiro, manter linguagem de requisito (o *quê* e *porquê*), evitando deslizar para detalhes de implementação que pertencem a `docs/ARCH-GUIDELINES.md` ou `docs/CLEAN-CODE-GUIDELINES.md`.
+- Após alterar requisitos que impactem UI, alinhar ou referenciar `docs/UI-COMPONENTS.md` / design conforme necessário.

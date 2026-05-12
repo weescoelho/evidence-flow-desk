@@ -1,0 +1,12 @@
+---
+description: Aplicar Clean Code Guidelines do projeto ao editar código
+globs: src/**/*.{ts,tsx},src-tauri/**/*.rs
+alwaysApply: false
+---
+
+# `docs/CLEAN-CODE-GUIDELINES.md`
+
+- **Função**: padrões de clean code na stack Evidence Flow Desk (React 19, TS, Vite, Tauri, Tailwind/shadcn, Zod/Zustand/RHF onde aplicável).
+- **Ao implementar/refatorar** nestes arquivos, seguir esse documento para nomes, tamanho de funções, DRY e exemplos de TypeScript/React (e trechos pertinentes ao desktop).
+
+Para *onde* colocar arquivos e dependências entre módulos, ver `docs/ARCH-GUIDELINES.md`; para telas visualmente aderentes, ver `docs/UI-COMPONENTS.md`.

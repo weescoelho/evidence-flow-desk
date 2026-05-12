@@ -1,0 +1,18 @@
+---
+description: Mapa dos documentos em docs/ — quando consultar cada um
+alwaysApply: true
+---
+
+# Uso dos documentos `docs/`
+
+Antes de implementar ou refatorar com impacto amplo, alinhar com o doc certo:
+
+| Documento | Atribuição | Consultar quando |
+|-----------|------------|-------------------|
+| `docs/prd.md` | Requisitos de produto (escopo, objetivos, público, stack de alto nível, fluxos e comportamento esperado) | Novas funcionalidades, mudança de UX/fluxos, critérios de aceite, priorização ou dúvidas sobre *o que* o produto deve fazer |
+| `docs/ARCH-GUIDELINES.md` | Arquitetura (Vertical Slice, pastas por feature, camadas, Tauri/Rust, estado, testes, evolução) | Criar features/pastas, dependências entre módulos, comandos IPC, infraestrutura desktop ou reorganização estrutural |
+| `docs/CLEAN-CODE-GUIDELINES.md` | Qualidade de código (nomes, funções, DRY, padrões TS/React/stack do projeto e desktop) | Escrever/revisar TypeScript, React ou Rust aplicando convenções acordadas no repo |
+| `docs/UI-COMPONENTS.md` | Especificação visual e componentes alinhados ao design (tokens, tipografia, layout, snippets Tailwind, node IDs) | Implementar telas, estilos Tailwind/CSS, tokens; paridade visual com o design system do projeto |
+| `docs/design.pen` | Fonte de design no Pencil (variáveis, layout, nós) | Inspecionar valores/layout no editor; **não** ler o `.pen` como texto no workspace — usar MCP Pencil conforme servidor configurado |
+
+**Assets:** `docs/design-assets/` (PNGs nomeados por node ID) servem como referência visual rápida; detalhes e tokens atualizados vêm do `.pen` (MCP) e de `docs/UI-COMPONENTS.md`.
