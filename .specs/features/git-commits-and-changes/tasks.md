@@ -68,5 +68,6 @@ T1 ──→ T2 ──→ T3 ──→ T4
 | T2 | ✅ |
 | T3 | ✅ |
 | T4 — Refs livres (input + datalist) + atalhos nos commits; teste Rust tag | ✅ |
+| **UAT** — `pnpm tauri dev`; refs branch/tag/SHA + atalhos na lista | ✅ (2026-05-12) |
 
 **Próximo:** anexos (RF-012), templates adicionais, ou integração PR/MR; ver [document-export-mvp](../document-export-mvp/tasks.md).

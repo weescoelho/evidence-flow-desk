@@ -16,7 +16,14 @@ export type RepositoryScopeSummaryState = {
   loading: boolean;
   error: string | null;
   sameBranch: boolean;
+  /** Texto efectivo no documento (gerado automaticamente ou editado pelo utilizador). */
   technicalNarrative: string;
+  /** Texto produzido apenas por `buildTechnicalSummary` (sem edição manual activa). */
+  technicalNarrativeGenerated: string;
+  /** Indica se há rascunho manual em curso (mesmo que coincida com o gerado). */
+  technicalNarrativeIsCustomized: boolean;
+  setTechnicalNarrative: (value: string) => void;
+  resetTechnicalNarrativeToGenerated: () => void;
 };
 
 export function useRepositoryScopeSummary(): RepositoryScopeSummaryState {
@@ -77,10 +84,43 @@ export function useRepositoryScopeSummary(): RepositoryScopeSummaryState {
     };
   }, [repositoryPath, baseBranch, compareBranch, sameBranch]);
 
-  const technicalNarrative = useMemo(
+  const technicalNarrativeGenerated = useMemo(
     () => (data ? buildTechnicalSummary(data) : ""),
     [data],
   );
+
+  /** Reconstrói o rascunho manual quando o intervalo Git ou o conteúdo agregado mudam. */
+  const narrativeSourceKey = useMemo(() => {
+    if (
+      !repositoryPath ||
+      !baseBranch ||
+      !compareBranch ||
+      sameBranch ||
+      !data
+    ) {
+      return "";
+    }
+    return [
+      repositoryPath,
+      baseBranch,
+      compareBranch,
+      data.commitsTruncated ? "trunc" : "full",
+      ...data.commits.map((c) => c.hash),
+      ...data.files.map(
+        (f) =>
+          `${f.path}\0${f.status}\0${f.linesAdded}\0${f.linesRemoved}`,
+      ),
+    ].join("\n");
+  }, [repositoryPath, baseBranch, compareBranch, sameBranch, data]);
+
+  const [draftNarrative, setDraftNarrative] = useState<string | null>(null);
+
+  useEffect(() => {
+    setDraftNarrative(null);
+  }, [narrativeSourceKey]);
+
+  const technicalNarrative =
+    draftNarrative !== null ? draftNarrative : technicalNarrativeGenerated;
 
   const setScopeCommits = useEvidenceAttachmentsStore(
     (s) => s.setScopeCommits,
@@ -99,5 +139,9 @@ export function useRepositoryScopeSummary(): RepositoryScopeSummaryState {
     error,
     sameBranch,
     technicalNarrative,
+    technicalNarrativeGenerated,
+    technicalNarrativeIsCustomized: draftNarrative !== null,
+    setTechnicalNarrative: (value: string) => setDraftNarrative(value),
+    resetTechnicalNarrativeToGenerated: () => setDraftNarrative(null),
   };
 }

@@ -8,12 +8,25 @@ import {
   LayoutTemplate,
   Settings,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
+import { EvidenceDocumentsLibraryView } from "@/features/document";
 import { EvidenceCreationWizard, useGitStore } from "@/features/git";
 import { cn } from "@/lib/utils";
 
-const SIDEBAR_NAV = [
+type SidebarNavId =
+  | "repos"
+  | "templates"
+  | "screenshots"
+  | "documents"
+  | "settings";
+
+const SIDEBAR_NAV: readonly {
+  id: SidebarNavId;
+  label: string;
+  icon: typeof FolderGit2;
+  available: boolean;
+}[] = [
   {
     id: "repos",
     label: "Repositórios",
@@ -36,7 +49,7 @@ const SIDEBAR_NAV = [
     id: "documents",
     label: "Documentos",
     icon: FileText,
-    available: false,
+    available: true,
   },
   {
     id: "settings",
@@ -44,9 +57,10 @@ const SIDEBAR_NAV = [
     icon: Settings,
     available: false,
   },
-] as const;
+];
 
 function App() {
+  const [activeSection, setActiveSection] = useState<SidebarNavId>("repos");
   const refreshRecentRepos = useGitStore((s) => s.refreshRecentRepos);
 
   useEffect(() => {
@@ -70,7 +84,7 @@ function App() {
         <nav className="flex flex-col gap-1.5" aria-label="Principal">
           {SIDEBAR_NAV.map((item) => {
             const Icon = item.icon;
-            const isActive = item.id === "repos";
+            const isActive = item.available && item.id === activeSection;
             return (
               <button
                 key={item.id}
@@ -81,8 +95,11 @@ function App() {
                 title={
                   item.available
                     ? undefined
-                    : "Disponível numa versão seguinte (histórico e vistas globais)."
+                    : "Disponível numa versão seguinte."
                 }
+                onClick={() => {
+                  if (item.available) setActiveSection(item.id);
+                }}
                 className={cn(
                   "flex w-full items-center gap-2.5 rounded-[10px] px-[14px] py-3 text-left transition-colors",
                   isActive &&
@@ -119,7 +136,11 @@ function App() {
         </p>
       </aside>
       <main className="flex min-h-0 min-w-0 flex-1 flex-col gap-6 overflow-y-auto bg-background px-4 py-6 sm:px-8 lg:px-10 lg:py-8">
-        <EvidenceCreationWizard />
+        {activeSection === "documents" ? (
+          <EvidenceDocumentsLibraryView />
+        ) : (
+          <EvidenceCreationWizard />
+        )}
       </main>
     </div>
   );

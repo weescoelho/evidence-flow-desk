@@ -10,6 +10,7 @@ export {
   type EvidenceTemplateId,
 } from "./store/evidence-metadata-store";
 export { SavedEvidenceDocumentsPanel } from "./components/saved-evidence-documents-panel";
+export { EvidenceDocumentsLibraryView } from "./components/evidence-documents-library-view";
 export {
   buildEvidenceBodyHtml,
   buildEvidencePrintHtml,

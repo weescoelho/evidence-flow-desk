@@ -1,4 +1,4 @@
-import { ArrowRight, Download } from "lucide-react";
+import { ArrowRight, Download, Info } from "lucide-react";
 import {
   useEffect,
   useMemo,
@@ -173,7 +173,25 @@ export function EvidenceCreationWizard() {
         aria-label={page.title}
         className="flex min-h-0 flex-col gap-6"
       >
-        {step === 1 ? <RepositorySection /> : null}
+        {step === 1 ? (
+          <>
+            <RepositorySection />
+            <div
+              role="note"
+              aria-label="Dados locais e privacidade"
+              className="flex items-center gap-2.5 rounded-[10px] border border-[#E4E4E7] bg-[#F4F4F5] px-3.5 py-3"
+            >
+              <Info
+                className="size-[18px] shrink-0 text-[#5946DB]"
+                aria-hidden
+              />
+              <p className="font-mono text-[12px] leading-snug text-[#71717A]">
+                Somente dados locais. Nada sai da máquina sem a sua confirmação ao
+                usar IA ou integrações.
+              </p>
+            </div>
+          </>
+        ) : null}
         {step === 2 ? <BranchList /> : null}
         {step === 3 ? (
           <>

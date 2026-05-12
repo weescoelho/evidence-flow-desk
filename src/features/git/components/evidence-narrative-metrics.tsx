@@ -4,6 +4,9 @@ import type { FileChangeRow } from "../types/git";
 
 type EvidenceNarrativeMetricsProps = {
   technicalNarrative: string;
+  technicalNarrativeIsCustomized: boolean;
+  onTechnicalNarrativeChange: (value: string) => void;
+  onTechnicalNarrativeRestore: () => void;
   files: FileChangeRow[];
 };
 
@@ -22,6 +25,9 @@ function aggregateLines(files: FileChangeRow[]) {
  */
 export function EvidenceNarrativeMetrics({
   technicalNarrative,
+  technicalNarrativeIsCustomized,
+  onTechnicalNarrativeChange,
+  onTechnicalNarrativeRestore,
   files,
 }: EvidenceNarrativeMetricsProps) {
   const { add, rem, touched } = aggregateLines(files);
@@ -34,15 +40,35 @@ export function EvidenceNarrativeMetrics({
             Resumo técnico
           </span>
           <div className="rounded-[10px] border border-border bg-background p-3">
-            <p className="mb-2 font-mono text-[11px] text-muted-foreground">
-              Gerado dos commits e diff — não substitui revisão humana.
-            </p>
-            <pre
-              className="max-h-56 overflow-y-auto whitespace-pre-wrap font-mono text-[12px] leading-relaxed text-foreground"
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2 font-mono text-[11px] text-muted-foreground">
+              <p>
+                Gerado a partir dos commits e do diff — pode editar o texto antes
+                de pré-visualizar ou exportar (não substitui revisão humana).
+              </p>
+              <button
+                type="button"
+                disabled={!technicalNarrativeIsCustomized}
+                onClick={() => onTechnicalNarrativeRestore()}
+                title={
+                  technicalNarrativeIsCustomized
+                    ? undefined
+                    : "O texto actual já é o automático."
+                }
+                className={cn(
+                  "shrink-0 rounded-md border border-transparent px-2 py-1 font-semibold text-primary underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-45 disabled:no-underline",
+                )}
+              >
+                Restaurar texto automático
+              </button>
+            </div>
+            <textarea
+              value={technicalNarrative}
+              onChange={(e) => onTechnicalNarrativeChange(e.target.value)}
+              aria-label="Resumo técnico editável"
+              rows={14}
+              className="max-h-[min(28rem,55vh)] min-h-[12rem] w-full resize-y overflow-y-auto rounded-md border border-border bg-card px-2.5 py-2 font-mono text-[12px] leading-relaxed text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
               data-testid="technical-summary"
-            >
-              {technicalNarrative}
-            </pre>
+            />
           </div>
         </div>
 

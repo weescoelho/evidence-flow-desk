@@ -21,7 +21,7 @@
 - Listar branches, branch atual, busca básica (RF-002)
 - Escopo inicial: pelo menos branch ou intervalo de commits (subset RF-003)
 
-**Análise de alterações** — IN PROGRESS *(TLC: [spec](../features/git-commits-and-changes/spec.md) · [tasks](../features/git-commits-and-changes/tasks.md); escopo por **branch + refs Git** (tag/commit/expr.); PR/MR fora)*
+**Análise de alterações** — DONE *(TLC: [spec](../features/git-commits-and-changes/spec.md) · [tasks](../features/git-commits-and-changes/tasks.md); refs Git livres + atalhos; PR/MR fora)*
 
 - Extrair lista de commits (hash, autor, data, mensagem, tipo conventional) (RF-004)
 - Listar arquivos add/mod/del/rename + linhas +/- (RF-005)
@@ -35,9 +35,10 @@
 
 - Anexar e associar screenshots manuais a commits no escopo (RF-012, RF-014 subset); incluídos no documento/PDF
 
-**Persistência MVP** — PLANNED
+**Persistência MVP** — IN PROGRESS
 
-- SQLite para preferências/histórico mínimos conforme avançar (PRD §15; pode ser incremental)
+- Listagem/abertura/remoção de cópias HTML guardadas pela app (**RF-015** subset, via serviço `evidence_documents` + índice JSON); ver [evidence-history-mvp](../features/evidence-history-mvp/tasks.md).
+- SQLite para templates/histórico/preferências conforme PRD §15 — planeado incrementalmente
 
 **Infraestrutura app** — IN PROGRESS *(scaffolding existe)*
 

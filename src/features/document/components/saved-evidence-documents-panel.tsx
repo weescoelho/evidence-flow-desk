@@ -43,10 +43,13 @@ function formatSavedAt(ms: number): string {
 export type SavedEvidenceDocumentsPanelProps = {
   /** Incrementado após uma gravação bem-sucedida para voltar a carregar a lista. */
   refreshKey?: number;
+  /** `embedded`: painel dentro do wizard (lista compacta). `library`: página dedicada na sidebar. */
+  layout?: "embedded" | "library";
 };
 
 export function SavedEvidenceDocumentsPanel({
   refreshKey = 0,
+  layout = "embedded",
 }: SavedEvidenceDocumentsPanelProps) {
   const [items, setItems] = useState<SavedEvidenceDocumentInfo[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -136,11 +139,12 @@ export function SavedEvidenceDocumentsPanel({
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <h2 className="text-sm font-semibold text-foreground">
-            Documentos guardados localmente
+            {layout === "library" ? "Entradas guardadas" : "Documentos guardados localmente"}
           </h2>
           <p className="text-[11px] text-muted-foreground">
-            Cópias HTML gravadas neste dispositivo (últimas entradas; as mais
-            antigas são removidas ao atingir o limite).
+            {layout === "library"
+              ? "Ordenadas da mais recente para a mais antiga. Limite aplicado pela aplicação."
+              : "Cópias HTML gravadas neste dispositivo (últimas entradas; as mais antigas são removidas ao atingir o limite)."}
           </p>
         </div>
         <button
@@ -189,7 +193,13 @@ export function SavedEvidenceDocumentsPanel({
           Nenhuma entrada corresponde ao filtro.
         </p>
       ) : (
-        <ul className="flex max-h-56 flex-col gap-2 overflow-y-auto pr-1">
+        <ul
+          className={
+            layout === "library"
+              ? "flex max-h-[min(72vh,40rem)] flex-col gap-2 overflow-y-auto pr-1 sm:max-h-[min(78vh,44rem)]"
+              : "flex max-h-56 flex-col gap-2 overflow-y-auto pr-1"
+          }
+        >
           {(filteredItems ?? []).map((doc) => (
             <li
               key={doc.id}

@@ -1,7 +1,7 @@
 # Estado do projeto — EvidenceFlow Desk
 
 **Última atualização:** 2026-05-12  
-**Trabalho atual:** Screenshots manuais + associação a commits (RF-012/014 subset) em [evidence-screenshots-mvp](../features/evidence-screenshots-mvp/tasks.md). Próximo: persistência (RF-015) ou refinamentos de documento.
+**Trabalho atual:** Histórico de documentos na sidebar ([evidence-history-mvp](../features/evidence-history-mvp/tasks.md)); armazenamento local já existe (`index.json` + HTML em app data; SQLite formal em PRD §15 pode vir depois).
 
 ---
 
@@ -66,5 +66,5 @@ _Nenhuma listada._
 ## Todos
 
 - [x] Feature `git-repository-and-branches`: UAT T12; estado **Approved** em [tasks.md](../features/git-repository-and-branches/tasks.md).
-- [ ] Feature `git-commits-and-changes`: UAT manual em `pnpm tauri dev` (refs distintas: branch, **tag** ou **SHA** nos campos livres; atalhos na lista de commits) — [tasks.md](../features/git-commits-and-changes/tasks.md).
-- [ ] Próximo produto desejável: **RF-015** (histórico / persistência de evidências) ou PDF sem diálogo de impressão.
+- [x] Feature `git-commits-and-changes`: UAT manual (refs branch/tag/SHA + atalhos) — **OK** 2026-05-12; [tasks.md](../features/git-commits-and-changes/tasks.md).
+- [ ] **RF-015 evolução** — SQLite/metadata alargada conforme PRD §15 ou PDF silencioso (ver roadmap). *Subset entregue:* histórico na sidebar + armazenamento JSON/HTML.

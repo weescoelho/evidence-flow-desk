@@ -28,6 +28,9 @@ export function ScopeAnalysisPanel({ scope }: ScopeAnalysisPanelProps) {
     sameBranch,
     repositoryPath,
     technicalNarrative,
+    technicalNarrativeIsCustomized,
+    setTechnicalNarrative,
+    resetTechnicalNarrativeToGenerated,
   } = scope;
 
   return (
@@ -77,6 +80,9 @@ export function ScopeAnalysisPanel({ scope }: ScopeAnalysisPanelProps) {
 
               <EvidenceNarrativeMetrics
                 technicalNarrative={technicalNarrative}
+                technicalNarrativeIsCustomized={technicalNarrativeIsCustomized}
+                onTechnicalNarrativeChange={setTechnicalNarrative}
+                onTechnicalNarrativeRestore={resetTechnicalNarrativeToGenerated}
                 files={data.files}
               />
 
