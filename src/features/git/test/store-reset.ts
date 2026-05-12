@@ -1,3 +1,5 @@
+import { useEvidenceAttachmentsStore } from "@/features/evidence";
+
 import { useGitStore } from "../store/git-store";
 
 export function resetGitStore() {
@@ -13,4 +15,5 @@ export function resetGitStore() {
     baseBranch: null,
     compareBranch: null,
   });
+  useEvidenceAttachmentsStore.getState().clear();
 }

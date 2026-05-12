@@ -2,6 +2,14 @@ import type { CommitRow, FileChangeRow } from "@/features/git/types/git";
 
 import { escapeHtml } from "./escape-html";
 
+export type EvidenceScreenshotPayload = {
+  fileName: string;
+  /** Só `data:image/*;base64,` confiável para &lt;img src&gt; */
+  dataUrl: string;
+  caption: string;
+  linkedCommitShort: string | null;
+};
+
 export type EvidenceDocumentPayload = {
   repositoryPath: string;
   baseRef: string;
@@ -10,6 +18,7 @@ export type EvidenceDocumentPayload = {
   commits: CommitRow[];
   files: FileChangeRow[];
   commitsTruncated: boolean;
+  screenshots: EvidenceScreenshotPayload[];
 };
 
 const FILE_STATUS_PT: Record<FileChangeRow["status"], string> = {
@@ -20,6 +29,11 @@ const FILE_STATUS_PT: Record<FileChangeRow["status"], string> = {
   copied: "copiado",
   other: "outro",
 };
+
+function safeImageDataUrl(url: string): string {
+  if (!url.startsWith("data:image/")) return "";
+  return url;
+}
 
 /**
  * Corpo do documento em HTML seguro (apenas texto escapado).
@@ -73,6 +87,30 @@ export function buildEvidenceBodyHtml(p: EvidenceDocumentPayload): string {
     ? `<p class="warn"><strong>Atenção:</strong> a lista de commits foi truncada pelo limite de segurança da aplicação.</p>`
     : "";
 
+  const screenshotSection =
+    p.screenshots.length === 0
+      ? ""
+      : `<section class="screenshots">
+  <h2>Screenshots (${p.screenshots.length})</h2>
+  ${p.screenshots
+    .map((s) => {
+      const src = safeImageDataUrl(s.dataUrl);
+      if (!src) {
+        return `<figure class="shot"><p class="warn">Imagem omitida (formato inválido).</p></figure>`;
+      }
+      const cap = escapeHtml(s.caption.trim() || s.fileName);
+      const linkNote = s.linkedCommitShort
+        ? `<p class="screenshot-meta">Associado ao commit <code>${escapeHtml(s.linkedCommitShort)}</code></p>`
+        : "";
+      return `<figure class="shot">
+  <img src="${src}" alt="${cap}" />
+  <figcaption>${cap}</figcaption>
+  ${linkNote}
+</figure>`;
+    })
+    .join("\n")}
+</section>`;
+
   return `
 <header class="doc-header">
   <h1>Evidência técnica — EvidenceFlow</h1>
@@ -112,6 +150,8 @@ ${truncNote}
   </table>
 </section>
 
+${screenshotSection}
+
 <footer class="doc-footer">
   <p>Documento gerado localmente. Revise antes de arquivar ou partilhar.</p>
 </footer>
@@ -146,7 +186,21 @@ const PRINT_STYLES = `
   th, td { border: 1px solid #ccc; padding: 4pt 6pt; vertical-align: top; }
   th { background: #f0f0f0; text-align: left; }
   .warn { color: #7a5b00; background: #fff8e6; border: 1px solid #e6d08c; padding: 8pt; border-radius: 4px; }
+  figure.shot { margin: 12pt 0; page-break-inside: avoid; }
+  figure.shot img { max-width: 100%; height: auto; border: 1px solid #ddd; display: block; }
+  figure.shot .screenshot-meta { font-size: 9pt; color: #444; margin: 4pt 0 0; }
+  figure.shot figcaption { font-size: 9pt; margin-top: 4pt; }
   .doc-footer { margin-top: 16pt; font-size: 9pt; color: #555; }
+  @media screen {
+    html {
+      min-height: 100%;
+    }
+    body {
+      width: 100%;
+      max-width: 100%;
+      padding: 1rem 1.25rem;
+    }
+  }
   @page { margin: 14mm; }
   @media print {
     body { padding: 0; }

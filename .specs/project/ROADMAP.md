@@ -29,9 +29,9 @@
 - Resumo técnico simples sem LLM obrigatório (RF-006 subset)
 - Template único + preview + exportação «Guardar como PDF» via impressão (RF-009/010/011 subset)
 
-**Evidências visuais** — PLANNED
+**Evidências visuais** — IN PROGRESS *(TLC: [evidence-screenshots-mvp](../features/evidence-screenshots-mvp/spec.md))*
 
-- Anexar e associar screenshots manuais a commits/evidência (RF-012, RF-014 subset)
+- Anexar e associar screenshots manuais a commits no escopo (RF-012, RF-014 subset); incluídos no documento/PDF
 
 **Persistência MVP** — PLANNED
 

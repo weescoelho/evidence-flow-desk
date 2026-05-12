@@ -4,5 +4,6 @@ export {
   buildEvidencePrintHtml,
   wrapPrintDocument,
   type EvidenceDocumentPayload,
+  type EvidenceScreenshotPayload,
 } from "./lib/build-evidence-html";
 export { printHtmlDocument } from "./lib/print-html";

@@ -1,7 +1,7 @@
 # Estado do projeto — EvidenceFlow Desk
 
 **Última atualização:** 2026-05-12  
-**Trabalho atual:** Template único + preview + exportação por impressão entregues em [document-export-mvp](../features/document-export-mvp/tasks.md). Próximo: anexos visuais (RF-012) ou PDF directo.
+**Trabalho atual:** Screenshots manuais + associação a commits (RF-012/014 subset) em [evidence-screenshots-mvp](../features/evidence-screenshots-mvp/tasks.md). Próximo: persistência (RF-015) ou refinamentos de documento.
 
 ---
 
@@ -59,4 +59,4 @@ _Nenhuma listada._
 
 - [x] Feature `git-repository-and-branches`: UAT T12; estado **Approved** em [tasks.md](../features/git-repository-and-branches/tasks.md).
 - [ ] Feature `git-commits-and-changes`: UAT manual em `pnpm tauri dev` (refs distintas: branch, **tag** ou **SHA** nos campos livres; atalhos na lista de commits) — [tasks.md](../features/git-commits-and-changes/tasks.md).
-- [ ] Próximo produto desejável: **RF-012** (screenshots manuais) ou PDF sem diálogo de impressão / templates extra.
+- [ ] Próximo produto desejável: **RF-015** (histórico / persistência de evidências) ou PDF sem diálogo de impressão.

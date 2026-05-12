@@ -120,11 +120,17 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    }
-  body {
-    @apply bg-background text-foreground;
-    }
+  }
+
   html {
-    @apply font-mono;
-    }
+    @apply h-full font-mono;
+  }
+
+  body {
+    @apply m-0 min-h-full bg-background text-foreground;
+  }
+
+  #root {
+    @apply flex min-h-dvh w-full flex-col;
+  }
 }

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { EvidenceDocumentPreview } from "@/features/document";
+import { useEvidenceAttachmentsStore } from "@/features/evidence";
 
 import { getRepositoryScopeSummary } from "../api/git.commands";
 import { parseGitCommandError } from "../api/parse-git-error";
@@ -78,6 +79,30 @@ export function ScopeSummary() {
   const technicalNarrative = useMemo(
     () => (data ? buildTechnicalSummary(data) : ""),
     [data],
+  );
+
+  const setScopeCommits = useEvidenceAttachmentsStore(
+    (s) => s.setScopeCommits,
+  );
+  const evidenceAttachments = useEvidenceAttachmentsStore(
+    (s) => s.attachments,
+  );
+
+  useEffect(() => {
+    setScopeCommits(data?.commits ?? []);
+  }, [data, setScopeCommits]);
+
+  const screenshotPayload = useMemo(
+    () =>
+      evidenceAttachments.map((a) => ({
+        fileName: a.fileName,
+        dataUrl: a.dataUrl,
+        caption: a.caption,
+        linkedCommitShort: a.linkedCommitHash
+          ? a.linkedCommitHash.slice(0, 7)
+          : null,
+      })),
+    [evidenceAttachments],
   );
 
   if (!repositoryPath) {
@@ -236,6 +261,7 @@ export function ScopeSummary() {
             commits={data.commits}
             files={data.files}
             commitsTruncated={data.commitsTruncated}
+            screenshots={screenshotPayload}
           />
         </div>
       ) : null}

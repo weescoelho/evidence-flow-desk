@@ -4,6 +4,7 @@ import { FileCheck, FolderGit2 } from "lucide-react";
 import { useEffect } from "react";
 
 import { BranchList, RepositorySection, ScopeSummary, useGitStore } from "@/features/git";
+import { EvidenceScreenshotsSection } from "@/features/evidence";
 
 function App() {
   const refreshRecentRepos = useGitStore((s) => s.refreshRecentRepos);
@@ -13,8 +14,11 @@ function App() {
   }, [refreshRecentRepos]);
 
   return (
-    <div className="flex h-screen bg-background font-mono text-foreground">
-      <aside className="flex w-[276px] shrink-0 flex-col gap-[22px] border-r border-border bg-sidebar px-[18px] py-7">
+    <div className="flex min-h-dvh w-full min-w-0 flex-1 flex-col bg-background font-mono text-foreground md:flex-row">
+      <aside
+        className="flex w-full shrink-0 flex-col gap-[22px] border-b border-border bg-sidebar px-[18px] py-6 md:w-[276px] md:border-b-0 md:border-r md:py-7"
+        aria-label="Navegação lateral"
+      >
         <div className="flex items-center gap-3">
           <div className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-primary text-primary-foreground">
             <FileCheck className="size-[22px]" aria-hidden />
@@ -38,20 +42,20 @@ function App() {
           Ambiente local — processamento offline.
         </p>
       </aside>
-      <main className="flex flex-1 flex-col gap-6 overflow-y-auto bg-background px-10 py-8">
+      <main className="flex min-h-0 min-w-0 flex-1 flex-col gap-6 overflow-y-auto bg-background px-4 py-6 sm:px-8 lg:px-10 lg:py-8">
         <header className="flex flex-col gap-1">
           <h1 className="text-[28px] font-semibold tracking-tight text-foreground">
             Repositório Git
           </h1>
           <p className="text-sm text-muted-foreground">
             Valide uma pasta, compare refs, veja commits e ficheiros, gere resumo
-            técnico e pré-visualize o documento de evidência (incl. exportar PDF
-            via impressão).
+            técnico, pré-visualize o documento e anexe screenshots à evidência.
           </p>
         </header>
         <RepositorySection />
         <BranchList />
         <ScopeSummary />
+        <EvidenceScreenshotsSection />
       </main>
     </div>
   );

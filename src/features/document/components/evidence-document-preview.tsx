@@ -17,6 +17,7 @@ export function EvidenceDocumentPreview(props: EvidenceDocumentPayload) {
       props.commits,
       props.files,
       props.commitsTruncated,
+      props.screenshots,
     ],
   );
 
