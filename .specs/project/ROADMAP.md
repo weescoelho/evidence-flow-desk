@@ -11,6 +11,8 @@
 
 **Critério de aceite (alto nível):** O usuário gera um PDF de evidência local sem dependência obrigatória de SaaS.
 
+**Paridade com o design (`docs/design.pen`):** A jornada canónica de cinco passos, ordem dos CTAs, sidebar e campos do passo 3 (template, Change ID, ambiente, resumo, métricas, screenshots) estão especificadas em **[product-ui-journey](../features/product-ui-journey/spec.md)**. Use esta spec com `docs/UI-COMPONENTS.md` para sair do MVP «descolado» e convergir para o produto final.
+
 ### Features
 
 **Repositório e Git** — DONE *(TLC: [spec](../features/git-repository-and-branches/spec.md) · [tasks](../features/git-repository-and-branches/tasks.md))*
@@ -39,7 +41,7 @@
 
 **Infraestrutura app** — IN PROGRESS *(scaffolding existe)*
 
-- Shell Tauri + React + navegação (sidebar wizard PRD §21)
+- Shell Tauri + React + navegação — alinhar com [product-ui-journey](../features/product-ui-journey/spec.md) (PRD §21: sidebar + wizard)
 
 ---
 

@@ -1,7 +1,8 @@
 # Especificação: resumo técnico MVP (`technical-summary-mvp`)
 
 **PRD:** [RF-006](../../../docs/prd.md)  
-**Depende de:** [git-commits-and-changes](../git-commits-and-changes/spec.md) (`RepositoryScopeSummary` carregado na UI).
+**Depende de:** [git-commits-and-changes](../git-commits-and-changes/spec.md) (`RepositoryScopeSummary` carregado na UI).  
+**Colocação UI e blocos adjacentes:** [product-ui-journey](../product-ui-journey/spec.md) (UI-R03) — resumo técnico no passo 3 (`fZdOT` / painel `gbZwC`); **Resumo corporativo** e **Regenerar com IA** são Fase 2 (PRD RF-007 / IA), podem permanecer placeholders desactivados até lá.
 
 ---
 
@@ -35,5 +36,5 @@ O utilizador deve ver indicação explícita de que o texto é **gerado automati
 
 ## Critérios de aceite
 
-1. Com escopo válido carregado, a app mostra bloco **Resumo técnico (automático)** coerente com os dados apresentados em Commits e Arquivos.
+1. Com escopo válido carregado, a app mostra bloco **Resumo técnico** (gerado a partir de Git) **no passo 3** da jornada, coerente com os dados em Commits e Arquivos e com o posicionamento em [product-ui-journey](../product-ui-journey/spec.md).
 2. `pnpm test` inclui testes unitários do gerador de texto.

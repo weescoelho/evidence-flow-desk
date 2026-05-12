@@ -27,6 +27,14 @@
 
 **Impacto:** Novas features devem referenciar limites observados em CONCERNS/STACK.
 
+### AD-003: spec de jornada UI vs `design.pen` (2026-05-12)
+
+**Decisão:** A fonte de requisitos de **fluxo, ordem dos passos e composição dos ecrãs** do EvidenceFlow Desk é a spec [product-ui-journey](../features/product-ui-journey/spec.md), derivada dos nós do ficheiro `docs/design.pen` (incl. `fZdOT`, `Hbs1b`, `ANhm2`, `X80A7`, `Kym43`). Tokens e snippets visuais permanecem em `docs/UI-COMPONENTS.md`.
+
+**Motivo:** O MVP implementado divergia do design; era necessário um documento rastreável que una PRD, Pencil e critérios de aceite.
+
+**Impacto:** Features de documento, resumo, Git e screenshots referenciam `product-ui-journey` onde o layout é relevante.
+
 ---
 
 ## Bloqueadores ativos

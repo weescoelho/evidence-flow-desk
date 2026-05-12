@@ -1,7 +1,8 @@
 # Especificação: screenshots manuais MVP (`evidence-screenshots-mvp`)
 
 **PRD:** [RF-012](../../../docs/prd.md), [RF-014](../../../docs/prd.md) (subset)  
-**Depende de:** [git-commits-and-changes](../git-commits-and-changes/spec.md), [document-export-mvp](../document-export-mvp/spec.md).
+**Depende de:** [git-commits-and-changes](../git-commits-and-changes/spec.md), [document-export-mvp](../document-export-mvp/spec.md).  
+**UI:** secção **Screenshots e comparacao** no passo 3 — [product-ui-journey](../product-ui-journey/spec.md) (UI-R03), nó `fZdOT` / `gbZwC` (acções «Importar arquivo», «Nova captura», grelha de miniaturas).
 
 ---
 

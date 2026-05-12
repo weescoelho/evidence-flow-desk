@@ -1,4 +1,5 @@
 import { save } from "@tauri-apps/plugin-dialog";
+import type { RefObject } from "react";
 import { useMemo, useState } from "react";
 
 import { saveEvidenceDocument } from "../api/evidence.commands";
@@ -15,11 +16,14 @@ export type EvidenceDocumentPreviewProps = EvidenceDocumentPayload & {
   variant?: "preview" | "export";
   /** Chamado após gravar cópia local com sucesso (ex.: atualizar histórico). */
   onLocalSaveSuccess?: () => void;
+  /** Permite acionar «Exportar PDF…» a partir do rodapé do wizard (passo 5). */
+  exportPdfTriggerRef?: RefObject<HTMLButtonElement | null>;
 };
 
 export function EvidenceDocumentPreview({
   variant = "preview",
   onLocalSaveSuccess,
+  exportPdfTriggerRef,
   ...payload
 }: EvidenceDocumentPreviewProps) {
   const printReadyHtml = useMemo(
@@ -131,6 +135,7 @@ export function EvidenceDocumentPreview({
               : "Guardar HTML como…"}
           </button>
           <button
+            ref={exportPdfTriggerRef}
             type="button"
             className={
               isExportStep

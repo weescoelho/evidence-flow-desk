@@ -1,7 +1,8 @@
 # Especificação: commits e alterações por escopo (`git-commits-and-changes`)
 
 **PRD:** [RF-003](../../../docs/prd.md) (escopo), [RF-004](../../../docs/prd.md) (extração de commits), [RF-005](../../../docs/prd.md) (extração de alterações).  
-**Depende de:** [git-repository-and-branches](../git-repository-and-branches/spec.md) (repo válido, branches base/compare).
+**Depende de:** [git-repository-and-branches](../git-repository-and-branches/spec.md) (repo válido, branches base/compare).  
+**Jornada UI:** passo **2** — [product-ui-journey](../product-ui-journey/spec.md) (ecrã `ANhm2`: branches, modos, tabela de commits).
 
 ---
 

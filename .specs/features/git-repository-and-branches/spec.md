@@ -2,7 +2,7 @@
 
 **Slug:** `git-repository-and-branches`  
 **Rastreio PRD:** [RF-001](../../docs/prd.md#rf-001--seleção-de-repositório), [RF-002](../../docs/prd.md#rf-002--leitura-de-branches)  
-**Refs de arquitetura/UI:** [`docs/ARCH-GUIDELINES.md`](../../docs/ARCH-GUIDELINES.md) (`features/git/`), [`docs/UI-COMPONENTS.md`](../../docs/UI-COMPONENTS.md) — shell com sidebar quando a tela entrar no produto.
+**Refs de arquitetura/UI:** [`docs/ARCH-GUIDELINES.md`](../../docs/ARCH-GUIDELINES.md) (`features/git/`), [`docs/UI-COMPONENTS.md`](../../docs/UI-COMPONENTS.md). **Jornada:** passo **1** do wizard «Nova evidência» — [product-ui-journey](../product-ui-journey/spec.md) (ecrã `Hbs1b`: caminho, recentes, «Continuar para escopo»).
 
 ## Problema
 

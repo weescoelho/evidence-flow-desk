@@ -1,3 +1,4 @@
+import type { RefObject } from "react";
 import { useMemo } from "react";
 
 import { EvidenceDocumentPreview } from "@/features/document";
@@ -9,12 +10,14 @@ type ScopeDocumentPreviewPanelProps = {
   scope: RepositoryScopeSummaryState;
   variant?: "preview" | "export";
   onLocalSaveSuccess?: () => void;
+  exportPdfTriggerRef?: RefObject<HTMLButtonElement | null>;
 };
 
 export function ScopeDocumentPreviewPanel({
   scope,
   variant = "preview",
   onLocalSaveSuccess,
+  exportPdfTriggerRef,
 }: ScopeDocumentPreviewPanelProps) {
   const {
     repositoryPath,
@@ -64,6 +67,7 @@ export function ScopeDocumentPreviewPanel({
       screenshots={screenshotPayload}
       variant={variant}
       onLocalSaveSuccess={onLocalSaveSuccess}
+      exportPdfTriggerRef={exportPdfTriggerRef}
     />
   );
 }
