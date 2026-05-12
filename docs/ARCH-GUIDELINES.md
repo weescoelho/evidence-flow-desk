@@ -54,7 +54,7 @@ Traditional Layered (AVOID)          Vertical Slice (PREFER)
 | **Low Coupling** | Modules communicate through well-defined interfaces |
 | **Single Responsibility** | Each module has one clear purpose |
 | **Open/Closed** | Open for extension, closed for modification |
-| **Dependency Inversion** | Depend on abstractions, not concretions |
+| **Dependency Inversion** | Não aplicavável. Use implementaçoes concretas |
 
 ### 1.3 Dependency Rules
 
