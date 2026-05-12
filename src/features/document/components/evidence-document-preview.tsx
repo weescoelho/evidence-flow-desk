@@ -1,5 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
+import { saveEvidenceDocument } from "../api/evidence.commands";
 import {
   buildEvidencePrintHtml,
   type EvidenceDocumentPayload,
@@ -29,7 +30,31 @@ export function EvidenceDocumentPreview({
     ],
   );
 
+  const [saveStatus, setSaveStatus] = useState<
+    "idle" | "saving" | { ok: string } | { err: string }
+  >("idle");
+
   const isExportStep = variant === "export";
+
+  async function handleSaveLocalCopy() {
+    setSaveStatus("saving");
+    try {
+      const r = await saveEvidenceDocument({
+        html: printReadyHtml,
+        repositoryPath: payload.repositoryPath,
+        baseRef: payload.baseRef,
+        compareRef: payload.compareRef,
+      });
+      setSaveStatus({ ok: r.htmlPath });
+    } catch (e) {
+      setSaveStatus({
+        err:
+          e instanceof Error
+            ? e.message
+            : "Não foi possível guardar o documento.",
+      });
+    }
+  }
 
   return (
     <div className="flex flex-col gap-3">
@@ -43,25 +68,55 @@ export function EvidenceDocumentPreview({
             MVP; RF-009 expande para múltiplos)
           </p>
         </div>
-        <button
-          type="button"
-          className={
-            isExportStep
-              ? "rounded-md border border-primary bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
-              : "rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
-          }
-          data-testid="export-pdf-print"
-          onClick={() => printHtmlDocument(printReadyHtml)}
-        >
-          Exportar PDF…
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted disabled:opacity-50"
+            data-testid="save-evidence-local-html"
+            disabled={saveStatus === "saving"}
+            onClick={() => void handleSaveLocalCopy()}
+          >
+            {saveStatus === "saving"
+              ? "A guardar…"
+              : "Guardar cópia local (HTML)"}
+          </button>
+          <button
+            type="button"
+            className={
+              isExportStep
+                ? "rounded-md border border-primary bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+                : "rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
+            }
+            data-testid="export-pdf-print"
+            onClick={() => printHtmlDocument(printReadyHtml)}
+          >
+            Exportar PDF…
+          </button>
+        </div>
       </div>
+      {saveStatus !== "idle" && saveStatus !== "saving" && (
+        <p
+          className={
+            saveStatus && "ok" in saveStatus
+              ? "text-[11px] text-foreground"
+              : "text-[11px] text-destructive"
+          }
+          data-testid="save-evidence-status"
+        >
+          {saveStatus && "ok" in saveStatus
+            ? `Documento guardado em: ${saveStatus.ok}`
+            : saveStatus && "err" in saveStatus
+              ? saveStatus.err
+              : null}
+        </p>
+      )}
       <p className="text-[11px] text-muted-foreground">
         {isExportStep ? (
           <>
             Último passo: abra o diálogo de impressão e escolha «Guardar como
             PDF». O conteúdo inclui o escopo, resumo técnico e screenshots
-            anexados.
+            anexados. «Guardar cópia local» grava o HTML completo na pasta de
+            dados da aplicação para arquivo ou reabertura externa.
           </>
         ) : (
           <>
