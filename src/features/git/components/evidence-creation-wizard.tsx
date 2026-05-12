@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
+import { SavedEvidenceDocumentsPanel } from "@/features/document";
 import { EvidenceScreenshotsSection } from "@/features/evidence";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +38,7 @@ function highestAccessibleStep(
 export function EvidenceCreationWizard() {
   const scope = useRepositoryScopeSummary();
   const [step, setStep] = useState(1);
+  const [savedEvidenceRefreshKey, setSavedEvidenceRefreshKey] = useState(0);
 
   const maxStep = useMemo(() => highestAccessibleStep(scope), [scope]);
 
@@ -147,7 +149,13 @@ export function EvidenceCreationWizard() {
             <h2 className="text-sm font-semibold text-foreground">
               {STEPS[3].label}
             </h2>
-            <ScopeDocumentPreviewPanel scope={scope} variant="preview" />
+            <ScopeDocumentPreviewPanel
+              scope={scope}
+              variant="preview"
+              onLocalSaveSuccess={() =>
+                setSavedEvidenceRefreshKey((k) => k + 1)
+              }
+            />
             {!scope.data && scope.repositoryPath ? (
               <p className="text-xs text-muted-foreground">
                 Defina duas refs distintas no passo «Escopo e commits» e aguarde
@@ -161,7 +169,16 @@ export function EvidenceCreationWizard() {
             <h2 className="text-sm font-semibold text-foreground">
               {STEPS[4].label}
             </h2>
-            <ScopeDocumentPreviewPanel scope={scope} variant="export" />
+            <ScopeDocumentPreviewPanel
+              scope={scope}
+              variant="export"
+              onLocalSaveSuccess={() =>
+                setSavedEvidenceRefreshKey((k) => k + 1)
+              }
+            />
+            <SavedEvidenceDocumentsPanel
+              refreshKey={savedEvidenceRefreshKey}
+            />
             {!scope.data && scope.repositoryPath ? (
               <p className="text-xs text-muted-foreground">
                 Defina duas refs distintas no passo «Escopo e commits» e aguarde

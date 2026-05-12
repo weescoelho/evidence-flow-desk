@@ -10,10 +10,13 @@ import { printHtmlDocument } from "../lib/print-html";
 export type EvidenceDocumentPreviewProps = EvidenceDocumentPayload & {
   /** Passo 4 vs 5 do wizard — só muda ênfase na UI (PRD fluxo em cinco passos). */
   variant?: "preview" | "export";
+  /** Chamado após gravar cópia local com sucesso (ex.: atualizar histórico). */
+  onLocalSaveSuccess?: () => void;
 };
 
 export function EvidenceDocumentPreview({
   variant = "preview",
+  onLocalSaveSuccess,
   ...payload
 }: EvidenceDocumentPreviewProps) {
   const printReadyHtml = useMemo(
@@ -46,6 +49,7 @@ export function EvidenceDocumentPreview({
         compareRef: payload.compareRef,
       });
       setSaveStatus({ ok: r.htmlPath });
+      onLocalSaveSuccess?.();
     } catch (e) {
       setSaveStatus({
         err:

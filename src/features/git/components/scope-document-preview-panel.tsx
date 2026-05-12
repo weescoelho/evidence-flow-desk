@@ -8,11 +8,13 @@ import type { RepositoryScopeSummaryState } from "../hooks/use-repository-scope-
 type ScopeDocumentPreviewPanelProps = {
   scope: RepositoryScopeSummaryState;
   variant?: "preview" | "export";
+  onLocalSaveSuccess?: () => void;
 };
 
 export function ScopeDocumentPreviewPanel({
   scope,
   variant = "preview",
+  onLocalSaveSuccess,
 }: ScopeDocumentPreviewPanelProps) {
   const {
     repositoryPath,
@@ -61,6 +63,7 @@ export function ScopeDocumentPreviewPanel({
       commitsTruncated={data.commitsTruncated}
       screenshots={screenshotPayload}
       variant={variant}
+      onLocalSaveSuccess={onLocalSaveSuccess}
     />
   );
 }

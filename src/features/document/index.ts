@@ -2,6 +2,7 @@ export {
   EvidenceDocumentPreview,
   type EvidenceDocumentPreviewProps,
 } from "./components/evidence-document-preview";
+export { SavedEvidenceDocumentsPanel } from "./components/saved-evidence-documents-panel";
 export {
   buildEvidenceBodyHtml,
   buildEvidencePrintHtml,
