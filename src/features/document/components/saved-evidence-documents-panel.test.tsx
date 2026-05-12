@@ -20,12 +20,20 @@ vi.mock("@tauri-apps/plugin-opener", () => ({
   revealItemInDir: (...args: unknown[]) => revealMock(...args),
 }));
 
+const confirmMock = vi.fn();
+
+vi.mock("@tauri-apps/plugin-dialog", () => ({
+  confirm: (...args: unknown[]) => confirmMock(...args),
+}));
+
 describe("SavedEvidenceDocumentsPanel", () => {
   beforeEach(() => {
     listMock.mockReset();
     openPathMock.mockReset();
     revealMock.mockReset();
     deleteMock.mockReset();
+    confirmMock.mockReset();
+    confirmMock.mockResolvedValue(true);
   });
 
   it("mostra estado vazio quando não há entradas", async () => {
@@ -88,16 +96,68 @@ describe("SavedEvidenceDocumentsPanel", () => {
       expect(screen.getByRole("button", { name: /Remover/i })).toBeEnabled(),
     );
     await user.click(screen.getByRole("button", { name: /^Remover$/i }));
-    await waitFor(() => expect(deleteMock).toHaveBeenCalledWith(
-      "550e8400-e29b-41d4-a716-446655440000",
-    ));
-    await waitFor(() => expect(deleteMock).toHaveBeenCalledWith(
-      "550e8400-e29b-41d4-a716-446655440000",
-    ));
+    await waitFor(() => expect(confirmMock).toHaveBeenCalled());
+    await waitFor(() =>
+      expect(deleteMock).toHaveBeenCalledWith(
+        "550e8400-e29b-41d4-a716-446655440000",
+      ),
+    );
     await waitFor(() =>
       expect(
         screen.getByText(/Ainda não há cópias guardadas/i),
       ).toBeInTheDocument(),
     );
+  });
+
+  it("não remove se o utilizador cancelar a confirmação", async () => {
+    confirmMock.mockResolvedValueOnce(false);
+    deleteMock.mockResolvedValue(undefined);
+    listMock.mockResolvedValue([
+      {
+        id: "550e8400-e29b-41d4-a716-446655440000",
+        savedAtMs: 1,
+        repositoryPath: "/repo",
+        baseRef: "main",
+        compareRef: "feat",
+        htmlPath: "/x/doc.html",
+      },
+    ]);
+    const user = userEvent.setup();
+    render(<SavedEvidenceDocumentsPanel />);
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /^Remover$/i })).toBeEnabled(),
+    );
+    await user.click(screen.getByRole("button", { name: /^Remover$/i }));
+    await waitFor(() => expect(confirmMock).toHaveBeenCalled());
+    expect(deleteMock).not.toHaveBeenCalled();
+  });
+
+  it("filtra entradas pelo texto", async () => {
+    listMock.mockResolvedValue([
+      {
+        id: "550e8400-e29b-41d4-a716-446655440000",
+        savedAtMs: 1,
+        repositoryPath: "/projects/alpha",
+        baseRef: "main",
+        compareRef: "feat",
+        htmlPath: "/a/doc.html",
+      },
+      {
+        id: "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+        savedAtMs: 2,
+        repositoryPath: "/other/beta",
+        baseRef: "dev",
+        compareRef: "prod",
+        htmlPath: "/b/doc.html",
+      },
+    ]);
+    const user = userEvent.setup();
+    render(<SavedEvidenceDocumentsPanel />);
+    await waitFor(() =>
+      expect(screen.getByTestId("saved-evidence-filter")).toBeInTheDocument(),
+    );
+    await user.type(screen.getByTestId("saved-evidence-filter"), "beta");
+    expect(screen.queryByText(/alpha/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/beta/i)).toBeInTheDocument();
   });
 });

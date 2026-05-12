@@ -1,5 +1,6 @@
+import { confirm } from "@tauri-apps/plugin-dialog";
 import { openPath, revealItemInDir } from "@tauri-apps/plugin-opener";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   deleteSavedEvidenceDocument,
@@ -12,6 +13,20 @@ function ellipsizePath(p: string, max = 52): string {
   const head = Math.ceil(max / 2) - 2;
   const tail = max - head - 3;
   return `${p.slice(0, head)}…${p.slice(-tail)}`;
+}
+
+function matchesFilter(
+  doc: SavedEvidenceDocumentInfo,
+  query: string,
+): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  return (
+    doc.repositoryPath.toLowerCase().includes(q) ||
+    doc.baseRef.toLowerCase().includes(q) ||
+    doc.compareRef.toLowerCase().includes(q) ||
+    doc.htmlPath.toLowerCase().includes(q)
+  );
 }
 
 function formatSavedAt(ms: number): string {
@@ -37,6 +52,7 @@ export function SavedEvidenceDocumentsPanel({
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [filter, setFilter] = useState("");
 
   const load = useCallback(async () => {
     setError(null);
@@ -56,6 +72,11 @@ export function SavedEvidenceDocumentsPanel({
   useEffect(() => {
     void load();
   }, [load, refreshKey]);
+
+  const filteredItems = useMemo(() => {
+    if (items === null) return null;
+    return items.filter((doc) => matchesFilter(doc, filter));
+  }, [items, filter]);
 
   async function handleOpen(path: string) {
     setActionError(null);
@@ -81,6 +102,17 @@ export function SavedEvidenceDocumentsPanel({
 
   async function handleRemove(id: string) {
     setActionError(null);
+    const agreed = await confirm(
+      "Esta cópia HTML será eliminada da pasta de dados da aplicação. Não é possível anular.",
+      {
+        title: "Remover documento guardado",
+        kind: "warning",
+        okLabel: "Remover",
+        cancelLabel: "Cancelar",
+      },
+    );
+    if (!agreed) return;
+
     setRemovingId(id);
     try {
       await deleteSavedEvidenceDocument(id);
@@ -131,15 +163,34 @@ export function SavedEvidenceDocumentsPanel({
         <p className="text-[11px] text-destructive">{actionError}</p>
       ) : null}
 
+      {items !== null && items.length > 0 ? (
+        <label className="flex flex-col gap-1 font-mono text-[11px]">
+          <span className="text-muted-foreground">Filtrar lista</span>
+          <input
+            type="search"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            placeholder="Repositório, ref base/compare ou caminho…"
+            className="rounded-md border border-border bg-background px-2 py-1.5 text-foreground placeholder:text-muted-foreground"
+            data-testid="saved-evidence-filter"
+            aria-label="Filtrar documentos guardados"
+          />
+        </label>
+      ) : null}
+
       {items === null ? (
         <p className="font-mono text-[11px] text-muted-foreground">A carregar…</p>
       ) : items.length === 0 ? (
         <p className="font-mono text-[11px] text-muted-foreground">
           Ainda não há cópias guardadas. Use «Guardar cópia local (HTML)» acima.
         </p>
+      ) : filteredItems !== null && filteredItems.length === 0 ? (
+        <p className="font-mono text-[11px] text-muted-foreground">
+          Nenhuma entrada corresponde ao filtro.
+        </p>
       ) : (
         <ul className="flex max-h-56 flex-col gap-2 overflow-y-auto pr-1">
-          {items.map((doc) => (
+          {(filteredItems ?? []).map((doc) => (
             <li
               key={doc.id}
               className="rounded-md border border-border bg-muted/30 px-2.5 py-2 font-mono text-[11px]"
