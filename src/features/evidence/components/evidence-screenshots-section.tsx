@@ -39,14 +39,14 @@ export function EvidenceScreenshotsSection() {
             id={inputId}
             className="text-sm font-semibold text-foreground"
           >
-            Screenshots (RF-012)
+            Screenshots e comparação
           </h2>
           <p className="text-xs text-muted-foreground">
-            Anexe imagens da pasta ou capturas de ecrã; associe opcionalmente a
-            um commit do escopo (RF-014).
+            Importe ficheiros ou anexe capturas; associe opcionalmente a um
+            commit do escopo (RF-012 / RF-014).
           </p>
         </div>
-        <div className="flex flex-col items-end gap-1">
+        <div className="flex flex-col items-end gap-1 sm:flex-row sm:gap-2">
           <input
             ref={fileRef}
             type="file"
@@ -66,10 +66,18 @@ export function EvidenceScreenshotsSection() {
           />
           <button
             type="button"
+            disabled
+            title="Automatização / Playwright — fase 2"
+            className="rounded-md border border-border bg-muted/40 px-3 py-1.5 text-xs font-medium text-muted-foreground"
+          >
+            Nova captura
+          </button>
+          <button
+            type="button"
             className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
             onClick={() => fileRef.current?.click()}
           >
-            Adicionar imagens…
+            Importar arquivo
           </button>
         </div>
       </div>

@@ -9,6 +9,9 @@ function basePayload(over: Partial<EvidenceDocumentPayload> = {}): EvidenceDocum
     repositoryPath: "/tmp/repo",
     baseRef: "main",
     compareRef: "dev",
+    templateLabel: "Homologação — padrão enterprise",
+    changeId: "CHG-1",
+    environment: "HML",
     technicalSummary: "Resumo",
     commits: [
       {
@@ -52,6 +55,8 @@ describe("buildEvidenceBodyHtml", () => {
     expect(html).toContain("main");
     expect(html).toContain("dev");
     expect(html).toContain("feat: x");
+    expect(html).toContain("CHG-1");
+    expect(html).toContain("HML");
   });
 
   it("escapa texto na secção de resumo técnico", () => {

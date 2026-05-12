@@ -14,6 +14,11 @@ export type EvidenceDocumentPayload = {
   repositoryPath: string;
   baseRef: string;
   compareRef: string;
+  /** Rótulo do template no documento (MVP: único preset). */
+  templateLabel: string;
+  /** Metadados de rastreio preenchidos no passo 3; vazios omitidos no texto como «—». */
+  changeId: string;
+  environment: string;
   technicalSummary: string;
   commits: CommitRow[];
   files: FileChangeRow[];
@@ -41,6 +46,9 @@ function safeImageDataUrl(url: string): string {
  */
 export function buildEvidenceBodyHtml(p: EvidenceDocumentPayload): string {
   const generatedAt = escapeHtml(new Date().toISOString());
+  const templateLine = escapeHtml(p.templateLabel.trim() || "padrão");
+  const changeLine = escapeHtml(p.changeId.trim() || "—");
+  const envLine = escapeHtml(p.environment.trim() || "—");
 
   const commitRows =
     p.commits.length === 0
@@ -114,12 +122,14 @@ export function buildEvidenceBodyHtml(p: EvidenceDocumentPayload): string {
   return `
 <header class="doc-header">
   <h1>Evidência técnica — EvidenceFlow</h1>
-  <p class="subtitle">Template <strong>padrão</strong> (MVP)</p>
+  <p class="subtitle">Template <strong>${templateLine}</strong></p>
 </header>
 
 <section class="meta">
   <h2>Metadados</h2>
   <dl>
+    <dt>Change ID / ticket</dt><dd>${changeLine}</dd>
+    <dt>Ambiente</dt><dd>${envLine}</dd>
     <dt>Repositório</dt><dd><code>${escapeHtml(p.repositoryPath)}</code></dd>
     <dt>Ref base</dt><dd><code>${escapeHtml(p.baseRef)}</code></dd>
     <dt>Ref comparação</dt><dd><code>${escapeHtml(p.compareRef)}</code></dd>

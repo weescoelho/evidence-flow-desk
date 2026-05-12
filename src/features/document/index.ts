@@ -2,6 +2,13 @@ export {
   EvidenceDocumentPreview,
   type EvidenceDocumentPreviewProps,
 } from "./components/evidence-document-preview";
+export { EvidenceDocumentMetadataSection } from "./components/evidence-document-metadata-section";
+export {
+  useEvidenceMetadataStore,
+  TEMPLATE_OPTIONS,
+  activeTemplateLabel,
+  type EvidenceTemplateId,
+} from "./store/evidence-metadata-store";
 export { SavedEvidenceDocumentsPanel } from "./components/saved-evidence-documents-panel";
 export {
   buildEvidenceBodyHtml,

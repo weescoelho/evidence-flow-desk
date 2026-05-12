@@ -1,7 +1,11 @@
 import type { RefObject } from "react";
 import { useMemo } from "react";
 
-import { EvidenceDocumentPreview } from "@/features/document";
+import {
+  EvidenceDocumentPreview,
+  activeTemplateLabel,
+  useEvidenceMetadataStore,
+} from "@/features/document";
 import { useEvidenceAttachmentsStore } from "@/features/evidence";
 
 import type { RepositoryScopeSummaryState } from "../hooks/use-repository-scope-summary";
@@ -32,6 +36,12 @@ export function ScopeDocumentPreviewPanel({
     (s) => s.attachments,
   );
 
+  const activeTemplateId = useEvidenceMetadataStore(
+    (s) => s.activeTemplateId,
+  );
+  const changeId = useEvidenceMetadataStore((s) => s.changeId);
+  const environment = useEvidenceMetadataStore((s) => s.environment);
+
   const screenshotPayload = useMemo(
     () =>
       evidenceAttachments.map((a) => ({
@@ -60,6 +70,9 @@ export function ScopeDocumentPreviewPanel({
       repositoryPath={repositoryPath}
       baseRef={baseBranch}
       compareRef={compareBranch}
+      templateLabel={activeTemplateLabel(activeTemplateId)}
+      changeId={changeId}
+      environment={environment}
       technicalSummary={technicalNarrative}
       commits={data.commits}
       files={data.files}

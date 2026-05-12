@@ -32,6 +32,9 @@ export function EvidenceDocumentPreview({
       payload.repositoryPath,
       payload.baseRef,
       payload.compareRef,
+      payload.templateLabel,
+      payload.changeId,
+      payload.environment,
       payload.technicalSummary,
       payload.commits,
       payload.files,
@@ -107,8 +110,9 @@ export function EvidenceDocumentPreview({
             {isExportStep ? "Exportar documento" : "Documento de evidência"}
           </h3>
           <p className="text-[11px] text-muted-foreground">
-            Template: <span className="text-foreground">padrão</span> (único no
-            MVP; RF-009 expande para múltiplos)
+            Template:{" "}
+            <span className="text-foreground">{payload.templateLabel}</span>{" "}
+            (único preset no MVP; RF-009 expande)
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

@@ -66,4 +66,5 @@
 |------|------|--------|
 | 2026-05-12 | **1.1** | Sidebar com 5 itens Lucide (`App.tsx`), estilo activo `Repositórios` = `docs/UI-COMPONENTS.md`; outros desactivados até rotas 06/07 e vistas globais. |
 | 2026-05-12 | **2.2–2.4** | `EvidenceCreationWizard`: `STEP_PAGE` (H1+sub por passo); tablist removida; stepper clicável; rodapé «Cancelar» (volta um passo; passo 1 inactivo) + primários UI-R02 + ícones; passo 5 aciona `exportPdfTriggerRef` → «Exportar PDF…». `App.tsx` já sem cabeçalho genérico duplicado. |
-| 2026-05-12 | Próximo | **P1 3.x** — template, Change ID, ambiente, layout passo 3 (UI-R03). |
+| 2026-05-12 | **3.1–3.5 (MVP)** | Store `evidence-metadata-store`; `EvidenceDocumentMetadataSection`; `EvidenceNarrativeMetrics` (2 colunas); metadados no HTML (`build-evidence-html`); preview lê store em `ScopeDocumentPreviewPanel`; screenshots: título + Importar + Nova captura (stub); `resetSession` no `resetGitStore`. |
+| 2026-05-12 | Próximo | **4.1–4.2** (preview índice/zoom; export destino/checkboxes) ou faixa informativa dados locais no wizard. |
