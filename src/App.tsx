@@ -3,8 +3,7 @@ import "./globals.css";
 import { FileCheck, FolderGit2 } from "lucide-react";
 import { useEffect } from "react";
 
-import { BranchList, RepositorySection, ScopeSummary, useGitStore } from "@/features/git";
-import { EvidenceScreenshotsSection } from "@/features/evidence";
+import { EvidenceCreationWizard, useGitStore } from "@/features/git";
 
 function App() {
   const refreshRecentRepos = useGitStore((s) => s.refreshRecentRepos);
@@ -43,19 +42,17 @@ function App() {
         </p>
       </aside>
       <main className="flex min-h-0 min-w-0 flex-1 flex-col gap-6 overflow-y-auto bg-background px-4 py-6 sm:px-8 lg:px-10 lg:py-8">
-        <header className="flex flex-col gap-1">
+        <header className="flex flex-col gap-2">
           <h1 className="text-[28px] font-semibold tracking-tight text-foreground">
-            Repositório Git
+            Nova evidência
           </h1>
           <p className="text-sm text-muted-foreground">
-            Valide uma pasta, compare refs, veja commits e ficheiros, gere resumo
-            técnico, pré-visualize o documento e anexe screenshots à evidência.
+            Assistente em passos: repositório, escopo Git, evidências visuais,
+            pré-visualização e exportação do documento (alinhado ao PRD e ao
+            design de fluxo).
           </p>
         </header>
-        <RepositorySection />
-        <BranchList />
-        <ScopeSummary />
-        <EvidenceScreenshotsSection />
+        <EvidenceCreationWizard />
       </main>
     </div>
   );

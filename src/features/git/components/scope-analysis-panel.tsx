@@ -1,12 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
-
-import { EvidenceDocumentPreview } from "@/features/document";
-import { useEvidenceAttachmentsStore } from "@/features/evidence";
-
-import { getRepositoryScopeSummary } from "../api/git.commands";
-import { parseGitCommandError } from "../api/parse-git-error";
-import { buildTechnicalSummary } from "../lib/technical-summary";
-import type { RepositoryScopeSummary } from "../types/git";
+import type { RepositoryScopeSummaryState } from "../hooks/use-repository-scope-summary";
 import { useGitStore } from "../store/git-store";
 
 function formatCommitDate(unix: number): string {
@@ -17,93 +9,22 @@ function formatCommitDate(unix: number): string {
   });
 }
 
-export function ScopeSummary() {
-  const headingId = "scope-summary-heading";
-  const repositoryPath = useGitStore((s) => s.repositoryPath);
-  const baseBranch = useGitStore((s) => s.baseBranch);
-  const compareBranch = useGitStore((s) => s.compareBranch);
+type ScopeAnalysisPanelProps = {
+  scope: RepositoryScopeSummaryState;
+};
+
+export function ScopeAnalysisPanel({ scope }: ScopeAnalysisPanelProps) {
+  const headingId = "scope-analysis-heading";
   const setBaseBranch = useGitStore((s) => s.setBaseBranch);
   const setCompareBranch = useGitStore((s) => s.setCompareBranch);
 
-  const [data, setData] = useState<RepositoryScopeSummary | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const sameBranch =
-    baseBranch &&
-    compareBranch &&
-    baseBranch.length > 0 &&
-    baseBranch === compareBranch;
-
-  useEffect(() => {
-    if (
-      !repositoryPath ||
-      !baseBranch ||
-      !compareBranch ||
-      sameBranch
-    ) {
-      setData(null);
-      setError(null);
-      setLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-
-    void getRepositoryScopeSummary(repositoryPath, baseBranch, compareBranch)
-      .then((summary) => {
-        if (!cancelled) {
-          setData(summary);
-          setLoading(false);
-        }
-      })
-      .catch((e) => {
-        if (!cancelled) {
-          const ge = parseGitCommandError(e);
-          setData(null);
-          setError(
-            ge?.message ??
-              (e instanceof Error ? e.message : "Falha ao carregar o escopo."),
-          );
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [repositoryPath, baseBranch, compareBranch, sameBranch]);
-
-  const technicalNarrative = useMemo(
-    () => (data ? buildTechnicalSummary(data) : ""),
-    [data],
-  );
-
-  const setScopeCommits = useEvidenceAttachmentsStore(
-    (s) => s.setScopeCommits,
-  );
-  const evidenceAttachments = useEvidenceAttachmentsStore(
-    (s) => s.attachments,
-  );
-
-  useEffect(() => {
-    setScopeCommits(data?.commits ?? []);
-  }, [data, setScopeCommits]);
-
-  const screenshotPayload = useMemo(
-    () =>
-      evidenceAttachments.map((a) => ({
-        fileName: a.fileName,
-        dataUrl: a.dataUrl,
-        caption: a.caption,
-        linkedCommitShort: a.linkedCommitHash
-          ? a.linkedCommitHash.slice(0, 7)
-          : null,
-      })),
-    [evidenceAttachments],
-  );
+  const {
+    data,
+    loading,
+    error,
+    sameBranch,
+    repositoryPath,
+  } = scope;
 
   if (!repositoryPath) {
     return null;
@@ -250,19 +171,9 @@ export function ScopeSummary() {
               className="max-h-56 overflow-y-auto whitespace-pre-wrap rounded-md border border-border bg-muted/30 px-3 py-2 font-mono text-[11px] leading-relaxed text-foreground"
               data-testid="technical-summary"
             >
-              {technicalNarrative}
+              {scope.technicalNarrative}
             </pre>
           </div>
-          <EvidenceDocumentPreview
-            repositoryPath={repositoryPath}
-            baseRef={baseBranch!}
-            compareRef={compareBranch!}
-            technicalSummary={technicalNarrative}
-            commits={data.commits}
-            files={data.files}
-            commitsTruncated={data.commitsTruncated}
-            screenshots={screenshotPayload}
-          />
         </div>
       ) : null}
     </section>

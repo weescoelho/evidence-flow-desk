@@ -1,4 +1,7 @@
-export { EvidenceDocumentPreview } from "./components/evidence-document-preview";
+export {
+  EvidenceDocumentPreview,
+  type EvidenceDocumentPreviewProps,
+} from "./components/evidence-document-preview";
 export {
   buildEvidenceBodyHtml,
   buildEvidencePrintHtml,
