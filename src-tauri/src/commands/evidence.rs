@@ -1,7 +1,8 @@
 use tauri::AppHandle;
 
 use crate::services::evidence_documents::{
-    list_documents, save_document, SaveEvidenceDocumentResult, SavedEvidenceDocumentInfo,
+    delete_document, list_documents, save_document, SaveEvidenceDocumentResult,
+    SavedEvidenceDocumentInfo,
 };
 
 #[tauri::command]
@@ -26,4 +27,9 @@ pub fn list_saved_evidence_documents(
     app: AppHandle,
 ) -> Result<Vec<SavedEvidenceDocumentInfo>, String> {
     list_documents(&app)
+}
+
+#[tauri::command]
+pub fn delete_saved_evidence_document(app: AppHandle, id: String) -> Result<(), String> {
+    delete_document(&app, id)
 }

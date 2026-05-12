@@ -11,7 +11,9 @@ export {
   type EvidenceScreenshotPayload,
 } from "./lib/build-evidence-html";
 export { printHtmlDocument } from "./lib/print-html";
+export { writeTextFile } from "./api/io.commands";
 export {
+  deleteSavedEvidenceDocument,
   listSavedEvidenceDocuments,
   saveEvidenceDocument,
   type SaveEvidenceDocumentResult,

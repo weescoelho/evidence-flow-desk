@@ -170,6 +170,25 @@ impl EvidenceDocumentsStore {
             })
             .collect())
     }
+
+    /// Remove uma entrada pelo id (UUID). Rejeita ids malformados para evitar path traversal.
+    pub fn remove_by_id(&self, id: &str) -> Result<(), String> {
+        Uuid::parse_str(id).map_err(|_| "Identificador de documento inválido.".to_string())?;
+
+        let mut entries = self.read_index()?;
+        let before = entries.len();
+        entries.retain(|e| e.id != id);
+        if entries.len() == before {
+            return Err("Documento não encontrado.".to_string());
+        }
+
+        let dir = self.doc_dir(id);
+        if dir.exists() {
+            fs::remove_dir_all(&dir).map_err(|e| e.to_string())?;
+        }
+
+        self.write_index(&entries)
+    }
 }
 
 fn normalize_path(p: &Path) -> String {
@@ -188,6 +207,10 @@ pub fn save_document(
 
 pub fn list_documents(app: &AppHandle) -> Result<Vec<SavedEvidenceDocumentInfo>, String> {
     EvidenceDocumentsStore::for_app(app)?.list()
+}
+
+pub fn delete_document(app: &AppHandle, id: String) -> Result<(), String> {
+    EvidenceDocumentsStore::for_app(app)?.remove_by_id(&id)
 }
 
 #[cfg(test)]
@@ -256,5 +279,29 @@ mod tests {
         assert_eq!(list.len(), 2);
         assert_eq!(list[0].id, third.id);
         assert_eq!(list[1].id, second.id);
+    }
+
+    #[test]
+    fn remove_by_id_drops_entry_and_folder() {
+        let tmp = tempfile::tempdir().unwrap();
+        let store = EvidenceDocumentsStore::with_root(tmp.path().join(ROOT_DIR), 10);
+
+        let r = store
+            .save("x".into(), "/r".into(), "a".into(), "b".into())
+            .unwrap();
+        assert!(Path::new(&r.html_path).exists());
+
+        store.remove_by_id(&r.id).unwrap();
+
+        assert!(!Path::new(&r.html_path).exists());
+        assert!(store.list().unwrap().is_empty());
+    }
+
+    #[test]
+    fn remove_by_id_rejects_non_uuid() {
+        let tmp = tempfile::tempdir().unwrap();
+        let store = EvidenceDocumentsStore::with_root(tmp.path().join(ROOT_DIR), 10);
+        let err = store.remove_by_id("../etc").unwrap_err();
+        assert!(err.contains("inválido"));
     }
 }

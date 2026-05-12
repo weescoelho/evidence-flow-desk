@@ -2,11 +2,14 @@ mod commands;
 mod models;
 mod services;
 
-use commands::evidence::{list_saved_evidence_documents, save_evidence_document};
+use commands::evidence::{
+    delete_saved_evidence_document, list_saved_evidence_documents, save_evidence_document,
+};
 use commands::git::{
     get_repository_scope_summary, list_branches, recent_repositories_add,
     recent_repositories_list, recent_repositories_remove, validate_git_repository,
 };
+use commands::io::write_text_file;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -22,6 +25,8 @@ pub fn run() {
             recent_repositories_remove,
             save_evidence_document,
             list_saved_evidence_documents,
+            delete_saved_evidence_document,
+            write_text_file,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

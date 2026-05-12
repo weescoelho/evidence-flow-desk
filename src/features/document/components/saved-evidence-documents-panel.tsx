@@ -2,6 +2,7 @@ import { openPath, revealItemInDir } from "@tauri-apps/plugin-opener";
 import { useCallback, useEffect, useState } from "react";
 
 import {
+  deleteSavedEvidenceDocument,
   listSavedEvidenceDocuments,
   type SavedEvidenceDocumentInfo,
 } from "../api/evidence.commands";
@@ -35,6 +36,7 @@ export function SavedEvidenceDocumentsPanel({
   const [items, setItems] = useState<SavedEvidenceDocumentInfo[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
@@ -74,6 +76,23 @@ export function SavedEvidenceDocumentsPanel({
       setActionError(
         e instanceof Error ? e.message : "Não foi possível abrir a pasta.",
       );
+    }
+  }
+
+  async function handleRemove(id: string) {
+    setActionError(null);
+    setRemovingId(id);
+    try {
+      await deleteSavedEvidenceDocument(id);
+      await load();
+    } catch (e) {
+      setActionError(
+        e instanceof Error
+          ? e.message
+          : "Não foi possível remover o documento.",
+      );
+    } finally {
+      setRemovingId(null);
     }
   }
 
@@ -153,6 +172,14 @@ export function SavedEvidenceDocumentsPanel({
                   onClick={() => void handleReveal(doc.htmlPath)}
                 >
                   Mostrar na pasta
+                </button>
+                <button
+                  type="button"
+                  className="rounded border border-destructive/40 bg-background px-2 py-1 text-[10px] font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                  disabled={removingId !== null}
+                  onClick={() => void handleRemove(doc.id)}
+                >
+                  {removingId === doc.id ? "A remover…" : "Remover"}
                 </button>
               </div>
             </li>

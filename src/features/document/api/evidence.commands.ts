@@ -31,3 +31,7 @@ export function saveEvidenceDocument(args: {
 export function listSavedEvidenceDocuments() {
   return invoke<SavedEvidenceDocumentInfo[]>("list_saved_evidence_documents");
 }
+
+export function deleteSavedEvidenceDocument(id: string) {
+  return invoke<void>("delete_saved_evidence_document", { id });
+}

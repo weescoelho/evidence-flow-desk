@@ -1,10 +1,13 @@
+import { save } from "@tauri-apps/plugin-dialog";
 import { useMemo, useState } from "react";
 
 import { saveEvidenceDocument } from "../api/evidence.commands";
+import { writeTextFile } from "../api/io.commands";
 import {
   buildEvidencePrintHtml,
   type EvidenceDocumentPayload,
 } from "../lib/build-evidence-html";
+import { defaultEvidenceHtmlFileName } from "../lib/evidence-export-filename";
 import { printHtmlDocument } from "../lib/print-html";
 
 export type EvidenceDocumentPreviewProps = EvidenceDocumentPayload & {
@@ -36,8 +39,13 @@ export function EvidenceDocumentPreview({
   const [saveStatus, setSaveStatus] = useState<
     "idle" | "saving" | { ok: string } | { err: string }
   >("idle");
+  const [saveAsStatus, setSaveAsStatus] = useState<
+    "idle" | "saving" | { ok: string } | { err: string }
+  >("idle");
 
   const isExportStep = variant === "export";
+  const savingBusy =
+    saveStatus === "saving" || saveAsStatus === "saving";
 
   async function handleSaveLocalCopy() {
     setSaveStatus("saving");
@@ -60,6 +68,33 @@ export function EvidenceDocumentPreview({
     }
   }
 
+  async function handleSaveHtmlAs() {
+    setSaveAsStatus("saving");
+    try {
+      const path = await save({
+        title: "Guardar documento HTML",
+        filters: [{ name: "HTML", extensions: ["html", "htm"] }],
+        defaultPath: defaultEvidenceHtmlFileName(
+          payload.baseRef,
+          payload.compareRef,
+        ),
+      });
+      if (path === null) {
+        setSaveAsStatus("idle");
+        return;
+      }
+      await writeTextFile(path, printReadyHtml);
+      setSaveAsStatus({ ok: path });
+    } catch (e) {
+      setSaveAsStatus({
+        err:
+          e instanceof Error
+            ? e.message
+            : "Não foi possível guardar o ficheiro.",
+      });
+    }
+  }
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-end justify-between gap-2">
@@ -77,12 +112,23 @@ export function EvidenceDocumentPreview({
             type="button"
             className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted disabled:opacity-50"
             data-testid="save-evidence-local-html"
-            disabled={saveStatus === "saving"}
+            disabled={savingBusy}
             onClick={() => void handleSaveLocalCopy()}
           >
             {saveStatus === "saving"
               ? "A guardar…"
               : "Guardar cópia local (HTML)"}
+          </button>
+          <button
+            type="button"
+            className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted disabled:opacity-50"
+            data-testid="save-evidence-html-as"
+            disabled={savingBusy}
+            onClick={() => void handleSaveHtmlAs()}
+          >
+            {saveAsStatus === "saving"
+              ? "A guardar…"
+              : "Guardar HTML como…"}
           </button>
           <button
             type="button"
@@ -114,18 +160,36 @@ export function EvidenceDocumentPreview({
               : null}
         </p>
       )}
+      {saveAsStatus !== "idle" && saveAsStatus !== "saving" && (
+        <p
+          className={
+            saveAsStatus && "ok" in saveAsStatus
+              ? "text-[11px] text-foreground"
+              : "text-[11px] text-destructive"
+          }
+          data-testid="save-evidence-html-as-status"
+        >
+          {saveAsStatus && "ok" in saveAsStatus
+            ? `HTML guardado em: ${saveAsStatus.ok}`
+            : saveAsStatus && "err" in saveAsStatus
+              ? saveAsStatus.err
+              : null}
+        </p>
+      )}
       <p className="text-[11px] text-muted-foreground">
         {isExportStep ? (
           <>
             Último passo: abra o diálogo de impressão e escolha «Guardar como
             PDF». O conteúdo inclui o escopo, resumo técnico e screenshots
-            anexados. «Guardar cópia local» grava o HTML completo na pasta de
-            dados da aplicação para arquivo ou reabertura externa.
+            anexados. «Guardar cópia local» grava o HTML na pasta de dados da
+            aplicação; «Guardar HTML como» deixa escolher pasta e nome do
+            ficheiro (ex.: Documentos ou partilha com a equipa).
           </>
         ) : (
           <>
             Abre o diálogo de impressão do sistema — escolha «Guardar como PDF»
             ou uma impressora. O preview atualiza quando o escopo muda (RF-010).
+            Pode também guardar o HTML noutro sítio com «Guardar HTML como».
           </>
         )}
       </p>

@@ -162,6 +162,9 @@ export function EvidenceCreationWizard() {
                 o carregamento para ver o documento.
               </p>
             ) : null}
+            <SavedEvidenceDocumentsPanel
+              refreshKey={savedEvidenceRefreshKey}
+            />
           </section>
         ) : null}
         {step === 5 ? (
