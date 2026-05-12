@@ -13,13 +13,13 @@
 
 ### Features
 
-**Repositório e Git** — IN PROGRESS *(TLC: [spec](../features/git-repository-and-branches/spec.md) · [tasks](../features/git-repository-and-branches/tasks.md))*
+**Repositório e Git** — DONE *(TLC: [spec](../features/git-repository-and-branches/spec.md) · [tasks](../features/git-repository-and-branches/tasks.md))*
 
 - Selecionar pasta Git válida e mensagens de erro claras (RF-001)
 - Listar branches, branch atual, busca básica (RF-002)
 - Escopo inicial: pelo menos branch ou intervalo de commits (subset RF-003)
 
-**Análise de alterações** — PLANNED
+**Análise de alterações** — IN PROGRESS *(TLC: [spec](../features/git-commits-and-changes/spec.md) · [tasks](../features/git-commits-and-changes/tasks.md); escopo por **branch + refs Git** (tag/commit/expr.); PR/MR fora)*
 
 - Extrair lista de commits (hash, autor, data, mensagem, tipo conventional) (RF-004)
 - Listar arquivos add/mod/del/rename + linhas +/- (RF-005)

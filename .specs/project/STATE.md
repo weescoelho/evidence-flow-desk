@@ -1,7 +1,7 @@
 # Estado do projeto — EvidenceFlow Desk
 
 **Última atualização:** 2026-05-12  
-**Trabalho atual:** Feature `git-repository-and-branches` com [spec](../features/git-repository-and-branches/spec.md) + [tasks](../features/git-repository-and-branches/tasks.md) (Draft); próximo: **aprovar tasks** e **Implement** (T1…T12).
+**Trabalho atual:** Feature `git-commits-and-changes` — slice RF-003 (refs livres + atalhos em commits) entregue; **PR/MR** e integrações remotas continuam fora do MVP. UAT manual recomendado em `pnpm tauri dev`.
 
 ---
 
@@ -57,4 +57,6 @@ _Nenhuma listada._
 
 ## Todos
 
-- [ ] Rever e marcar **Approved** em [tasks.md](../features/git-repository-and-branches/tasks.md), depois executar T1…T12 (Implement).
+- [x] Feature `git-repository-and-branches`: UAT T12; estado **Approved** em [tasks.md](../features/git-repository-and-branches/tasks.md).
+- [ ] Feature `git-commits-and-changes`: UAT manual em `pnpm tauri dev` (refs distintas: branch, **tag** ou **SHA** nos campos livres; atalhos na lista de commits) — [tasks.md](../features/git-commits-and-changes/tasks.md).
+- [ ] Próximo produto desejável: **RF-006** (resumo técnico mínimo) ou integração **PR/MR** (RF-003 remoto) conforme roadmap.

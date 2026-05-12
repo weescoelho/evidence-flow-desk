@@ -2,7 +2,7 @@
 
 **Especificação:** [spec.md](./spec.md)  
 **Design:** _não criado_ — decisões técnicas mínimas descritas por tarefa abaixo.  
-**Estado:** Draft
+**Estado:** **Approved** (2026-05-12) — gates `pnpm test`, `pnpm build`, `cargo test`; UAT T12 verificado.
 
 ---
 
@@ -294,7 +294,7 @@ T9, T10 ──→ T11 ──→ T12
 
 **Feito quando:**
 
-- [ ] Checklist: path não-Git mostra erro; Git válido lista branches; restart mantém MRU; filtro P2 funciona; aviso se base=compare.
+- [x] Checklist: path não-Git mostra erro; Git válido lista branches; restart mantém MRU; filtro P2 funciona; aviso se base=compare.
 
 **Commit sugerido:** `feat(app): wire git repository feature into main shell`
 
@@ -371,4 +371,4 @@ Ao executar, por tarefa: **filesystem/código** disponível aqui; **Context7 MCP
 
 ---
 
-**Próximo passo:** aprovar tarefas (marcar Estado **Approved**) → fase Implement (sub-tarefas com commits conforme coluna «Commit sugerido» ou squash por decisão da equipe).
+**Encerramento:** Feature concluída. Próximo marco: [git-commits-and-changes](../git-commits-and-changes/tasks.md) (RF-004 / RF-005).
