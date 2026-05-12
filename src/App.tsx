@@ -11,6 +11,7 @@ import {
 import { useEffect, useState } from "react";
 
 import {
+  EvidenceAppSettingsView,
   EvidenceDocumentsLibraryView,
   useHydrateEvidenceAppState,
   useEvidencePreferenceSync,
@@ -59,7 +60,7 @@ const SIDEBAR_NAV: readonly {
     id: "settings",
     label: "Configurações",
     icon: Settings,
-    available: false,
+    available: true,
   },
 ];
 
@@ -145,6 +146,8 @@ function App() {
       <main className="flex min-h-0 min-w-0 flex-1 flex-col gap-6 overflow-y-auto bg-background px-4 py-6 sm:px-8 lg:px-10 lg:py-8">
         {activeSection === "documents" ? (
           <EvidenceDocumentsLibraryView />
+        ) : activeSection === "settings" ? (
+          <EvidenceAppSettingsView />
         ) : (
           <EvidenceCreationWizard />
         )}

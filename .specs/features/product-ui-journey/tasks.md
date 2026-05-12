@@ -17,7 +17,7 @@
 |---|--------|-----------|------|
 | 1.1 | Sidebar com 5 entradas (ícones Lucide, activo vs inactivo, hint rodapé) | UI-R01 | Visual vs `sb` no .pen; `pnpm build` |
 | 1.2 | Estado «vista» futuro: `Repositórios` activo durante wizard 01–05; restantes inactivos ou rota placeholder documentada | UI-R01 | — |
-| 1.3 | Ecrãs 06/07 (Histórico, Config): stub ou rota vazia quando item activo | UI-R06 | Opcional no primeiro ciclo |
+| 1.3 | Ecrãs 06/07 (Histórico, Config): stub ou rota vazia quando item activo | UI-R06 | **07** stub `EvidenceAppSettingsView`; **06** = `Documentos` existente |
 
 ---
 
@@ -68,4 +68,5 @@
 | 2026-05-12 | **2.2–2.4** | `EvidenceCreationWizard`: `STEP_PAGE` (H1+sub por passo); tablist removida; stepper clicável; rodapé «Cancelar» (volta um passo; passo 1 inactivo) + primários UI-R02 + ícones; passo 5 aciona `exportPdfTriggerRef` → «Exportar PDF…». `App.tsx` já sem cabeçalho genérico duplicado. |
 | 2026-05-12 | **3.1–3.5 (MVP)** | Store `evidence-metadata-store`; `EvidenceDocumentMetadataSection`; `EvidenceNarrativeMetrics` (2 colunas); metadados no HTML (`build-evidence-html`); preview lê store em `ScopeDocumentPreviewPanel`; screenshots: título + Importar + Nova captura (stub); `resetSession` no `resetGitStore`. |
 | 2026-05-12 | **4.1–4.2** | `EvidenceDocumentPreview`: passo 4 com Sumário lateral + scroll (`id` nas secções HTML), barra «Páginas • zoom ±», copy «Atualiza ao mudar…»; passo 5 com destino (pasta via diálogo), nome do projeto → `<title>`, opções PDF (numerar páginas via `@page`; marca d’água desactivada F2), faixa SQLite; `buildEvidencePrintHtml(p, opts)`. |
-| 2026-05-12 | Próximo | **RF-015** preferências/templates SQLite; stubs **06/07** (UI-R06); QA vs `design-assets/X80A7.png`, `Kym43.png`. |
+| 2026-05-12 | **1.3 (parcial)** | Configurações navegáveis: `EvidenceAppSettingsView` + sidebar `available: true`. Histórico = item Documentos (já existia). |
+| 2026-05-12 | Próximo | Stubs **Templates** / **Screenshots** (sidebar); QA vs `design-assets/X80A7.png`, `Kym43.png`; **RF-015** PDF silencioso ou metadados extra. |

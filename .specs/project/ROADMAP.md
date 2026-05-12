@@ -48,7 +48,7 @@
 
 ## Fase 2 — Automação e IA (PRD §17)
 
-**Objetivo:** Automação Playwright, IA local/remota opcional (Ollama, LM Studio, OpenRouter, OpenAI), comparativos visuais, integrações.
+**Objetivo:** Automação Playwright, IA remota opcional (Gemini), comparativos visuais, integrações.
 
 ### Features
 
@@ -62,21 +62,5 @@
 
 ---
 
-## Fase 3 — SaaS e colaboração (PRD §18)
-
-**Objetivo:** Evolução para SaaS, dashboard, analytics, colaboração, assinatura digital.
-
-### Features
-
-- Modelo hospedado, multiusuário, analytics — PLANNED (alto nível PRD §18)
-
----
-
-## Considerações futuras
-
-- OCR, IA multimodal, geração automática por PR/tag, pipelines CI/CD (PRD §23)
-- Extração eventual para CLI (PRD §22)
-
----
 
 _Rastreabilidade RF/RNF:_ `docs/prd.md`. O estado deste roadmap deve ficar alinhado a `.specs/project/STATE.md` ao fechar marcos.

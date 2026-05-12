@@ -1,7 +1,7 @@
 # Estado do projeto — EvidenceFlow Desk
 
 **Última atualização:** 2026-05-12  
-**Trabalho atual:** MVP narrativa/export + **RF-015** incremental (SQLite além do índice de documentos: preferências/templates, PDF silencioso quando existir especificação). Próximo alinhamento visual: stubs **06/07** ou QA passos 4–5 vs `design-assets/`.
+**Trabalho atual:** MVP narrativa/export + **RF-015** incremental (SQLite: preferências/templates; PDF silencioso quando existir especificação — pendente). **UI-R06:** ecrã 06 (Documentos/histórico) já existente; **07 Configurações** com vista stub navegável na sidebar (2026-05-12). Próximo: **Templates** / **Screenshots** globais como stubs opcionais, QA passos 4–5 vs `design-assets/`, ou evolução RF-015 (PDF silencioso / metadados em `saved_evidence_documents`).
 
 
 ---

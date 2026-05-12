@@ -14,6 +14,7 @@ export {
 } from "./store/evidence-metadata-store";
 export { SavedEvidenceDocumentsPanel } from "./components/saved-evidence-documents-panel";
 export { EvidenceDocumentsLibraryView } from "./components/evidence-documents-library-view";
+export { EvidenceAppSettingsView } from "./components/evidence-app-settings-view";
 export {
   buildEvidenceBodyHtml,
   buildEvidencePrintHtml,
