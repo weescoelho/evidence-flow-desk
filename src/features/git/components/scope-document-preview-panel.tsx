@@ -30,6 +30,7 @@ export function ScopeDocumentPreviewPanel({
     data,
     sameBranch,
     technicalNarrative,
+    corporateNarrative,
   } = scope;
 
   const evidenceAttachments = useEvidenceAttachmentsStore(
@@ -74,6 +75,7 @@ export function ScopeDocumentPreviewPanel({
       changeId={changeId}
       environment={environment}
       technicalSummary={technicalNarrative}
+      corporateSummary={corporateNarrative}
       commits={data.commits}
       files={data.files}
       commitsTruncated={data.commitsTruncated}

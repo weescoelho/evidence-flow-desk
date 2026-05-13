@@ -23,6 +23,8 @@ function idleScope(
     technicalNarrativeIsCustomized: false,
     setTechnicalNarrative: noop,
     resetTechnicalNarrativeToGenerated: noop,
+    corporateNarrative: "",
+    setCorporateNarrative: noop,
     ...partial,
   };
 }

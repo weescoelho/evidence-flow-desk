@@ -7,6 +7,7 @@ use commands::evidence::{
     delete_saved_evidence_document, list_saved_evidence_documents,
     load_evidence_app_persisted_state, save_evidence_document, set_evidence_preference,
 };
+use commands::llm::{llm_generate_corporate_summary, llm_rewrite_technical_summary};
 use commands::git::{
     get_repository_scope_summary, list_branches, recent_repositories_add,
     recent_repositories_list, recent_repositories_remove, validate_git_repository,
@@ -32,6 +33,8 @@ pub fn run() {
             set_evidence_preference,
             create_evidence_custom_template,
             delete_evidence_custom_template,
+            llm_generate_corporate_summary,
+            llm_rewrite_technical_summary,
             write_text_file,
         ])
         .run(tauri::generate_context!())

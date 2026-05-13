@@ -16,7 +16,7 @@ export { SavedEvidenceDocumentsPanel } from "./components/saved-evidence-documen
 export { EvidenceDocumentsLibraryView } from "./components/evidence-documents-library-view";
 export { EvidenceAppSettingsView } from "./components/evidence-app-settings-view";
 export { EvidenceTemplatesLibraryView } from "./components/evidence-templates-library-view";
-export { EvidenceScreenshotsPlaceholderView } from "./components/evidence-screenshots-placeholder-view";
+export { EvidenceScreenshotsLibraryView } from "./components/evidence-screenshots-library-view";
 export {
   buildEvidenceBodyHtml,
   buildEvidencePrintHtml,

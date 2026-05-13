@@ -4,6 +4,10 @@ import type {
   EvidenceAppPersistedSnapshot,
   PersistedEvidenceTemplate,
 } from "../api/evidence-app-state.commands";
+import {
+  DEFAULT_GEMINI_API_BASE,
+  DEFAULT_GEMINI_MODEL,
+} from "../api/evidence-app-state.commands";
 
 export type { PersistedEvidenceTemplate } from "../api/evidence-app-state.commands";
 
@@ -30,12 +34,19 @@ type EvidenceMetadataStore = {
   changeId: string;
   environment: string;
   exportDefaultDirectory: string | null;
+  /** Google Gemini (RF-017) — chave na BD, não no estado React. */
+  aiGeminiApiBase: string;
+  aiGeminiModel: string;
+  aiGeminiApiKeyConfigured: boolean;
 
   setTemplates: (templates: PersistedEvidenceTemplate[]) => void;
   setActiveTemplateId: (id: string) => void;
   setChangeId: (value: string) => void;
   setEnvironment: (value: string) => void;
   setExportDefaultDirectory: (path: string | null) => void;
+  setAiGeminiApiBase: (value: string) => void;
+  setAiGeminiModel: (value: string) => void;
+  setAiGeminiApiKeyConfigured: (value: boolean) => void;
 
   hydrateFromSnapshot: (snapshot: EvidenceAppPersistedSnapshot) => void;
   hydrateFallbackLocal: () => void;
@@ -71,6 +82,9 @@ export const useEvidenceMetadataStore = create<EvidenceMetadataStore>(
     changeId: "",
     environment: "",
     exportDefaultDirectory: null,
+    aiGeminiApiBase: DEFAULT_GEMINI_API_BASE,
+    aiGeminiModel: DEFAULT_GEMINI_MODEL,
+    aiGeminiApiKeyConfigured: false,
 
     setTemplates: (templates) =>
       set((s) => {
@@ -85,6 +99,10 @@ export const useEvidenceMetadataStore = create<EvidenceMetadataStore>(
     setEnvironment: (environment) => set({ environment }),
     setExportDefaultDirectory: (exportDefaultDirectory) =>
       set({ exportDefaultDirectory }),
+    setAiGeminiApiBase: (aiGeminiApiBase) => set({ aiGeminiApiBase }),
+    setAiGeminiModel: (aiGeminiModel) => set({ aiGeminiModel }),
+    setAiGeminiApiKeyConfigured: (aiGeminiApiKeyConfigured) =>
+      set({ aiGeminiApiKeyConfigured }),
 
     hydrateFromSnapshot: (snapshot) => {
       const templates = normalizeTemplates(snapshot.templates);
@@ -100,6 +118,10 @@ export const useEvidenceMetadataStore = create<EvidenceMetadataStore>(
         changeId: prefs.evidenceChangeId ?? "",
         environment: prefs.evidenceEnvironment ?? "",
         exportDefaultDirectory: prefs.exportDefaultDirectory ?? null,
+        aiGeminiApiBase:
+          prefs.aiGeminiApiBase?.trim() || DEFAULT_GEMINI_API_BASE,
+        aiGeminiModel: prefs.aiGeminiModel?.trim() || DEFAULT_GEMINI_MODEL,
+        aiGeminiApiKeyConfigured: prefs.aiGeminiApiKeyConfigured ?? false,
       });
     },
 
@@ -111,6 +133,9 @@ export const useEvidenceMetadataStore = create<EvidenceMetadataStore>(
         changeId: "",
         environment: "",
         exportDefaultDirectory: null,
+        aiGeminiApiBase: DEFAULT_GEMINI_API_BASE,
+        aiGeminiModel: DEFAULT_GEMINI_MODEL,
+        aiGeminiApiKeyConfigured: false,
       });
     },
 
@@ -120,6 +145,9 @@ export const useEvidenceMetadataStore = create<EvidenceMetadataStore>(
         changeId: "",
         environment: "",
         exportDefaultDirectory: null,
+        aiGeminiApiBase: state.aiGeminiApiBase,
+        aiGeminiModel: state.aiGeminiModel,
+        aiGeminiApiKeyConfigured: state.aiGeminiApiKeyConfigured,
         templates:
           state.templates.length > 0
             ? state.templates

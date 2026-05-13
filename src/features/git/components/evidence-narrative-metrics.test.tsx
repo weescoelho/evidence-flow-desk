@@ -8,6 +8,7 @@ import { EvidenceNarrativeMetrics } from "./evidence-narrative-metrics";
 function TechnicalSummaryHarness({ initial }: { initial: string }) {
   const [value, setValue] = useState(initial);
   const [customized, setCustomized] = useState(false);
+  const [corporate, setCorporate] = useState("");
 
   return (
     <EvidenceNarrativeMetrics
@@ -21,6 +22,8 @@ function TechnicalSummaryHarness({ initial }: { initial: string }) {
         setCustomized(false);
         setValue(initial);
       }}
+      corporateNarrative={corporate}
+      onCorporateNarrativeChange={setCorporate}
       files={[]}
     />
   );
@@ -46,6 +49,8 @@ describe("EvidenceNarrativeMetrics", () => {
         technicalNarrativeIsCustomized={true}
         onTechnicalNarrativeChange={vi.fn()}
         onTechnicalNarrativeRestore={restore}
+        corporateNarrative=""
+        onCorporateNarrativeChange={vi.fn()}
         files={[]}
       />,
     );

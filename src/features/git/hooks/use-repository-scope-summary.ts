@@ -24,6 +24,8 @@ export type RepositoryScopeSummaryState = {
   technicalNarrativeIsCustomized: boolean;
   setTechnicalNarrative: (value: string) => void;
   resetTechnicalNarrativeToGenerated: () => void;
+  corporateNarrative: string;
+  setCorporateNarrative: (value: string) => void;
 };
 
 export function useRepositoryScopeSummary(): RepositoryScopeSummaryState {
@@ -119,6 +121,12 @@ export function useRepositoryScopeSummary(): RepositoryScopeSummaryState {
     setDraftNarrative(null);
   }, [narrativeSourceKey]);
 
+  const [corporateNarrative, setCorporateNarrative] = useState("");
+
+  useEffect(() => {
+    setCorporateNarrative("");
+  }, [narrativeSourceKey]);
+
   const technicalNarrative =
     draftNarrative !== null ? draftNarrative : technicalNarrativeGenerated;
 
@@ -143,5 +151,7 @@ export function useRepositoryScopeSummary(): RepositoryScopeSummaryState {
     technicalNarrativeIsCustomized: draftNarrative !== null,
     setTechnicalNarrative: (value: string) => setDraftNarrative(value),
     resetTechnicalNarrativeToGenerated: () => setDraftNarrative(null),
+    corporateNarrative,
+    setCorporateNarrative,
   };
 }

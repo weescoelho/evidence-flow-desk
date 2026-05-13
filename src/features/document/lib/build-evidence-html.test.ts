@@ -107,6 +107,21 @@ describe("buildEvidenceBodyHtml", () => {
     expect(html).toContain('id="evidence-section-files"');
   });
 
+  it("inclui secção de resumo corporativo quando preenchido", () => {
+    const html = buildEvidenceBodyHtml(
+      basePayload({ corporateSummary: "Entrega focada em estabilidade." }),
+    );
+    expect(html).toContain('id="evidence-section-corporate"');
+    expect(html).toContain("Entrega focada em estabilidade.");
+  });
+
+  it("omite resumo corporativo quando vazio", () => {
+    const html = buildEvidenceBodyHtml(
+      basePayload({ corporateSummary: "" }),
+    );
+    expect(html).not.toContain('id="evidence-section-corporate"');
+  });
+
   it("inclui id da secção de screenshots quando existem anexos", () => {
     const html = buildEvidenceBodyHtml(
       basePayload({

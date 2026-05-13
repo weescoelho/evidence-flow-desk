@@ -6,7 +6,14 @@ export const evidencePreferenceKeys = {
   activeTemplateId: "evidence.active_template_id",
   changeId: "evidence.change_id",
   environment: "evidence.environment",
+  aiGeminiApiKey: "ai.gemini.api_key",
+  aiGeminiModel: "ai.gemini.model",
+  aiGeminiApiBase: "ai.gemini.api_base",
 } as const;
+
+/** Por defeito: Google AI (AI Studio). */
+export const DEFAULT_GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta";
+export const DEFAULT_GEMINI_MODEL = "gemini-flash-latest";
 
 export type PersistedEvidenceTemplate = {
   id: string;
@@ -19,6 +26,9 @@ export type EvidencePreferencesSnapshot = {
   evidenceActiveTemplateId?: string | null;
   evidenceChangeId?: string | null;
   evidenceEnvironment?: string | null;
+  aiGeminiApiBase?: string | null;
+  aiGeminiModel?: string | null;
+  aiGeminiApiKeyConfigured?: boolean;
 };
 
 export type EvidenceAppPersistedSnapshot = {
@@ -48,4 +58,19 @@ export function createEvidenceCustomTemplate(label: string) {
 
 export function deleteEvidenceCustomTemplate(id: string) {
   return invoke<void>("delete_evidence_custom_template", { id });
+}
+
+/** RF-007 / RNF-002 — Google Gemini; só na acção explícita do utilizador. */
+export function llmGenerateCorporateSummary(technicalSummary: string, tone: string) {
+  return invoke<string>("llm_generate_corporate_summary", {
+    technicalSummary,
+    tone,
+  });
+}
+
+export function llmRewriteTechnicalSummary(technicalSummary: string, tone: string) {
+  return invoke<string>("llm_rewrite_technical_summary", {
+    technicalSummary,
+    tone,
+  });
 }

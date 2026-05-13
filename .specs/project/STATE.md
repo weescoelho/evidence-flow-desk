@@ -1,7 +1,7 @@
 # Estado do projeto — EvidenceFlow Desk
 
 **Última atualização:** 2026-05-12  
-**Trabalho atual:** MVP núcleo — checklist [product-ui-journey/tasks.md](../features/product-ui-journey/tasks.md) fechado (P1–P2 marcados); vista global **Templates** com gestão SQLite alinhada ao passo 3. **Seguinte:** stub **Screenshots** na sidebar (biblioteca agregada) ou endurecer critérios de fecho MVP no PRD; Fase 2 (Playwright RF-013, IA RF-007) quando priorizado.
+**Trabalho atual:** Sidebar **Templates** e **Screenshots** com vistas dedicadas (última: mesma sessão que passo 3). **Seguinte:** persistência global de capturas (nova tabela / ficheiros) se o produto priorizar; ou fecho formal do MVP no PRD; Fase 2 (Playwright RF-013, IA RF-007).
 
 ---
 
@@ -80,4 +80,4 @@ _Nenhuma listada._
 - [x] Feature `git-repository-and-branches`: UAT T12; estado **Approved** em [tasks.md](../features/git-repository-and-branches/tasks.md).
 - [x] Feature `git-commits-and-changes`: UAT manual (refs branch/tag/SHA + atalhos) — **OK** 2026-05-12; [tasks.md](../features/git-commits-and-changes/tasks.md).
 - [x] **RF-015 evolução (metadados por gravação)** — Colunas opcionais em `saved_evidence_documents`: `template_label`, `change_id`, `environment`, `document_title` (migração idempotente + `save_evidence_document`; lista/filtro em **Documentos**). *Já entregue antes:* histórico + índice HTML + migração `index.json`; preferências KV + `evidence_templates`; hidratação; pasta de export no passo 5.
-- [x] **Vista sidebar Templates** — `EvidenceTemplatesLibraryView`: selector de template ativo (persistência KV) + painel partilhado com o modal «Gerenciar templates» (`EvidenceTemplatesManagePanel`).
+- [x] **Vista sidebar Screenshots** — `EvidenceScreenshotsLibraryView`: `EvidenceScreenshotsSection` + empty state sem repo (`useGitStore`).

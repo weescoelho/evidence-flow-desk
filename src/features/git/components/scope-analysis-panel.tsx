@@ -20,6 +20,8 @@ export function ScopeAnalysisPanel({ scope }: ScopeAnalysisPanelProps) {
     technicalNarrativeIsCustomized,
     setTechnicalNarrative,
     resetTechnicalNarrativeToGenerated,
+    corporateNarrative,
+    setCorporateNarrative,
   } = scope;
 
   return (
@@ -72,6 +74,8 @@ export function ScopeAnalysisPanel({ scope }: ScopeAnalysisPanelProps) {
                 technicalNarrativeIsCustomized={technicalNarrativeIsCustomized}
                 onTechnicalNarrativeChange={setTechnicalNarrative}
                 onTechnicalNarrativeRestore={resetTechnicalNarrativeToGenerated}
+                corporateNarrative={corporateNarrative}
+                onCorporateNarrativeChange={setCorporateNarrative}
                 files={data.files}
               />
 

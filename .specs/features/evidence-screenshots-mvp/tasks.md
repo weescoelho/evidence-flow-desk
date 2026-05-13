@@ -21,4 +21,4 @@
 |--------|--------|
 | T1 | ✅ |
 
-**Próximo:** persistência (RF-015), funcionalidades/etapas além de commits, ou RF-013 automação.
+**Próximo:** biblioteca de capturas persistida entre sessões (opcional RF evolução) ou RF-013 automação.

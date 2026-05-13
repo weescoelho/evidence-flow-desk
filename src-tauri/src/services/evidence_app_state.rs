@@ -10,12 +10,18 @@ pub const KEY_EXPORT_DEFAULT_DIRECTORY: &str = "export.default_directory";
 pub const KEY_EVIDENCE_ACTIVE_TEMPLATE_ID: &str = "evidence.active_template_id";
 pub const KEY_EVIDENCE_CHANGE_ID: &str = "evidence.change_id";
 pub const KEY_EVIDENCE_ENVIRONMENT: &str = "evidence.environment";
+pub const KEY_AI_GEMINI_API_KEY: &str = "ai.gemini.api_key";
+pub const KEY_AI_GEMINI_MODEL: &str = "ai.gemini.model";
+pub const KEY_AI_GEMINI_API_BASE: &str = "ai.gemini.api_base";
 
 const KNOWN_KEYS: &[&str] = &[
     KEY_EXPORT_DEFAULT_DIRECTORY,
     KEY_EVIDENCE_ACTIVE_TEMPLATE_ID,
     KEY_EVIDENCE_CHANGE_ID,
     KEY_EVIDENCE_ENVIRONMENT,
+    KEY_AI_GEMINI_API_KEY,
+    KEY_AI_GEMINI_MODEL,
+    KEY_AI_GEMINI_API_BASE,
 ];
 
 pub fn is_known_preference_key(key: &str) -> bool {
@@ -29,6 +35,9 @@ pub struct EvidencePreferencesSnapshot {
     pub evidence_active_template_id: Option<String>,
     pub evidence_change_id: Option<String>,
     pub evidence_environment: Option<String>,
+    pub ai_gemini_api_base: Option<String>,
+    pub ai_gemini_model: Option<String>,
+    pub ai_gemini_api_key_configured: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -87,6 +96,14 @@ fn pref_get(conn: &Connection, key: &str) -> Result<Option<String>, rusqlite::Er
     .optional()
 }
 
+/// Valor de preferência não vazio, se existir.
+pub fn get_preference_or(conn: &Connection, key: &str) -> Option<String> {
+    pref_get(conn, key)
+        .ok()
+        .flatten()
+        .filter(|s| !s.trim().is_empty())
+}
+
 fn pref_upsert(conn: &Connection, key: &str, value: &str) -> Result<(), rusqlite::Error> {
     conn.execute(
         "INSERT INTO evidence_preferences (key, value) VALUES (?1, ?2)
@@ -114,6 +131,15 @@ pub fn load_snapshot(conn: &Connection) -> Result<EvidenceAppPersistedSnapshot, 
         evidence_environment: trim_opt(
             pref_get(conn, KEY_EVIDENCE_ENVIRONMENT).map_err(|e| e.to_string())?,
         ),
+        ai_gemini_api_base: trim_opt(
+            pref_get(conn, KEY_AI_GEMINI_API_BASE).map_err(|e| e.to_string())?,
+        ),
+        ai_gemini_model: trim_opt(
+            pref_get(conn, KEY_AI_GEMINI_MODEL).map_err(|e| e.to_string())?,
+        ),
+        ai_gemini_api_key_configured: pref_get(conn, KEY_AI_GEMINI_API_KEY)
+            .map_err(|e| e.to_string())?
+            .is_some_and(|s| !s.trim().is_empty()),
     };
 
     let mut stmt = conn
@@ -267,6 +293,35 @@ mod tests {
         set_preference(&conn, KEY_EVIDENCE_CHANGE_ID.into(), "CHG-1".into()).unwrap();
         let s = load_snapshot(&conn).unwrap();
         assert_eq!(s.preferences.evidence_change_id, Some("CHG-1".into()));
+        assert!(!s.preferences.ai_gemini_api_key_configured);
+
+        set_preference(
+            &conn,
+            KEY_AI_GEMINI_API_BASE.into(),
+            "https://generativelanguage.googleapis.com/v1beta".into(),
+        )
+        .unwrap();
+        set_preference(
+            &conn,
+            KEY_AI_GEMINI_MODEL.into(),
+            "gemini-2.0-flash".into(),
+        )
+        .unwrap();
+        set_preference(&conn, KEY_AI_GEMINI_API_KEY.into(), "fake-key".into()).unwrap();
+        let s3 = load_snapshot(&conn).unwrap();
+        assert_eq!(
+            s3.preferences.ai_gemini_api_base,
+            Some("https://generativelanguage.googleapis.com/v1beta".into())
+        );
+        assert_eq!(
+            s3.preferences.ai_gemini_model,
+            Some("gemini-2.0-flash".into())
+        );
+        assert!(s3.preferences.ai_gemini_api_key_configured);
+
+        set_preference(&conn, KEY_AI_GEMINI_API_KEY.into(), "".into()).unwrap();
+        let s4 = load_snapshot(&conn).unwrap();
+        assert!(!s4.preferences.ai_gemini_api_key_configured);
 
         set_preference(&conn, KEY_EVIDENCE_CHANGE_ID.into(), "".into()).unwrap();
         let s2 = load_snapshot(&conn).unwrap();

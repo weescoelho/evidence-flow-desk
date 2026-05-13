@@ -42,7 +42,7 @@
 
 **Infraestrutura app** — IN PROGRESS *(scaffolding existe)*
 
-- Shell Tauri + React + navegação — alinhar com [product-ui-journey](../features/product-ui-journey/spec.md) (PRD §21: sidebar + wizard). **Templates** na sidebar: vista dedicada com preset activo + CRUD SQLite (`EvidenceTemplatesLibraryView`); **Screenshots** global permanece stub.
+- Shell Tauri + React + navegação — alinhar com [product-ui-journey](../features/product-ui-journey/spec.md) (PRD §21: sidebar + wizard). **Templates** na sidebar: vista dedicada com preset activo + CRUD SQLite (`EvidenceTemplatesLibraryView`); **Screenshots** na sidebar: vista dedicada partilhando estado de sessão do passo 3 (`EvidenceScreenshotsLibraryView`).
 
 ---
 

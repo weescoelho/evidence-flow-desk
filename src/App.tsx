@@ -13,7 +13,7 @@ import { useEffect, useState } from "react";
 import {
   EvidenceAppSettingsView,
   EvidenceDocumentsLibraryView,
-  EvidenceScreenshotsPlaceholderView,
+  EvidenceScreenshotsLibraryView,
   EvidenceTemplatesLibraryView,
   useHydrateEvidenceAppState,
   useEvidencePreferenceSync,
@@ -153,7 +153,7 @@ function App() {
         ) : activeSection === "templates" ? (
           <EvidenceTemplatesLibraryView />
         ) : activeSection === "screenshots" ? (
-          <EvidenceScreenshotsPlaceholderView />
+          <EvidenceScreenshotsLibraryView />
         ) : (
           <EvidenceCreationWizard />
         )}

@@ -102,6 +102,7 @@ export function EvidenceDocumentPreview({
       payload.changeId,
       payload.environment,
       payload.technicalSummary,
+      payload.corporateSummary,
       payload.commits,
       payload.files,
       payload.commitsTruncated,

@@ -20,6 +20,8 @@ export type EvidenceDocumentPayload = {
   changeId: string;
   environment: string;
   technicalSummary: string;
+  /** RF-007 — texto de negócio; omitido no HTML se vazio. */
+  corporateSummary?: string;
   commits: CommitRow[];
   files: FileChangeRow[];
   commitsTruncated: boolean;
@@ -144,6 +146,15 @@ ${truncNote}
   <h2>Resumo técnico</h2>
   <pre class="technical">${escapeHtml(p.technicalSummary)}</pre>
 </section>
+
+${
+    p.corporateSummary?.trim()
+      ? `<section id="evidence-section-corporate">
+  <h2>Resumo corporativo</h2>
+  <pre class="technical">${escapeHtml(p.corporateSummary.trim())}</pre>
+</section>`
+      : ""
+  }
 
 <section id="evidence-section-commits">
   <h2>Commits (${p.commits.length})</h2>
