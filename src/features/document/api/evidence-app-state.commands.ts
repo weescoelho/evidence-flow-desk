@@ -16,6 +16,8 @@ export const evidencePreferenceKeys = {
   documentRevisionDate: "evidence.document_revision_date",
   documentRevisionSummary: "evidence.document_revision_summary",
   documentRevisionAuthor: "evidence.document_revision_author",
+  /** JSON: `{ version, date, summary, author }[]` */
+  documentRevisionHistory: "evidence.document_revision_history",
   aiGeminiApiKey: "ai.gemini.api_key",
   aiGeminiModel: "ai.gemini.model",
   aiGeminiApiBase: "ai.gemini.api_base",
@@ -51,6 +53,7 @@ export type EvidencePreferencesSnapshot = {
   evidenceDocumentRevisionDate?: string | null;
   evidenceDocumentRevisionSummary?: string | null;
   evidenceDocumentRevisionAuthor?: string | null;
+  evidenceDocumentRevisionHistory?: string | null;
   aiGeminiApiBase?: string | null;
   aiGeminiModel?: string | null;
   aiGeminiApiKeyConfigured?: boolean;

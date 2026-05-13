@@ -6,3 +6,5 @@ export * from "./types/git";
 export { useGitRepository } from "./hooks/use-git-repository";
 export { useGitStore } from "./store/git-store";
 export { buildTechnicalSummary } from "./lib/technical-summary";
+export { resetEvidenceSession } from "./lib/reset-evidence-session";
+export { useEvidenceWizardUiStore } from "./store/evidence-wizard-ui-store";

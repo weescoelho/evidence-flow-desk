@@ -77,12 +77,62 @@ describe("buildEvidenceBodyHtml", () => {
         productName: "Meu Sistema",
       }),
     );
-    expect(html).toContain("Capa / identificação");
+    expect(html).toContain('id="evidence-section-cover"');
     expect(html).toContain("Controle de versões do documento");
     expect(html).toContain("Resumo executivo");
     expect(html).toContain("Meu Sistema");
     expect(html).toContain("main");
     expect(html).toContain("dev");
+  });
+
+  it("modelo mercado acumula linhas de revisão no histórico", () => {
+    const html = buildEvidenceBodyHtml(
+      basePayload({
+        templateLayoutKey: "market_standard",
+        productName: "Svc",
+        documentRevisionHistory: [
+          {
+            version: "1.0",
+            date: "01/05/2026",
+            summary: "Emissão inicial",
+            author: "Ana",
+          },
+        ],
+        documentVersion: "1.1",
+        documentRevisionDate: "12/05/2026",
+        documentRevisionSummary: "Correcções de texto",
+        documentRevisionAuthor: "Bruno",
+      }),
+    );
+    expect(html).toContain(">1.0<");
+    expect(html).toContain(">1.1<");
+    expect(html).toContain("Emissão inicial");
+    expect(html).toContain("Correcções de texto");
+    expect(html).toContain("Ana");
+    expect(html).toContain("Bruno");
+  });
+
+  it("modelo mercado não duplica linha quando último histórico coincide com campos actuais", () => {
+    const html = buildEvidenceBodyHtml(
+      basePayload({
+        templateLayoutKey: "market_standard",
+        documentRevisionHistory: [
+          {
+            version: "2.0",
+            date: "10/05/2026",
+            summary: "Release",
+            author: "Carla",
+          },
+        ],
+        documentVersion: "2.0",
+        documentRevisionDate: "10/05/2026",
+        documentRevisionSummary: "Release",
+        documentRevisionAuthor: "Carla",
+      }),
+    );
+    const tbodyMatch = /<tbody>([\s\S]*?)<\/tbody>/.exec(html);
+    expect(tbodyMatch).toBeTruthy();
+    expect((tbodyMatch![1].match(/<tr>/g) ?? []).length).toBe(1);
   });
 
   it("inclui conteúdo principal do relatório nas secções seguintes", () => {

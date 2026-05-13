@@ -21,6 +21,7 @@ pub const KEY_EVIDENCE_DOCUMENT_VERSION: &str = "evidence.document_version";
 pub const KEY_EVIDENCE_DOCUMENT_REVISION_DATE: &str = "evidence.document_revision_date";
 pub const KEY_EVIDENCE_DOCUMENT_REVISION_SUMMARY: &str = "evidence.document_revision_summary";
 pub const KEY_EVIDENCE_DOCUMENT_REVISION_AUTHOR: &str = "evidence.document_revision_author";
+pub const KEY_EVIDENCE_DOCUMENT_REVISION_HISTORY: &str = "evidence.document_revision_history";
 pub const KEY_AI_GEMINI_API_KEY: &str = "ai.gemini.api_key";
 pub const KEY_AI_GEMINI_MODEL: &str = "ai.gemini.model";
 pub const KEY_AI_GEMINI_API_BASE: &str = "ai.gemini.api_base";
@@ -40,6 +41,7 @@ const KNOWN_KEYS: &[&str] = &[
     KEY_EVIDENCE_DOCUMENT_REVISION_DATE,
     KEY_EVIDENCE_DOCUMENT_REVISION_SUMMARY,
     KEY_EVIDENCE_DOCUMENT_REVISION_AUTHOR,
+    KEY_EVIDENCE_DOCUMENT_REVISION_HISTORY,
     KEY_AI_GEMINI_API_KEY,
     KEY_AI_GEMINI_MODEL,
     KEY_AI_GEMINI_API_BASE,
@@ -66,6 +68,7 @@ pub struct EvidencePreferencesSnapshot {
     pub evidence_document_revision_date: Option<String>,
     pub evidence_document_revision_summary: Option<String>,
     pub evidence_document_revision_author: Option<String>,
+    pub evidence_document_revision_history: Option<String>,
     pub ai_gemini_api_base: Option<String>,
     pub ai_gemini_model: Option<String>,
     pub ai_gemini_api_key_configured: bool,
@@ -306,6 +309,9 @@ pub fn load_snapshot(conn: &Connection) -> Result<EvidenceAppPersistedSnapshot, 
         evidence_document_revision_author: trim_opt(
             pref_get(conn, KEY_EVIDENCE_DOCUMENT_REVISION_AUTHOR).map_err(|e| e.to_string())?,
         ),
+        evidence_document_revision_history: pref_get(conn, KEY_EVIDENCE_DOCUMENT_REVISION_HISTORY)
+            .map_err(|e| e.to_string())?
+            .filter(|s| !s.trim().is_empty()),
         ai_gemini_api_base: trim_opt(
             pref_get(conn, KEY_AI_GEMINI_API_BASE).map_err(|e| e.to_string())?,
         ),

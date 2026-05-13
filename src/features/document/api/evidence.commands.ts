@@ -16,6 +16,12 @@ export type SavedEvidenceDocumentInfo = {
   changeId?: string | null;
   environment?: string | null;
   documentTitle?: string | null;
+  hasDraft: boolean;
+};
+
+export type LoadEvidenceDocumentDraftResult = {
+  draftJson: string;
+  htmlPath: string;
 };
 
 export function saveEvidenceDocument(args: {
@@ -27,6 +33,7 @@ export function saveEvidenceDocument(args: {
   changeId?: string | null;
   environment?: string | null;
   documentTitle?: string | null;
+  draftJson?: string | null;
 }) {
   return invoke<SaveEvidenceDocumentResult>("save_evidence_document", {
     html: args.html,
@@ -37,6 +44,13 @@ export function saveEvidenceDocument(args: {
     changeId: args.changeId ?? null,
     environment: args.environment ?? null,
     documentTitle: args.documentTitle ?? null,
+    draftJson: args.draftJson ?? null,
+  });
+}
+
+export function loadEvidenceDocumentDraft(id: string) {
+  return invoke<LoadEvidenceDocumentDraftResult>("load_evidence_document_draft", {
+    id,
   });
 }
 

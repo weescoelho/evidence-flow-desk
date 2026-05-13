@@ -6,10 +6,24 @@ import { SavedEvidenceDocumentsPanel } from "./saved-evidence-documents-panel";
 
 const listMock = vi.fn();
 const deleteMock = vi.fn();
+const loadDraftMock = vi.fn();
 
 vi.mock("../api/evidence.commands", () => ({
   listSavedEvidenceDocuments: () => listMock(),
   deleteSavedEvidenceDocument: (id: string) => deleteMock(id),
+  loadEvidenceDocumentDraft: (id: string) => loadDraftMock(id),
+}));
+
+vi.mock("../lib/apply-evidence-report-draft", () => ({
+  applyEvidenceReportDraft: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("@/features/git/store/evidence-wizard-ui-store", () => ({
+  useEvidenceWizardUiStore: {
+    getState: () => ({
+      requestJumpToStep: vi.fn(),
+    }),
+  },
 }));
 
 const openPathMock = vi.fn();
@@ -29,6 +43,7 @@ vi.mock("@tauri-apps/plugin-dialog", () => ({
 describe("SavedEvidenceDocumentsPanel", () => {
   beforeEach(() => {
     listMock.mockReset();
+    loadDraftMock.mockReset();
     openPathMock.mockReset();
     revealMock.mockReset();
     deleteMock.mockReset();
@@ -55,6 +70,7 @@ describe("SavedEvidenceDocumentsPanel", () => {
         baseRef: "main",
         compareRef: "feat",
         htmlPath: "/data/evidence/a/document.html",
+        hasDraft: true,
       },
     ]);
     const user = userEvent.setup();
@@ -64,6 +80,9 @@ describe("SavedEvidenceDocumentsPanel", () => {
     );
     await user.click(screen.getByRole("button", { name: /Abrir HTML/i }));
     expect(openPathMock).toHaveBeenCalledWith("/data/evidence/a/document.html");
+    expect(
+      screen.getByRole("button", { name: /Carregar para editar/i }),
+    ).toBeEnabled();
   });
 
   it("recarrega quando refreshKey muda", async () => {
@@ -86,6 +105,7 @@ describe("SavedEvidenceDocumentsPanel", () => {
           baseRef: "main",
           compareRef: "feat",
           htmlPath: "/x/doc.html",
+          hasDraft: false,
         },
       ])
       .mockResolvedValueOnce([]);
@@ -120,6 +140,7 @@ describe("SavedEvidenceDocumentsPanel", () => {
         baseRef: "main",
         compareRef: "feat",
         htmlPath: "/x/doc.html",
+        hasDraft: false,
       },
     ]);
     const user = userEvent.setup();
@@ -141,6 +162,7 @@ describe("SavedEvidenceDocumentsPanel", () => {
         baseRef: "main",
         compareRef: "feat",
         htmlPath: "/a/doc.html",
+        hasDraft: false,
       },
       {
         id: "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
@@ -149,6 +171,7 @@ describe("SavedEvidenceDocumentsPanel", () => {
         baseRef: "dev",
         compareRef: "prod",
         htmlPath: "/b/doc.html",
+        hasDraft: false,
       },
     ]);
     const user = userEvent.setup();

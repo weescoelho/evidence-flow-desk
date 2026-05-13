@@ -4,6 +4,7 @@ import {
   evidencePreferenceKeys,
   setEvidencePreference,
 } from "../api/evidence-app-state.commands";
+import { serializeDocumentRevisionHistory } from "../lib/document-revision-history";
 import { useEvidenceMetadataStore } from "../store/evidence-metadata-store";
 
 const DEBOUNCE_MS = 480;
@@ -31,6 +32,9 @@ export function useEvidencePreferenceSync() {
   );
   const documentRevisionAuthor = useEvidenceMetadataStore(
     (s) => s.documentRevisionAuthor,
+  );
+  const documentRevisionHistory = useEvidenceMetadataStore(
+    (s) => s.documentRevisionHistory,
   );
 
   const skipFirst = useRef(true);
@@ -75,6 +79,10 @@ export function useEvidencePreferenceSync() {
         evidencePreferenceKeys.documentRevisionAuthor,
         documentRevisionAuthor,
       );
+      void setEvidencePreference(
+        evidencePreferenceKeys.documentRevisionHistory,
+        serializeDocumentRevisionHistory(documentRevisionHistory),
+      );
     }, DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
   }, [
@@ -91,5 +99,6 @@ export function useEvidencePreferenceSync() {
     documentRevisionDate,
     documentRevisionSummary,
     documentRevisionAuthor,
+    documentRevisionHistory,
   ]);
 }

@@ -5,8 +5,9 @@ mod services;
 use commands::evidence::{
     create_evidence_custom_template, delete_evidence_custom_template,
     delete_saved_evidence_document, list_repository_evidence_screenshots,
-    list_saved_evidence_documents, load_evidence_app_persisted_state, save_evidence_document,
-    set_evidence_preference, set_evidence_template_header_images, set_evidence_template_layout,
+    list_saved_evidence_documents, load_evidence_app_persisted_state,
+    load_evidence_document_draft, save_evidence_document, set_evidence_preference,
+    set_evidence_template_header_images, set_evidence_template_layout,
     sync_repository_evidence_screenshots,
 };
 use commands::llm::{llm_generate_corporate_summary, llm_rewrite_technical_summary};
@@ -29,6 +30,7 @@ pub fn run() {
             recent_repositories_add,
             recent_repositories_remove,
             save_evidence_document,
+            load_evidence_document_draft,
             list_saved_evidence_documents,
             delete_saved_evidence_document,
             load_evidence_app_persisted_state,

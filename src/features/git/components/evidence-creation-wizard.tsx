@@ -1,4 +1,5 @@
 import { ArrowRight, Download, Info } from "lucide-react";
+import { confirm } from "@tauri-apps/plugin-dialog";
 import {
   useEffect,
   useMemo,
@@ -15,6 +16,8 @@ import { RepositorySection } from "./repository-section";
 import { ScopeAnalysisPanel } from "./scope-analysis-panel";
 import { ScopeDocumentPreviewPanel } from "./scope-document-preview-panel";
 import { useRepositoryScopeSummary } from "../hooks/use-repository-scope-summary";
+import { resetEvidenceSession } from "../lib/reset-evidence-session";
+import { useEvidenceWizardUiStore } from "../store/evidence-wizard-ui-store";
 
 const STEP_COUNT = 5;
 
@@ -76,12 +79,41 @@ export function EvidenceCreationWizard() {
   const [step, setStep] = useState(1);
   const [savedEvidenceRefreshKey, setSavedEvidenceRefreshKey] = useState(0);
   const exportPdfTriggerRef = useRef<HTMLButtonElement>(null);
+  const jumpToStep = useEvidenceWizardUiStore((s) => s.jumpToStep);
+  const clearJump = useEvidenceWizardUiStore((s) => s.clearJump);
 
   const maxStep = useMemo(() => highestAccessibleStep(scope), [scope]);
 
   useEffect(() => {
     if (step > maxStep) setStep(maxStep);
   }, [maxStep, step]);
+
+  useEffect(() => {
+    if (
+      jumpToStep !== null &&
+      jumpToStep >= 1 &&
+      jumpToStep <= STEP_COUNT
+    ) {
+      setStep(jumpToStep);
+      clearJump();
+    }
+  }, [jumpToStep, clearJump]);
+
+  async function handleStartOver() {
+    const agreed = await confirm(
+      "Todo o texto, repositório seleccionado e capturas desta sessão serão limpos. Isto não remove entradas já listadas em «Documentos».",
+      {
+        title: "Começar evidência de novo",
+        kind: "warning",
+        okLabel: "Limpar e recomeçar",
+        cancelLabel: "Cancelar",
+      },
+    );
+    if (!agreed) return;
+    resetEvidenceSession();
+    clearJump();
+    setStep(1);
+  }
 
   const panelId = `evidence-step-panel-${step}`;
   const page = STEP_PAGE[step - 1];
@@ -112,14 +144,23 @@ export function EvidenceCreationWizard() {
         className="flex flex-col gap-4 border-b border-border pb-4"
         aria-label="Progresso da nova evidência"
       >
-        <div className="flex flex-wrap items-center gap-2 font-mono text-[12px]">
-          <span className="text-muted-foreground">Nova evidência</span>
-          <span className="text-muted-foreground" aria-hidden>
-            {">"}
-          </span>
-          <span className="font-semibold text-foreground">
-            Passo {step} de {STEP_COUNT}
-          </span>
+        <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-[12px]">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-muted-foreground">Nova evidência</span>
+            <span className="text-muted-foreground" aria-hidden>
+              {">"}
+            </span>
+            <span className="font-semibold text-foreground">
+              Passo {step} de {STEP_COUNT}
+            </span>
+          </div>
+          <button
+            type="button"
+            className="rounded-md border border-border bg-card px-2.5 py-1 text-[11px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+            onClick={() => void handleStartOver()}
+          >
+            Começar de novo
+          </button>
         </div>
         <div
           className="flex items-center gap-2.5 overflow-x-auto py-0.5"

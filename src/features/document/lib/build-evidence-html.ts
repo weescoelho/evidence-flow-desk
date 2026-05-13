@@ -1,5 +1,10 @@
 import type { CommitRow, FileChangeRow } from "@/features/git/types/git";
 
+import {
+  collectRevisionTableRows,
+  revisionRowFromPayloadScalars,
+  type DocumentRevisionRow,
+} from "./document-revision-history";
 import { escapeHtml } from "./escape-html";
 import {
   evidenceTemplateLayoutCss,
@@ -37,6 +42,8 @@ export type EvidenceDocumentPayload = {
   documentRevisionDate?: string;
   documentRevisionSummary?: string;
   documentRevisionAuthor?: string;
+  /** Entradas já registadas (SQLite); o PDF/HTML concatena com a revisão actual quando diferente. */
+  documentRevisionHistory?: DocumentRevisionRow[];
   technicalSummary: string;
   /** RF-007 — texto de negócio; omitido no HTML se vazio. */
   corporateSummary?: string;
@@ -254,17 +261,36 @@ function buildMarketStandardBodyHtml(p: EvidenceDocumentPayload): string {
   const approverLine = displayOrDash(p.approver);
   const generatedAt = formatGeneratedAtLong();
 
-  const docVer = (p.documentVersion ?? "").trim() || "1.0";
-  const docDate =
-    (p.documentRevisionDate ?? "").trim() ||
-    new Date().toLocaleDateString("pt-BR");
-  const docWhat =
-    (p.documentRevisionSummary ?? "").trim() || "Emissão inicial";
-  const docAuthorRaw = (p.documentRevisionAuthor ?? "").trim();
-  const docAuthor =
-    docAuthorRaw.length > 0
-      ? escapeHtml(docAuthorRaw)
-      : displayOrDash(p.technicalOwner);
+  const revisionRows = collectRevisionTableRows(
+    p.documentRevisionHistory,
+    revisionRowFromPayloadScalars({
+      documentVersion: p.documentVersion,
+      documentRevisionDate: p.documentRevisionDate,
+      documentRevisionSummary: p.documentRevisionSummary,
+      documentRevisionAuthor: p.documentRevisionAuthor,
+    }),
+  );
+
+  function formatRevisionRowCells(row: DocumentRevisionRow): string {
+    const docVer = row.version.trim() || "1.0";
+    const docDate =
+      row.date.trim() || new Date().toLocaleDateString("pt-BR");
+    const docWhat = row.summary.trim() || "Emissão inicial";
+    const docAuthorRaw = row.author.trim();
+    const docAuthor =
+      docAuthorRaw.length > 0
+        ? escapeHtml(docAuthorRaw)
+        : displayOrDash(p.technicalOwner);
+
+    return `<tr>
+        <td>${escapeHtml(docVer)}</td>
+        <td>${escapeHtml(docDate)}</td>
+        <td>${escapeHtml(docWhat)}</td>
+        <td>${docAuthor}</td>
+      </tr>`;
+  }
+
+  const revisionTableBody = revisionRows.map(formatRevisionRowCells).join("\n      ");
 
   const corpor = (p.corporateSummary ?? "").trim();
   const tech = p.technicalSummary;
@@ -313,12 +339,7 @@ ${truncNote}
       </tr>
     </thead>
     <tbody>
-      <tr>
-        <td>${escapeHtml(docVer)}</td>
-        <td>${escapeHtml(docDate)}</td>
-        <td>${escapeHtml(docWhat)}</td>
-        <td>${docAuthor}</td>
-      </tr>
+      ${revisionTableBody}
     </tbody>
   </table>
 </section>

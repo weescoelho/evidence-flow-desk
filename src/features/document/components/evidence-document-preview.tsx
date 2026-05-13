@@ -25,7 +25,11 @@ import {
 } from "../lib/build-evidence-html";
 import { defaultEvidenceHtmlFileName } from "../lib/evidence-export-filename";
 import { printHtmlDocument } from "../lib/print-html";
-import { useEvidenceMetadataStore } from "../store/evidence-metadata-store";
+import { buildEvidenceReportDraftJson } from "../lib/evidence-report-draft";
+import {
+  commitCurrentDocumentRevisionToHistory,
+  useEvidenceMetadataStore,
+} from "../store/evidence-metadata-store";
 
 function repoFolderName(repositoryPath: string): string {
   const parts = repositoryPath.split(/[/\\]/).filter(Boolean);
@@ -40,6 +44,16 @@ function sanitizeFilenameStem(raw: string): string {
   return t.slice(0, 120) || "projeto";
 }
 
+export type EvidenceDocumentSaveDraftContext = {
+  activeTemplateId: string;
+  screenshots: Array<{
+    id: string;
+    fileName: string;
+    dataUrl: string;
+    caption: string;
+  }>;
+};
+
 export type EvidenceDocumentPreviewProps = EvidenceDocumentPayload & {
   /** Passo 4 vs 5 do wizard — só muda ênfase na UI (PRD fluxo em cinco passos). */
   variant?: "preview" | "export";
@@ -47,6 +61,8 @@ export type EvidenceDocumentPreviewProps = EvidenceDocumentPayload & {
   onLocalSaveSuccess?: () => void;
   /** Permite acionar «Exportar PDF…» a partir do rodapé do wizard (passo 5). */
   exportPdfTriggerRef?: RefObject<HTMLButtonElement | null>;
+  /** Dados extra para `draft.json` (reabrir para edição). */
+  saveDraftContext?: EvidenceDocumentSaveDraftContext;
 };
 
 const ZOOM_STEP = 10;
@@ -57,6 +73,7 @@ export function EvidenceDocumentPreview({
   variant = "preview",
   onLocalSaveSuccess,
   exportPdfTriggerRef,
+  saveDraftContext,
   ...payload
 }: EvidenceDocumentPreviewProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -92,6 +109,11 @@ export function EvidenceDocumentPreview({
     };
   }, [projectName, derivedProjectName, numberPagesPrint]);
 
+  const revisionHistoryFingerprint = useMemo(
+    () => JSON.stringify(payload.documentRevisionHistory ?? []),
+    [payload.documentRevisionHistory],
+  );
+
   const printReadyHtml = useMemo(
     () => buildEvidencePrintHtml(payload, printOptions),
     [
@@ -112,6 +134,7 @@ export function EvidenceDocumentPreview({
       payload.documentRevisionDate,
       payload.documentRevisionSummary,
       payload.documentRevisionAuthor,
+      revisionHistoryFingerprint,
       payload.templateHeaderImageLeft,
       payload.templateHeaderImageRight,
       payload.technicalSummary,
@@ -133,7 +156,71 @@ export function EvidenceDocumentPreview({
   >("idle");
 
   const isExportStep = variant === "export";
-  const savingBusy = saveStatus === "saving" || saveAsStatus === "saving";
+  const [exportPdfBusy, setExportPdfBusy] = useState(false);
+  const savingBusy =
+    saveStatus === "saving" ||
+    saveAsStatus === "saving" ||
+    exportPdfBusy;
+
+  function buildDraftJsonString(): string | null {
+    if (!saveDraftContext) return null;
+    return buildEvidenceReportDraftJson({
+      payload,
+      activeTemplateId: saveDraftContext.activeTemplateId,
+      screenshots: saveDraftContext.screenshots,
+    });
+  }
+
+  async function saveToLibrary() {
+    return saveEvidenceDocument({
+      html: printReadyHtml,
+      repositoryPath: payload.repositoryPath,
+      baseRef: payload.baseRef,
+      compareRef: payload.compareRef,
+      templateLabel: payload.templateLabel,
+      changeId: payload.changeId,
+      environment: payload.environment,
+      documentTitle: printOptions.documentTitle,
+      draftJson: buildDraftJsonString(),
+    });
+  }
+
+  async function handleSaveLocalCopy() {
+    setSaveStatus("saving");
+    try {
+      const r = await saveToLibrary();
+      commitCurrentDocumentRevisionToHistory();
+      setSaveStatus({ ok: r.htmlPath });
+      onLocalSaveSuccess?.();
+    } catch (e) {
+      setSaveStatus({
+        err:
+          e instanceof Error
+            ? e.message
+            : "Não foi possível guardar o documento.",
+      });
+    }
+  }
+
+  async function handleExportPdf() {
+    setExportPdfBusy(true);
+    setSaveStatus("idle");
+    try {
+      await saveToLibrary();
+      commitCurrentDocumentRevisionToHistory();
+      onLocalSaveSuccess?.();
+    } catch (e) {
+      setSaveStatus({
+        err:
+          e instanceof Error
+            ? e.message
+            : "Não foi possível registar a cópia na biblioteca (SQLite). O PDF segue disponível.",
+      });
+    } finally {
+      setExportPdfBusy(false);
+    }
+    printHtmlDocument(printReadyHtml);
+  }
 
   const scale = zoomPct / 100;
 
@@ -189,31 +276,6 @@ export function EvidenceDocumentPreview({
     }
   }
 
-  async function handleSaveLocalCopy() {
-    setSaveStatus("saving");
-    try {
-      const r = await saveEvidenceDocument({
-        html: printReadyHtml,
-        repositoryPath: payload.repositoryPath,
-        baseRef: payload.baseRef,
-        compareRef: payload.compareRef,
-        templateLabel: payload.templateLabel,
-        changeId: payload.changeId,
-        environment: payload.environment,
-        documentTitle: printOptions.documentTitle,
-      });
-      setSaveStatus({ ok: r.htmlPath });
-      onLocalSaveSuccess?.();
-    } catch (e) {
-      setSaveStatus({
-        err:
-          e instanceof Error
-            ? e.message
-            : "Não foi possível guardar o documento.",
-      });
-    }
-  }
-
   async function handleSaveHtmlAs() {
     setSaveAsStatus("saving");
     try {
@@ -228,6 +290,7 @@ export function EvidenceDocumentPreview({
         return;
       }
       await writeTextFile(path, printReadyHtml);
+      commitCurrentDocumentRevisionToHistory();
       setSaveAsStatus({ ok: path });
     } catch (e) {
       setSaveAsStatus({
@@ -323,8 +386,8 @@ export function EvidenceDocumentPreview({
           aria-hidden
         />
         <p className="font-mono text-[12px] leading-snug text-[#71717A]">
-          Ao usar «Guardar cópia local (HTML)», registámos metadata na SQLite para
-          pesquisa em «Documentos».
+          «Guardar cópia local (HTML)» e «Exportar PDF…» registam HTML + rascunho
+          editável na SQLite para pesquisa e reabertura em «Documentos».
         </p>
       </div>
     ) : null;
@@ -465,7 +528,8 @@ export function EvidenceDocumentPreview({
               type="button"
               className="rounded-md border border-primary bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
               data-testid="export-pdf-print"
-              onClick={() => printHtmlDocument(printReadyHtml)}
+              disabled={savingBusy}
+              onClick={() => void handleExportPdf()}
             >
               Exportar PDF…
             </button>
@@ -511,7 +575,8 @@ export function EvidenceDocumentPreview({
                 type="button"
                 className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted disabled:opacity-50"
                 data-testid="export-pdf-print"
-                onClick={() => printHtmlDocument(printReadyHtml)}
+                disabled={savingBusy}
+                onClick={() => void handleExportPdf()}
               >
                 Exportar PDF…
               </button>
@@ -570,8 +635,9 @@ export function EvidenceDocumentPreview({
           <>
             Último passo: abra o diálogo de impressão e escolha «Guardar como PDF».
             O título HTML segue «Nome do projeto». «Numerar páginas» só atua onde o
-            motor de impressão respeitar margens `@page`; «Guardar cópia local»
-            atualiza SQLite e a pasta de dados da aplicação.
+            motor de impressão respeitar margens `@page`. Ao exportar, a app tenta
+            guardar também o rascunho na biblioteca local; se falhar, o PDF abre na
+            mesma mas verá o aviso em baixo.
           </>
         ) : (
           <>

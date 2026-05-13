@@ -12,6 +12,7 @@ pub(crate) const ROOT_DIR: &str = "evidence_documents";
 /// Legado antes de SQLite (RF-015); migrado uma vez quando a base está vazia.
 const LEGACY_INDEX_FILE: &str = "index.json";
 const DOCUMENT_FILE: &str = "document.html";
+const DRAFT_FILE: &str = "draft.json";
 /// Metadamos em SQLite; blobs HTML ficam nos subdirectórios sob `ROOT_DIR`.
 const DB_FILE_NAME: &str = "evidence_documents_index.sqlite3";
 const DEFAULT_MAX_ENTRIES: usize = 50;
@@ -47,6 +48,8 @@ pub struct SavedEvidenceDocumentInfo {
     pub environment: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub document_title: Option<String>,
+    /// `true` quando existe `draft.json` (reabrir para edição).
+    pub has_draft: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -215,6 +218,10 @@ impl EvidenceDocumentsStore {
         self.doc_dir(id).join(DOCUMENT_FILE)
     }
 
+    fn draft_path_for_id(&self, id: &str) -> PathBuf {
+        self.doc_dir(id).join(DRAFT_FILE)
+    }
+
     fn now_ms() -> u64 {
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -291,6 +298,7 @@ impl EvidenceDocumentsStore {
         change_id: Option<String>,
         environment: Option<String>,
         document_title: Option<String>,
+        draft_json: Option<String>,
     ) -> Result<SaveEvidenceDocumentResult, String> {
         fs::create_dir_all(&self.root).map_err(|e| e.to_string())?;
 
@@ -303,6 +311,11 @@ impl EvidenceDocumentsStore {
 
         let html_path = dir.join(DOCUMENT_FILE);
         fs::write(&html_path, html).map_err(|e| e.to_string())?;
+
+        if let Some(ref dj) = draft_json {
+            let draft_path = dir.join(DRAFT_FILE);
+            fs::write(&draft_path, dj).map_err(|e| e.to_string())?;
+        }
 
         let html_path_str = normalize_path(&html_path);
 
@@ -363,6 +376,7 @@ impl EvidenceDocumentsStore {
                     environment: row.get(7)?,
                     document_title: row.get(8)?,
                     html_path: String::new(),
+                    has_draft: false,
                 })
             })
             .map_err(|e| e.to_string())?;
@@ -371,6 +385,7 @@ impl EvidenceDocumentsStore {
         for r in rows {
             let mut e = r.map_err(|e| e.to_string())?;
             e.html_path = normalize_path(&self.html_path_for_id(&e.id));
+            e.has_draft = self.draft_path_for_id(&e.id).exists();
             result.push(e);
         }
 
@@ -397,6 +412,22 @@ impl EvidenceDocumentsStore {
 
         Ok(())
     }
+
+    pub fn load_draft_json(&self, id: &str) -> Result<String, String> {
+        Uuid::parse_str(id).map_err(|_| "Identificador de documento inválido.".to_string())?;
+        let p = self.draft_path_for_id(id);
+        if !p.is_file() {
+            return Err("Rascunho não disponível para esta gravação.".to_string());
+        }
+        fs::read_to_string(&p).map_err(|e| e.to_string())
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LoadEvidenceDocumentDraftResult {
+    pub draft_json: String,
+    pub html_path: String,
 }
 
 fn normalize_path(p: &Path) -> String {
@@ -413,6 +444,7 @@ pub fn save_document(
     change_id: Option<String>,
     environment: Option<String>,
     document_title: Option<String>,
+    draft_json: Option<String>,
 ) -> Result<SaveEvidenceDocumentResult, String> {
     EvidenceDocumentsStore::for_app(app)?.save(
         html,
@@ -423,7 +455,30 @@ pub fn save_document(
         change_id,
         environment,
         document_title,
+        draft_json,
     )
+}
+
+pub fn load_document_draft(app: &AppHandle, id: String) -> Result<LoadEvidenceDocumentDraftResult, String> {
+    let store = EvidenceDocumentsStore::for_app(app)?;
+    Uuid::parse_str(&id).map_err(|_| "Identificador de documento inválido.".to_string())?;
+    let conn = store.conn()?;
+    let exists: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM saved_evidence_documents WHERE id = ?1",
+            params![&id],
+            |r| r.get(0),
+        )
+        .map_err(|e| e.to_string())?;
+    if exists == 0 {
+        return Err("Documento não encontrado.".to_string());
+    }
+    let draft_json = store.load_draft_json(&id)?;
+    let html_path = normalize_path(&store.html_path_for_id(&id));
+    Ok(LoadEvidenceDocumentDraftResult {
+        draft_json,
+        html_path,
+    })
 }
 
 pub fn list_documents(app: &AppHandle) -> Result<Vec<SavedEvidenceDocumentInfo>, String> {
@@ -458,6 +513,7 @@ mod tests {
                 Some("CHG-1".into()),
                 Some("staging".into()),
                 Some("Meu projeto — Evidência".into()),
+                None,
             )
             .unwrap();
 
@@ -465,6 +521,7 @@ mod tests {
         let list = store.list().unwrap();
         assert_eq!(list.len(), 1);
         assert_eq!(list[0].id, r.id);
+        assert!(!list[0].has_draft);
         assert_eq!(list[0].repository_path, "/repo");
         assert_eq!(list[0].base_ref, "main");
         assert_eq!(list[0].compare_ref, "feat");
@@ -475,6 +532,31 @@ mod tests {
             list[0].document_title.as_deref(),
             Some("Meu projeto — Evidência")
         );
+    }
+
+    #[test]
+    fn save_with_draft_then_load_roundtrip() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path().join(ROOT_DIR);
+        let db = tmp.path().join("draft.sqlite3");
+        let store = EvidenceDocumentsStore::with_paths(root, db, 10).unwrap();
+        let payload = r#"{"schemaVersion":1,"baseRef":"x"}"#;
+        let r = store
+            .save(
+                "<html/>".into(),
+                "/repo".into(),
+                "main".into(),
+                "feat".into(),
+                None,
+                None,
+                None,
+                None,
+                Some(payload.into()),
+            )
+            .unwrap();
+        let list = store.list().unwrap();
+        assert!(list[0].has_draft);
+        assert_eq!(store.load_draft_json(&r.id).unwrap(), payload);
     }
 
     fn count_subdirs(root: &Path) -> usize {
@@ -498,17 +580,17 @@ mod tests {
         let store = EvidenceDocumentsStore::with_paths(root, db, 2).unwrap();
 
         let first = store
-            .save("a".into(), "r".into(), "a".into(), "b".into(), None, None, None, None)
+            .save("a".into(), "r".into(), "a".into(), "b".into(), None, None, None, None, None)
             .unwrap();
         thread::sleep(Duration::from_millis(12));
         let second = store
-            .save("b".into(), "r".into(), "a".into(), "b".into(), None, None, None, None)
+            .save("b".into(), "r".into(), "a".into(), "b".into(), None, None, None, None, None)
             .unwrap();
         assert_eq!(count_subdirs(&store.root), 2);
 
         thread::sleep(Duration::from_millis(12));
         let third = store
-            .save("c".into(), "r".into(), "a".into(), "b".into(), None, None, None, None)
+            .save("c".into(), "r".into(), "a".into(), "b".into(), None, None, None, None, None)
             .unwrap();
 
         assert!(!Path::new(&first.html_path).exists());
@@ -530,7 +612,7 @@ mod tests {
         let store = EvidenceDocumentsStore::with_paths(root, db, 10).unwrap();
 
         let r = store
-            .save("x".into(), "/r".into(), "a".into(), "b".into(), None, None, None, None)
+            .save("x".into(), "/r".into(), "a".into(), "b".into(), None, None, None, None, None)
             .unwrap();
         assert!(Path::new(&r.html_path).exists());
 

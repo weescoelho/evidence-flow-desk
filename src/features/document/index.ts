@@ -27,11 +27,20 @@ export {
   type EvidencePrintHtmlOptions,
 } from "./lib/build-evidence-html";
 export { printHtmlDocument } from "./lib/print-html";
+export {
+  buildEvidenceReportDraftJson,
+  EVIDENCE_REPORT_DRAFT_SCHEMA_VERSION,
+  parseEvidenceReportDraftJson,
+  type EvidenceReportDraftV1,
+} from "./lib/evidence-report-draft";
+export { applyEvidenceReportDraft } from "./lib/apply-evidence-report-draft";
 export { writeTextFile } from "./api/io.commands";
 export {
   deleteSavedEvidenceDocument,
   listSavedEvidenceDocuments,
+  loadEvidenceDocumentDraft,
   saveEvidenceDocument,
+  type LoadEvidenceDocumentDraftResult,
   type SaveEvidenceDocumentResult,
   type SavedEvidenceDocumentInfo,
 } from "./api/evidence.commands";

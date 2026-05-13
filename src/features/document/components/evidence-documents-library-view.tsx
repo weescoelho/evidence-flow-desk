@@ -1,7 +1,11 @@
 import { SavedEvidenceDocumentsPanel } from "./saved-evidence-documents-panel";
 
 /** Vista ecrã 06 (subset): histórico de cópias HTML guardadas pela app — ver `evidence-history-mvp`. */
-export function EvidenceDocumentsLibraryView() {
+export function EvidenceDocumentsLibraryView({
+  onNavigateToRepos,
+}: {
+  onNavigateToRepos: () => void;
+}) {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-2">
@@ -17,7 +21,7 @@ export function EvidenceDocumentsLibraryView() {
           HTML ou do próprio assistente.
         </p>
       </header>
-      <SavedEvidenceDocumentsPanel layout="library" />
+      <SavedEvidenceDocumentsPanel layout="library" onNavigateToRepos={onNavigateToRepos} />
     </div>
   );
 }

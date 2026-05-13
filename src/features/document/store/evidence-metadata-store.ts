@@ -7,11 +7,23 @@ import type {
 import {
   DEFAULT_GEMINI_API_BASE,
   DEFAULT_GEMINI_MODEL,
+  evidencePreferenceKeys,
+  setEvidencePreference,
 } from "../api/evidence-app-state.commands";
+import {
+  normalizeDocumentRevisionRow,
+  parseDocumentRevisionHistoryJson,
+  revisionRowsAreEqual,
+  serializeDocumentRevisionHistory,
+  MAX_DOCUMENT_REVISION_HISTORY_ROWS,
+  type DocumentRevisionRow,
+} from "../lib/document-revision-history";
 import {
   normalizeEvidenceTemplateLayoutKey,
   type EvidenceTemplateLayoutKey,
 } from "../lib/evidence-template-layouts";
+
+export type { DocumentRevisionRow };
 
 export type { PersistedEvidenceTemplate } from "../api/evidence-app-state.commands";
 
@@ -48,6 +60,8 @@ type EvidenceMetadataStore = {
   documentRevisionDate: string;
   documentRevisionSummary: string;
   documentRevisionAuthor: string;
+  /** Revisões já registadas para a tabela «Controle de versões» (RF HTML mercado). */
+  documentRevisionHistory: DocumentRevisionRow[];
   exportDefaultDirectory: string | null;
   /** Google Gemini (RF-017) — chave na BD, não no estado React. */
   aiGeminiApiBase: string;
@@ -68,6 +82,7 @@ type EvidenceMetadataStore = {
   setDocumentRevisionDate: (value: string) => void;
   setDocumentRevisionSummary: (value: string) => void;
   setDocumentRevisionAuthor: (value: string) => void;
+  setDocumentRevisionHistory: (rows: DocumentRevisionRow[]) => void;
   setExportDefaultDirectory: (path: string | null) => void;
   setAiGeminiApiBase: (value: string) => void;
   setAiGeminiModel: (value: string) => void;
@@ -77,6 +92,59 @@ type EvidenceMetadataStore = {
   hydrateFallbackLocal: () => void;
   resetSession: () => void;
 };
+
+function resolveDocumentRevisionHistoryFromPreferences(
+  prefs: EvidenceAppPersistedSnapshot["preferences"],
+): { rows: DocumentRevisionRow[]; seedToSqlite: boolean } {
+  const fromKey = parseDocumentRevisionHistoryJson(
+    prefs.evidenceDocumentRevisionHistory ?? undefined,
+  );
+  if (fromKey.length > 0) {
+    return { rows: fromKey, seedToSqlite: false };
+  }
+  const v = (prefs.evidenceDocumentVersion ?? "").trim();
+  const d = (prefs.evidenceDocumentRevisionDate ?? "").trim();
+  const sum = (prefs.evidenceDocumentRevisionSummary ?? "").trim();
+  const a = (prefs.evidenceDocumentRevisionAuthor ?? "").trim();
+  if (v || d || sum || a) {
+    return {
+      rows: [{ version: v, date: d, summary: sum, author: a }],
+      seedToSqlite: true,
+    };
+  }
+  return { rows: [], seedToSqlite: false };
+}
+
+/**
+ * Grava em `documentRevisionHistory` a revisão correspondente aos quatro campos atuais,
+ * se não for duplicada da última entrada. Usar após exportar/gravar HTML ou PDF.
+ */
+export function commitCurrentDocumentRevisionToHistory(): boolean {
+  const s = useEvidenceMetadataStore.getState();
+  const row = normalizeDocumentRevisionRow({
+    version: s.documentVersion,
+    date: s.documentRevisionDate,
+    summary: s.documentRevisionSummary,
+    author: s.documentRevisionAuthor,
+  });
+  if (!row.version && !row.date && !row.summary && !row.author) {
+    return false;
+  }
+  const hist = s.documentRevisionHistory;
+  const last = hist[hist.length - 1];
+  if (last && revisionRowsAreEqual(last, row)) {
+    return false;
+  }
+  const next = [...hist, row].slice(-MAX_DOCUMENT_REVISION_HISTORY_ROWS);
+  s.setDocumentRevisionHistory(next);
+  if (s.hydrated) {
+    void setEvidencePreference(
+      evidencePreferenceKeys.documentRevisionHistory,
+      serializeDocumentRevisionHistory(next),
+    );
+  }
+  return true;
+}
 
 function normalizeTemplates(
   list: PersistedEvidenceTemplate[] | undefined,
@@ -119,6 +187,7 @@ export const useEvidenceMetadataStore = create<EvidenceMetadataStore>(
     documentRevisionDate: "",
     documentRevisionSummary: "",
     documentRevisionAuthor: "",
+    documentRevisionHistory: [],
     exportDefaultDirectory: null,
     aiGeminiApiBase: DEFAULT_GEMINI_API_BASE,
     aiGeminiModel: DEFAULT_GEMINI_MODEL,
@@ -148,6 +217,8 @@ export const useEvidenceMetadataStore = create<EvidenceMetadataStore>(
       set({ documentRevisionSummary }),
     setDocumentRevisionAuthor: (documentRevisionAuthor) =>
       set({ documentRevisionAuthor }),
+    setDocumentRevisionHistory: (documentRevisionHistory) =>
+      set({ documentRevisionHistory }),
     setExportDefaultDirectory: (exportDefaultDirectory) =>
       set({ exportDefaultDirectory }),
     setAiGeminiApiBase: (aiGeminiApiBase) => set({ aiGeminiApiBase }),
@@ -162,6 +233,8 @@ export const useEvidenceMetadataStore = create<EvidenceMetadataStore>(
         prefs.evidenceActiveTemplateId ?? undefined,
         templates,
       );
+      const { rows: documentRevisionHistory, seedToSqlite } =
+        resolveDocumentRevisionHistoryFromPreferences(prefs);
       set({
         hydrated: true,
         templates,
@@ -178,12 +251,19 @@ export const useEvidenceMetadataStore = create<EvidenceMetadataStore>(
         documentRevisionDate: prefs.evidenceDocumentRevisionDate ?? "",
         documentRevisionSummary: prefs.evidenceDocumentRevisionSummary ?? "",
         documentRevisionAuthor: prefs.evidenceDocumentRevisionAuthor ?? "",
+        documentRevisionHistory,
         exportDefaultDirectory: prefs.exportDefaultDirectory ?? null,
         aiGeminiApiBase:
           prefs.aiGeminiApiBase?.trim() || DEFAULT_GEMINI_API_BASE,
         aiGeminiModel: prefs.aiGeminiModel?.trim() || DEFAULT_GEMINI_MODEL,
         aiGeminiApiKeyConfigured: prefs.aiGeminiApiKeyConfigured ?? false,
       });
+      if (seedToSqlite && documentRevisionHistory.length > 0) {
+        void setEvidencePreference(
+          evidencePreferenceKeys.documentRevisionHistory,
+          serializeDocumentRevisionHistory(documentRevisionHistory),
+        );
+      }
     },
 
     hydrateFallbackLocal: () => {
@@ -203,6 +283,7 @@ export const useEvidenceMetadataStore = create<EvidenceMetadataStore>(
         documentRevisionDate: "",
         documentRevisionSummary: "",
         documentRevisionAuthor: "",
+        documentRevisionHistory: [],
         exportDefaultDirectory: null,
         aiGeminiApiBase: DEFAULT_GEMINI_API_BASE,
         aiGeminiModel: DEFAULT_GEMINI_MODEL,
@@ -225,6 +306,7 @@ export const useEvidenceMetadataStore = create<EvidenceMetadataStore>(
         documentRevisionDate: "",
         documentRevisionSummary: "",
         documentRevisionAuthor: "",
+        documentRevisionHistory: [],
         exportDefaultDirectory: null,
         aiGeminiApiBase: state.aiGeminiApiBase,
         aiGeminiModel: state.aiGeminiModel,

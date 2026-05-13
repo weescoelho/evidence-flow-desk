@@ -4,8 +4,8 @@ use crate::services::evidence_app_state::{
     self, CreateEvidenceTemplateResult, EvidenceAppPersistedSnapshot,
 };
 use crate::services::evidence_documents::{
-    delete_document, list_documents, save_document, EvidenceDocumentsStore,
-    SaveEvidenceDocumentResult, SavedEvidenceDocumentInfo,
+    delete_document, list_documents, load_document_draft, save_document, EvidenceDocumentsStore,
+    LoadEvidenceDocumentDraftResult, SaveEvidenceDocumentResult, SavedEvidenceDocumentInfo,
 };
 use crate::services::repository_screenshots::{
     self, RepositoryEvidenceScreenshotInput, RepositoryEvidenceScreenshotRow,
@@ -22,6 +22,7 @@ pub fn save_evidence_document(
     change_id: Option<String>,
     environment: Option<String>,
     document_title: Option<String>,
+    draft_json: Option<String>,
 ) -> Result<SaveEvidenceDocumentResult, String> {
     save_document(
         &app,
@@ -33,7 +34,16 @@ pub fn save_evidence_document(
         change_id,
         environment,
         document_title,
+        draft_json,
     )
+}
+
+#[tauri::command]
+pub fn load_evidence_document_draft(
+    app: AppHandle,
+    id: String,
+) -> Result<LoadEvidenceDocumentDraftResult, String> {
+    load_document_draft(&app, id)
 }
 
 #[tauri::command]

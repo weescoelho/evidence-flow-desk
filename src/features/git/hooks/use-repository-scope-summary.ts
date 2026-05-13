@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
+import { usePendingEvidenceNarrativesStore } from "@/features/document/store/pending-evidence-narratives-store";
+
 import { getRepositoryScopeSummary } from "../api/git.commands";
 import { parseGitCommandError } from "../api/parse-git-error";
 import { buildTechnicalSummary } from "../lib/technical-summary";
@@ -124,6 +126,15 @@ export function useRepositoryScopeSummary(): RepositoryScopeSummaryState {
   useEffect(() => {
     setCorporateNarrative("");
   }, [narrativeSourceKey]);
+
+  const pending = usePendingEvidenceNarrativesStore((s) => s.pending);
+
+  useEffect(() => {
+    if (!pending || !data || loading || !narrativeSourceKey) return;
+    setDraftNarrative(pending.technical);
+    setCorporateNarrative(pending.corporate);
+    usePendingEvidenceNarrativesStore.getState().clearPending();
+  }, [pending, data, loading, narrativeSourceKey]);
 
   const technicalNarrative =
     draftNarrative !== null ? draftNarrative : technicalNarrativeGenerated;

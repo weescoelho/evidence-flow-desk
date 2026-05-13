@@ -30,6 +30,8 @@ type AttachmentsState = {
   remove: (id: string) => void;
   updateCaption: (id: string, caption: string) => void;
   clear: () => void;
+  /** Substitui a lista (ex.: carregar rascunho); sincroniza com SQLite do repo activo. */
+  replaceAttachmentsFromDraft: (items: EvidenceScreenshot[]) => void;
   lastAddError: string | null;
   clearLastAddError: () => void;
 };
@@ -170,4 +172,12 @@ export const useEvidenceAttachmentsStore = create<AttachmentsState>((set, get) =
   },
 
   clear: () => set({ attachments: [], lastAddError: null }),
+
+  replaceAttachmentsFromDraft: (items) => {
+    set({
+      lastAddError: null,
+      attachments: items.slice(0, MAX_EVIDENCE_SCREENSHOTS),
+    });
+    scheduleAttachmentsPersist(get);
+  },
 }));

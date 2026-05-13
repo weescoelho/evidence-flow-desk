@@ -61,6 +61,9 @@ export function ScopeDocumentPreviewPanel({
   const documentRevisionAuthor = useEvidenceMetadataStore(
     (s) => s.documentRevisionAuthor,
   );
+  const documentRevisionHistory = useEvidenceMetadataStore(
+    (s) => s.documentRevisionHistory,
+  );
 
   const screenshotPayload = useMemo(
     () =>
@@ -101,6 +104,7 @@ export function ScopeDocumentPreviewPanel({
       documentRevisionDate={documentRevisionDate}
       documentRevisionSummary={documentRevisionSummary}
       documentRevisionAuthor={documentRevisionAuthor}
+      documentRevisionHistory={documentRevisionHistory}
       templateHeaderImageLeft={activeTemplate?.headerImageLeft ?? ""}
       templateHeaderImageRight={activeTemplate?.headerImageRight ?? ""}
       technicalSummary={technicalNarrative}
@@ -109,6 +113,15 @@ export function ScopeDocumentPreviewPanel({
       files={data.files}
       commitsTruncated={data.commitsTruncated}
       screenshots={screenshotPayload}
+      saveDraftContext={{
+        activeTemplateId,
+        screenshots: evidenceAttachments.map((a) => ({
+          id: a.id,
+          fileName: a.fileName,
+          dataUrl: a.dataUrl,
+          caption: a.caption,
+        })),
+      }}
       variant={variant}
       onLocalSaveSuccess={onLocalSaveSuccess}
       exportPdfTriggerRef={exportPdfTriggerRef}

@@ -2,11 +2,16 @@ import { confirm } from "@tauri-apps/plugin-dialog";
 import { openPath, revealItemInDir } from "@tauri-apps/plugin-opener";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { useEvidenceWizardUiStore } from "@/features/git/store/evidence-wizard-ui-store";
+
 import {
   deleteSavedEvidenceDocument,
   listSavedEvidenceDocuments,
+  loadEvidenceDocumentDraft,
   type SavedEvidenceDocumentInfo,
 } from "../api/evidence.commands";
+import { applyEvidenceReportDraft } from "../lib/apply-evidence-report-draft";
+import { parseEvidenceReportDraftJson } from "../lib/evidence-report-draft";
 
 function ellipsizePath(p: string, max = 52): string {
   if (p.length <= max) return p;
@@ -69,16 +74,20 @@ export type SavedEvidenceDocumentsPanelProps = {
   refreshKey?: number;
   /** `embedded`: painel dentro do wizard (lista compacta). `library`: página dedicada na sidebar. */
   layout?: "embedded" | "library";
+  /** Após carregar rascunho a partir da biblioteca, mostrar o assistente «Nova evidência». */
+  onNavigateToRepos?: () => void;
 };
 
 export function SavedEvidenceDocumentsPanel({
   refreshKey = 0,
   layout = "embedded",
+  onNavigateToRepos,
 }: SavedEvidenceDocumentsPanelProps) {
   const [items, setItems] = useState<SavedEvidenceDocumentInfo[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [loadingDraftId, setLoadingDraftId] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
 
   const load = useCallback(async () => {
@@ -127,6 +136,28 @@ export function SavedEvidenceDocumentsPanel({
     }
   }
 
+  async function handleLoadForEdit(doc: SavedEvidenceDocumentInfo) {
+    if (!doc.hasDraft) return;
+    setActionError(null);
+    setLoadingDraftId(doc.id);
+    try {
+      const { draftJson } = await loadEvidenceDocumentDraft(doc.id);
+      const draft = parseEvidenceReportDraftJson(draftJson);
+      await applyEvidenceReportDraft(draft);
+      useEvidenceWizardUiStore.getState().requestJumpToStep(3);
+      onNavigateToRepos?.();
+      await load();
+    } catch (e) {
+      setActionError(
+        e instanceof Error
+          ? e.message
+          : "Não foi possível carregar o rascunho para edição.",
+      );
+    } finally {
+      setLoadingDraftId(null);
+    }
+  }
+
   async function handleRemove(id: string) {
     setActionError(null);
     const agreed = await confirm(
@@ -165,11 +196,11 @@ export function SavedEvidenceDocumentsPanel({
           <h2 className="text-sm font-semibold text-foreground">
             {layout === "library" ? "Entradas guardadas" : "Documentos guardados localmente"}
           </h2>
-          <p className="text-[11px] text-muted-foreground">
-            {layout === "library"
-              ? "Ordenadas da mais recente para a mais antiga. Limite aplicado pela aplicação."
-              : "Cópias HTML gravadas neste dispositivo (últimas entradas; as mais antigas são removidas ao atingir o limite)."}
-          </p>
+        <p className="text-[11px] text-muted-foreground">
+          {layout === "library"
+            ? "Ordenadas da mais recente para a mais antiga. «Carregar para editar» requer rascunho gravado com a versão actual da app."
+            : "Cópias HTML gravadas neste dispositivo. «Carregar para editar» repõe repositório, texto e capturas para ajustar e voltar a exportar."}
+        </p>
         </div>
         <button
           type="button"
@@ -261,6 +292,25 @@ export function SavedEvidenceDocumentsPanel({
                   onClick={() => void handleOpen(doc.htmlPath)}
                 >
                   Abrir HTML
+                </button>
+                <button
+                  type="button"
+                  title={
+                    doc.hasDraft
+                      ? undefined
+                      : "Esta gravação não inclui rascunho editável (anterior à versão actual)."
+                  }
+                  className="rounded border border-primary/40 bg-background px-2 py-1 text-[10px] font-semibold text-primary hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={
+                    !doc.hasDraft ||
+                    loadingDraftId !== null ||
+                    removingId !== null
+                  }
+                  onClick={() => void handleLoadForEdit(doc)}
+                >
+                  {loadingDraftId === doc.id
+                    ? "A carregar…"
+                    : "Carregar para editar"}
                 </button>
                 <button
                   type="button"

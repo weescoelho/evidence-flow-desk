@@ -147,7 +147,9 @@ function App() {
       </aside>
       <main className="flex min-h-0 min-w-0 flex-1 flex-col gap-6 overflow-y-auto bg-background px-4 py-6 sm:px-8 lg:px-10 lg:py-8">
         {activeSection === "documents" ? (
-          <EvidenceDocumentsLibraryView />
+          <EvidenceDocumentsLibraryView
+            onNavigateToRepos={() => setActiveSection("repos")}
+          />
         ) : activeSection === "settings" ? (
           <EvidenceAppSettingsView />
         ) : activeSection === "templates" ? (
