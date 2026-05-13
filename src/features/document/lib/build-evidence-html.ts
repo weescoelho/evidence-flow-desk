@@ -367,28 +367,31 @@ const PRINT_STYLES = `
   }
   .doc-header h1 { font-size: 18pt; margin: 0 0 4pt; }
   .subtitle { margin: 0; color: #444; font-size: 10pt; }
-  .evidence-template-banner { width: 100%; margin: 0 0 12pt; }
+  .evidence-template-banner { width: 100%; margin: 0 0 10pt; }
   .evidence-template-banner-inner {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 10pt;
+    gap: 8pt;
     width: 100%;
   }
   .evidence-template-banner-slot {
     flex: 1 1 0;
     min-width: 0;
-    min-height: 4pt;
+    max-width: 48%;
+    min-height: 2pt;
     display: flex;
+    align-items: flex-start;
   }
   .evidence-template-banner-left { justify-content: flex-start; }
   .evidence-template-banner-right { justify-content: flex-end; }
   .evidence-template-header-img {
-    max-height: 26mm;
-    max-width: 100%;
+    max-height: 11mm;
+    max-width: 42mm;
     width: auto;
     height: auto;
     object-fit: contain;
+    object-position: top center;
   }
   h2 { font-size: 12pt; margin: 14pt 0 6pt; border-bottom: 1px solid #ccc; padding-bottom: 2pt; }
   h3 { font-size: 11pt; margin: 10pt 0 4pt; font-weight: 600; }
