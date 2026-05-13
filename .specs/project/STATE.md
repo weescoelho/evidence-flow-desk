@@ -1,7 +1,8 @@
 # Estado do projeto — EvidenceFlow Desk
 
-**Última actualização:** 2026-05-12  
-**Trabalho actual:** Prioridade **templates (RF-009 subset)**: coluna `layout_key` SQLite, três variantes visuais (enterprise / minimal / audit) no PDF/HTML, UI na biblioteca e no painel «Gerenciar templates». Spec: [evidence-templates-layout](../features/evidence-templates-layout/spec.md). **Seguinte:** aprofundar RF-009 (secções/logo/cores) ou Fase 2 roadmap.
+**Última actualização:** 2026-05-13  
+**Trabalho actual:** _Nenhum em curso._ Pacote [evidence-templates-layout](../features/evidence-templates-layout/spec.md) fechado (tasks ✓).  
+**Seguinte:** escolher e especificar o **próximo slice** — preferencialmente RF-009 além de layout (logo / cores / secções, ver «Fora deste incremento» na spec de layout) **ou** uma linha concreta da [Fase 2](ROADMAP.md) (PRD §17). Retomada: [.specs/HANDOFF.md](../HANDOFF.md).
 
 ---
 
