@@ -10,9 +10,14 @@ export function invokeErrorMessage(
     return e.message;
   }
   if (e !== null && typeof e === "object") {
-    const msg = (e as Record<string, unknown>).message;
+    const o = e as Record<string, unknown>;
+    const msg = o.message;
     if (typeof msg === "string" && msg.trim().length > 0) {
       return msg;
+    }
+    const errField = o.error;
+    if (typeof errField === "string" && errField.trim().length > 0) {
+      return errField;
     }
   }
   return fallback;

@@ -80,6 +80,9 @@ pub struct EvidenceTemplateRecord {
     pub is_builtin: bool,
     #[serde(rename = "layoutKey")]
     pub layout_key: String,
+    /// Data URL `data:image/...;base64,...` para faixa no topo do PDF/HTML.
+    pub header_image_left: Option<String>,
+    pub header_image_right: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -120,6 +123,7 @@ pub fn ensure_app_state_tables(conn: &Connection) -> Result<(), String> {
     )
     .map_err(|e| e.to_string())?;
     ensure_templates_layout_key_column(conn)?;
+    ensure_template_header_image_columns(conn)?;
     migrate_default_template_to_market_standard(conn)?;
     Ok(())
 }
@@ -155,6 +159,56 @@ fn normalize_layout_key(raw: Option<String>) -> String {
     } else {
         "enterprise".to_string()
     }
+}
+
+const MAX_HEADER_IMAGE_DATA_URL_CHARS: usize = 4_500_000;
+
+fn ensure_template_header_image_columns(conn: &Connection) -> Result<(), String> {
+    let mut stmt = conn
+        .prepare("PRAGMA table_info(evidence_templates)")
+        .map_err(|e| e.to_string())?;
+    let cols: HashSet<String> = stmt
+        .query_map([], |row| row.get::<_, String>(1))
+        .map_err(|e| e.to_string())?
+        .collect::<Result<_, _>>()
+        .map_err(|e| e.to_string())?;
+
+    if cols.contains("header_image_left") {
+        return Ok(());
+    }
+
+    conn.execute_batch(
+        "ALTER TABLE evidence_templates ADD COLUMN header_image_left TEXT;
+         ALTER TABLE evidence_templates ADD COLUMN header_image_right TEXT;",
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+fn validate_header_image_data_url(raw: &str) -> Result<(), String> {
+    let t = raw.trim();
+    if t.is_empty() {
+        return Ok(());
+    }
+    if t.len() > MAX_HEADER_IMAGE_DATA_URL_CHARS {
+        return Err(
+            "Imagem demasiado grande (máx. ~4,5 MB codificados em Base64).".to_string(),
+        );
+    }
+    let lower = t.to_ascii_lowercase();
+    if !lower.starts_with("data:image/") {
+        return Err("A imagem deve ser uma data URL (data:image/…;base64,…).".to_string());
+    }
+    if !lower.contains(";base64,") {
+        return Err(
+            "Formato data URL inválido (é necessário encoding base64).".to_string(),
+        );
+    }
+    // SVG pode carregar scripts; não usar no mesmo pipeline de raster.
+    if lower.contains("image/svg") {
+        return Err("SVG não é suportado; use PNG ou JPEG.".to_string());
+    }
+    Ok(())
 }
 
 fn ensure_templates_layout_key_column(conn: &Connection) -> Result<(), String> {
@@ -265,7 +319,9 @@ pub fn load_snapshot(conn: &Connection) -> Result<EvidenceAppPersistedSnapshot, 
 
     let mut stmt = conn
         .prepare(
-            "SELECT id, label, is_builtin, layout_key FROM evidence_templates
+            "SELECT id, label, is_builtin, layout_key,
+                    header_image_left, header_image_right
+             FROM evidence_templates
              ORDER BY is_builtin DESC, sort_order ASC, label ASC",
         )
         .map_err(|e| e.to_string())?;
@@ -273,11 +329,15 @@ pub fn load_snapshot(conn: &Connection) -> Result<EvidenceAppPersistedSnapshot, 
     let rows = stmt
         .query_map([], |row| {
             let layout_raw: String = row.get(3)?;
+            let left: Option<String> = row.get(4)?;
+            let right: Option<String> = row.get(5)?;
             Ok(EvidenceTemplateRecord {
                 id: row.get(0)?,
                 label: row.get(1)?,
                 is_builtin: row.get::<_, i64>(2)? != 0,
                 layout_key: normalize_layout_key(Some(layout_raw)),
+                header_image_left: left.filter(|s| !s.trim().is_empty()),
+                header_image_right: right.filter(|s| !s.trim().is_empty()),
             })
         })
         .map_err(|e| e.to_string())?;
@@ -349,6 +409,46 @@ pub fn create_custom_template(
         is_builtin: false,
         layout_key,
     })
+}
+
+pub fn set_template_header_images(
+    conn: &Connection,
+    template_id: String,
+    header_image_left: String,
+    header_image_right: String,
+) -> Result<(), String> {
+    ensure_app_state_tables(conn)?;
+    validate_header_image_data_url(&header_image_left)?;
+    validate_header_image_data_url(&header_image_right)?;
+
+    let left_val = header_image_left.trim();
+    let right_val = header_image_right.trim();
+
+    let n = conn
+        .execute(
+            "UPDATE evidence_templates SET
+                header_image_left = ?1,
+                header_image_right = ?2
+             WHERE id = ?3",
+            params![
+                if left_val.is_empty() {
+                    None::<String>
+                } else {
+                    Some(left_val.to_string())
+                },
+                if right_val.is_empty() {
+                    None::<String>
+                } else {
+                    Some(right_val.to_string())
+                },
+                template_id,
+            ],
+        )
+        .map_err(|e| e.to_string())?;
+    if n == 0 {
+        return Err("Template não encontrado.".to_string());
+    }
+    Ok(())
 }
 
 pub fn set_template_layout(
@@ -499,5 +599,38 @@ mod tests {
         let list2 = load_snapshot(&conn).unwrap();
         let def = list2.templates.iter().find(|t| t.id == "default").unwrap();
         assert_eq!(def.layout_key, "market_standard");
+    }
+
+    #[test]
+    fn template_header_images_roundtrip() {
+        let (_tmp, conn) = open_schema();
+        let left = "data:image/png;base64,iVBORw0KGgo=".to_string();
+        let right = "data:image/jpeg;base64,/9j/4AA=".to_string();
+        set_template_header_images(&conn, "default".into(), left.clone(), right.clone()).unwrap();
+        let s = load_snapshot(&conn).unwrap();
+        let def = s.templates.iter().find(|t| t.id == "default").unwrap();
+        assert_eq!(def.header_image_left.as_ref(), Some(&left));
+        assert_eq!(def.header_image_right.as_ref(), Some(&right));
+        set_template_header_images(&conn, "default".into(), "".into(), "".into()).unwrap();
+        let s2 = load_snapshot(&conn).unwrap();
+        let def2 = s2.templates.iter().find(|t| t.id == "default").unwrap();
+        assert!(def2.header_image_left.is_none());
+        assert!(def2.header_image_right.is_none());
+    }
+
+    #[test]
+    fn template_header_accepts_charset_in_data_url() {
+        let (_tmp, conn) = open_schema();
+        let with_charset = "data:image/jpeg;charset=utf-8;base64,/9j/4AA=".to_string();
+        set_template_header_images(
+            &conn,
+            "default".into(),
+            with_charset.clone(),
+            "".into(),
+        )
+        .unwrap();
+        let s = load_snapshot(&conn).unwrap();
+        let def = s.templates.iter().find(|t| t.id == "default").unwrap();
+        assert_eq!(def.header_image_left.as_ref(), Some(&with_charset));
     }
 }

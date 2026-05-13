@@ -87,6 +87,23 @@ pub fn set_evidence_template_layout(
 }
 
 #[tauri::command]
+pub fn set_evidence_template_header_images(
+    app: AppHandle,
+    template_id: String,
+    header_image_left: String,
+    header_image_right: String,
+) -> Result<(), String> {
+    let store = EvidenceDocumentsStore::for_app(&app)?;
+    let conn = store.conn()?;
+    evidence_app_state::set_template_header_images(
+        &conn,
+        template_id,
+        header_image_left,
+        header_image_right,
+    )
+}
+
+#[tauri::command]
 pub fn delete_evidence_custom_template(app: AppHandle, id: String) -> Result<(), String> {
     let store = EvidenceDocumentsStore::for_app(&app)?;
     let conn = store.conn()?;

@@ -6,7 +6,8 @@ use commands::evidence::{
     create_evidence_custom_template, delete_evidence_custom_template,
     delete_saved_evidence_document, list_repository_evidence_screenshots,
     list_saved_evidence_documents, load_evidence_app_persisted_state, save_evidence_document,
-    set_evidence_preference, set_evidence_template_layout, sync_repository_evidence_screenshots,
+    set_evidence_preference, set_evidence_template_header_images, set_evidence_template_layout,
+    sync_repository_evidence_screenshots,
 };
 use commands::llm::{llm_generate_corporate_summary, llm_rewrite_technical_summary};
 use commands::git::{
@@ -34,6 +35,7 @@ pub fn run() {
             set_evidence_preference,
             create_evidence_custom_template,
             set_evidence_template_layout,
+            set_evidence_template_header_images,
             delete_evidence_custom_template,
             list_repository_evidence_screenshots,
             sync_repository_evidence_screenshots,

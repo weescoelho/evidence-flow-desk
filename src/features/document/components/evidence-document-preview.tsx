@@ -112,6 +112,8 @@ export function EvidenceDocumentPreview({
       payload.documentRevisionDate,
       payload.documentRevisionSummary,
       payload.documentRevisionAuthor,
+      payload.templateHeaderImageLeft,
+      payload.templateHeaderImageRight,
       payload.technicalSummary,
       payload.corporateSummary,
       payload.commits,

@@ -31,6 +31,9 @@ export type PersistedEvidenceTemplate = {
   isBuiltin: boolean;
   /** Variante visual do documento (`enterprise` | `minimal` | `audit`). */
   layoutKey?: string;
+  /** Data URLs gravadas por template — faixa no topo do PDF/HTML. */
+  headerImageLeft?: string | null;
+  headerImageRight?: string | null;
 };
 
 export type EvidencePreferencesSnapshot = {
@@ -79,14 +82,26 @@ export function createEvidenceCustomTemplate(
 ) {
   return invoke<CreateEvidenceTemplateResult>("create_evidence_custom_template", {
     label,
-    layout_key: layoutKey ?? null,
+    layoutKey: layoutKey ?? null,
   });
 }
 
 export function setEvidenceTemplateLayout(templateId: string, layoutKey: string) {
   return invoke<void>("set_evidence_template_layout", {
-    template_id: templateId,
-    layout_key: layoutKey,
+    templateId,
+    layoutKey,
+  });
+}
+
+export function setEvidenceTemplateHeaderImages(
+  templateId: string,
+  headerImageLeft: string,
+  headerImageRight: string,
+) {
+  return invoke<void>("set_evidence_template_header_images", {
+    templateId,
+    headerImageLeft,
+    headerImageRight,
   });
 }
 

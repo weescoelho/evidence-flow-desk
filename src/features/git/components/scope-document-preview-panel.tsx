@@ -41,6 +41,8 @@ export function ScopeDocumentPreviewPanel({
   const activeTemplateId = useEvidenceMetadataStore(
     (s) => s.activeTemplateId,
   );
+  const templates = useEvidenceMetadataStore((s) => s.templates);
+  const activeTemplate = templates.find((t) => t.id === activeTemplateId);
   const changeId = useEvidenceMetadataStore((s) => s.changeId);
   const environment = useEvidenceMetadataStore((s) => s.environment);
   const productName = useEvidenceMetadataStore((s) => s.productName);
@@ -99,6 +101,8 @@ export function ScopeDocumentPreviewPanel({
       documentRevisionDate={documentRevisionDate}
       documentRevisionSummary={documentRevisionSummary}
       documentRevisionAuthor={documentRevisionAuthor}
+      templateHeaderImageLeft={activeTemplate?.headerImageLeft ?? ""}
+      templateHeaderImageRight={activeTemplate?.headerImageRight ?? ""}
       technicalSummary={technicalNarrative}
       corporateSummary={corporateNarrative}
       commits={data.commits}

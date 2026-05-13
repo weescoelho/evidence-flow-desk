@@ -44,6 +44,9 @@ export type EvidenceDocumentPayload = {
   files: FileChangeRow[];
   commitsTruncated: boolean;
   screenshots: EvidenceScreenshotPayload[];
+  /** Data URLs do template activo — faixa horizontal no topo (esq. / dir.). */
+  templateHeaderImageLeft?: string;
+  templateHeaderImageRight?: string;
 };
 
 const FILE_STATUS_PT: Record<FileChangeRow["status"], string> = {
@@ -80,30 +83,31 @@ function formatGeneratedAtLong(): string {
   );
 }
 
-function formatCommitTimestampPt(unix: number): string {
-  if (!Number.isFinite(unix) || unix <= 0) return "—";
-  return escapeHtml(
-    new Date(unix * 1000).toLocaleString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
-  );
+function buildTemplateHeaderBanner(p: EvidenceDocumentPayload): string {
+  const left = safeImageDataUrl((p.templateHeaderImageLeft ?? "").trim());
+  const right = safeImageDataUrl((p.templateHeaderImageRight ?? "").trim());
+  if (!left && !right) return "";
+  const leftCell = left
+    ? `<img src="${left}" alt="" class="evidence-template-header-img" />`
+    : "";
+  const rightCell = right
+    ? `<img src="${right}" alt="" class="evidence-template-header-img" />`
+    : "";
+  return `<div class="evidence-template-banner" role="presentation">
+  <div class="evidence-template-banner-inner">
+    <div class="evidence-template-banner-slot evidence-template-banner-left">${leftCell}</div>
+    <div class="evidence-template-banner-slot evidence-template-banner-right">${rightCell}</div>
+  </div>
+</div>`;
 }
 
-function changelogTipoLabel(conventional: string | null): string {
-  if (!conventional) return "Alteração";
-  const c = conventional.trim().toLowerCase();
-  if (c === "feat") return "Feature";
-  if (c === "fix") return "Correção";
-  if (c === "perf" || c === "refactor") return "Melhoria";
-  if (c === "chore") return "Manutenção";
-  if (c === "docs") return "Documentação";
-  if (c === "test") return "Teste";
-  if (c === "build" || c === "ci") return "Build / CI";
-  return escapeHtml(conventional);
+function prefixTemplateHeader(
+  bodyHtml: string,
+  p: EvidenceDocumentPayload,
+): string {
+  const banner = buildTemplateHeaderBanner(p);
+  if (!banner) return bodyHtml;
+  return `${banner}\n${bodyHtml}`;
 }
 
 function buildScreenshotSection(p: EvidenceDocumentPayload): string {
@@ -236,23 +240,6 @@ ${screenshotSection}
 `.trim();
 }
 
-function buildMarketChangelogRows(p: EvidenceDocumentPayload): string {
-  if (p.commits.length === 0) {
-    return `<tr><td colspan="5">Nenhum commit no intervalo.</td></tr>`;
-  }
-  return p.commits
-    .map(
-      (c) => `<tr>
-<td><code>${escapeHtml(c.shortHash)}</code></td>
-<td>${formatCommitTimestampPt(c.committedAtUnix)}</td>
-<td>${changelogTipoLabel(c.conventionalType)}</td>
-<td>${escapeHtml(c.summary)}</td>
-<td>${escapeHtml(c.authorName)}</td>
-</tr>`,
-    )
-    .join("\n");
-}
-
 function buildMarketStandardBodyHtml(p: EvidenceDocumentPayload): string {
   const product =
     (p.productName ?? "").trim() ||
@@ -265,7 +252,6 @@ function buildMarketStandardBodyHtml(p: EvidenceDocumentPayload): string {
   const changeLine = displayOrDash(p.changeId);
   const ownerLine = displayOrDash(p.technicalOwner);
   const approverLine = displayOrDash(p.approver);
-  const templateLine = escapeHtml(p.templateLabel.trim() || "padrão");
   const generatedAt = formatGeneratedAtLong();
 
   const docVer = (p.documentVersion ?? "").trim() || "1.0";
@@ -291,33 +277,15 @@ function buildMarketStandardBodyHtml(p: EvidenceDocumentPayload): string {
         }`
       : `<pre class="technical">${escapeHtml(tech)}</pre>`;
 
-  const outScoped = (p.outOfScope ?? "").trim();
-  const scopeOutHtml =
-    outScoped.length > 0
-      ? `<pre class="technical">${escapeHtml(outScoped)}</pre>`
-      : `<p>—</p>`;
-
-  const fileList = p.files.slice(0, 50).map((f) => {
-    const line = f.path.trim() || "—";
-    return `<li>${escapeHtml(line)}</li>`;
-  });
-  const fileListHtml =
-    fileList.length > 0
-      ? `<ul>${fileList.join("\n")}</ul>`
-      : "<p>Nenhum arquivo listado no intervalo do escopo Git.</p>";
-
   const truncNote = p.commitsTruncated
     ? `<p class="warn"><strong>Atenção:</strong> a lista de commits foi truncada pelo limite de segurança da aplicação.</p>`
     : "";
 
-  const changelogRows = buildMarketChangelogRows(p);
-  const commitRows = buildClassicCommitRows(p);
   const fileRows = buildClassicFileRows(p);
   const screenshotSection = buildScreenshotSection(p);
 
   return `
 <section id="evidence-section-cover" class="cover">
-  <h1>Capa / identificação</h1>
   <p style="margin:0 0 8pt;font-size:14pt;font-weight:600">${productTitle}</p>
   <dl class="cover-grid">
     <dt>Versão da entrega</dt><dd>${versionLine}</dd>
@@ -326,7 +294,6 @@ function buildMarketStandardBodyHtml(p: EvidenceDocumentPayload): string {
     <dt>Change ID / ticket</dt><dd>${changeLine}</dd>
     <dt>Responsável técnico</dt><dd>${ownerLine}</dd>
     <dt>Aprovador</dt><dd>${approverLine}</dd>
-    <dt>Template documental</dt><dd>${templateLine}</dd>
     <dt>Gerado em</dt><dd>${generatedAt}</dd>
     <dt>Escopo Git (base → compare)</dt><dd>${escapeHtml(p.baseRef)} → ${escapeHtml(p.compareRef)}</dd>
   </dl>
@@ -381,10 +348,11 @@ ${screenshotSection}
  */
 export function buildEvidenceBodyHtml(p: EvidenceDocumentPayload): string {
   const layout = normalizeEvidenceTemplateLayoutKey(p.templateLayoutKey);
-  if (layout === "market_standard") {
-    return buildMarketStandardBodyHtml(p);
-  }
-  return buildClassicEvidenceBodyHtml(p);
+  const inner =
+    layout === "market_standard"
+      ? buildMarketStandardBodyHtml(p)
+      : buildClassicEvidenceBodyHtml(p);
+  return prefixTemplateHeader(inner, p);
 }
 
 const PRINT_STYLES = `
@@ -399,6 +367,29 @@ const PRINT_STYLES = `
   }
   .doc-header h1 { font-size: 18pt; margin: 0 0 4pt; }
   .subtitle { margin: 0; color: #444; font-size: 10pt; }
+  .evidence-template-banner { width: 100%; margin: 0 0 12pt; }
+  .evidence-template-banner-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10pt;
+    width: 100%;
+  }
+  .evidence-template-banner-slot {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 4pt;
+    display: flex;
+  }
+  .evidence-template-banner-left { justify-content: flex-start; }
+  .evidence-template-banner-right { justify-content: flex-end; }
+  .evidence-template-header-img {
+    max-height: 26mm;
+    max-width: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+  }
   h2 { font-size: 12pt; margin: 14pt 0 6pt; border-bottom: 1px solid #ccc; padding-bottom: 2pt; }
   h3 { font-size: 11pt; margin: 10pt 0 4pt; font-weight: 600; }
   .meta dl { display: grid; grid-template-columns: 9em 1fr; gap: 4pt 10pt; margin: 0; }

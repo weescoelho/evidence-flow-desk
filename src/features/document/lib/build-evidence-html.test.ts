@@ -58,7 +58,19 @@ describe("buildEvidenceBodyHtml", () => {
     expect(html).not.toContain("/tmp/repo");
   });
 
-  it("modelo mercado inclui secções IEEE/ITIL e não expõe paths indevidos no cabeçalho clássico", () => {
+  it("prefixa faixa com imagens do template (esq. / dir.)", () => {
+    const html = buildEvidenceBodyHtml(
+      basePayload({
+        templateHeaderImageLeft: "data:image/png;base64,xxx",
+        templateHeaderImageRight: "data:image/jpeg;base64,yyy",
+      }),
+    );
+    expect(html).toContain("evidence-template-banner-inner");
+    expect(html).toContain("evidence-template-banner-left");
+    expect(html).toContain("evidence-template-banner-right");
+  });
+
+  it("modelo mercado inclui capa IEEE/ITIL e não expõe paths indevidos no cabeçalho clássico", () => {
     const html = buildEvidenceBodyHtml(
       basePayload({
         templateLayoutKey: "market_standard",
@@ -68,8 +80,6 @@ describe("buildEvidenceBodyHtml", () => {
     expect(html).toContain("Capa / identificação");
     expect(html).toContain("Controle de versões do documento");
     expect(html).toContain("Resumo executivo");
-    expect(html).toContain("Escopo da implementação");
-    expect(html).toContain("Histórico de evoluções (changelog)");
     expect(html).toContain("Meu Sistema");
     expect(html).toContain("main");
     expect(html).toContain("dev");
