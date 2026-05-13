@@ -32,7 +32,7 @@ Quando existirem anexos de imagem na sessão, o corpo do documento inclui uma se
 
 
 - Múltiplos templates editáveis, logos e temas (RF-009 completo).
-- PDF gerado sem diálogo de impressão (biblioteca nativa ou servidor).
+- PDF sem diálogo de impressão: **fora do âmbito do produto** ([AD-004](../../project/STATE.md)); o único fluxo suportado é impressão do sistema + «Guardar como PDF» (DOC-R03).
 - Syntax highlight em blocos de código.
 
 ---

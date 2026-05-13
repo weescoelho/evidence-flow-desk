@@ -23,4 +23,4 @@
 |--------|--------|
 | T1 | ✅ |
 
-**Próximo:** templates adicionais, PDF sem diálogo de impressão, ou RF-015.
+**Próximo:** templates adicionais ou evoluções RF-015 (persistência); PDF continua apenas via impressão do sistema ([AD-004](../../project/STATE.md)).

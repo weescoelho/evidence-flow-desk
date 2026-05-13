@@ -10,7 +10,7 @@
 | 01 | 01 - Repositorio | `Hbs1b` | Seleção de pasta, recentes, validação Git |
 | 02 | 02 - Escopo e commits | `ANhm2` | Base/compare, modo escopo, lista de commits |
 | 03 | 03 - Evidencias e conteudo | `fZdOT` | Template, metadados, resumos, métricas, screenshots |
-| 04 | 04 - Preview | `X80A7` | Pré-visualização documento, sumário, zoom |
+| 04 | 04 - Preview | `X80A7` | Pré-visualização documento, zoom |
 | 05 | 05 - Exportar PDF | `Kym43` | Destino, opções PDF, exportação |
 | 06 | 06 - Historico de documentos | `D4yXKU` | Biblioteca local / histórico (pós-MVP núcleo) |
 | 07 | 07 - Configuracoes | `RYyhA` | Preferências da app |
@@ -87,8 +87,7 @@ No passo 3 (`fZdOT` / `gbZwC`), o utilizador dispõe de:
 No passo 4 (`X80A7`):
 
 - Barra de ferramentas: indicação **«Paginas: N • zoom 100%»** e controlos **+** / **−** de zoom.
-- **Índice** lateral (Sumário): bullets para Resumo executivo, Commits (N), Arquivos e metricas, Evidencias visuais.
-- Área central simula **página** com cabeçalho (Change ID, branch/versão, ambiente), corpo (secções), nota de atualização ao mudar template/commits.
+- Área principal com scroll simula **página** com cabeçalho (Change ID, branch/versão, ambiente), corpo em secções, nota de atualização ao mudar template/commits.
 - Copy de rodapé: «Atualiza ao mudar template ou commits marcados».
 
 **Critério:** Preview reage a alterações de escopo, template activo, metadados e anexos (subset [document-export-mvp](../document-export-mvp/spec.md)).
@@ -125,7 +124,7 @@ Estes ecrãs são **obrigatórios para paridade completa** com o `.pen`; podem s
 | Passo 1 | Pasta + recentes + erro Git | Layout card + «Explorar» |
 | Passo 2 | Refs + lista commits/ficheiros | Modos Diff / SHA / PR-MR (PR-MR pode stub não funcional com badge) |
 | Passo 3 | Resumo técnico + métricas + screenshots | + Template selector, Change ID, Ambiente, blocos IA/corporativo (placeholder F2) |
-| Passo 4 | Preview HTML útil | + Zoom, índice lateral, cabeçalho metadados |
+| Passo 4 | Preview HTML útil | + Zoom, cabeçalho metadados |
 | Passo 5 | PDF via impressão | + Destino, opções, stripe SQLite copy |
 | 06 / 07 | Opcional | Listagem histórico + settings |
 

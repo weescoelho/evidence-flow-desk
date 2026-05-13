@@ -13,6 +13,8 @@ import { useEffect, useState } from "react";
 import {
   EvidenceAppSettingsView,
   EvidenceDocumentsLibraryView,
+  EvidenceScreenshotsPlaceholderView,
+  EvidenceTemplatesPlaceholderView,
   useHydrateEvidenceAppState,
   useEvidencePreferenceSync,
 } from "@/features/document";
@@ -42,13 +44,13 @@ const SIDEBAR_NAV: readonly {
     id: "templates",
     label: "Templates",
     icon: LayoutTemplate,
-    available: false,
+    available: true,
   },
   {
     id: "screenshots",
     label: "Screenshots",
     icon: ImagePlus,
-    available: false,
+    available: true,
   },
   {
     id: "documents",
@@ -148,6 +150,10 @@ function App() {
           <EvidenceDocumentsLibraryView />
         ) : activeSection === "settings" ? (
           <EvidenceAppSettingsView />
+        ) : activeSection === "templates" ? (
+          <EvidenceTemplatesPlaceholderView />
+        ) : activeSection === "screenshots" ? (
+          <EvidenceScreenshotsPlaceholderView />
         ) : (
           <EvidenceCreationWizard />
         )}

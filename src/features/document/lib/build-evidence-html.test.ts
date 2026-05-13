@@ -99,7 +99,7 @@ describe("buildEvidenceBodyHtml", () => {
     expect(html).toContain("abcd123");
   });
 
-  it("expõe ids de secção para o sumário do preview", () => {
+  it("expõe ids de secção estáveis no HTML do relatório", () => {
     const html = buildEvidenceBodyHtml(basePayload());
     expect(html).toContain('id="evidence-section-meta"');
     expect(html).toContain('id="evidence-section-summary"');

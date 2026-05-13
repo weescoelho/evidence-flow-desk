@@ -139,11 +139,6 @@ export function EvidenceDocumentPreview({
     syncIframeMetrics();
   }, [printReadyHtml, scale, syncIframeMetrics]);
 
-  const scrollIframeToSection = useCallback((id: string) => {
-    const doc = iframeRef.current?.contentDocument;
-    doc?.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
-
   const handlePickExportDir = useCallback(async () => {
     const picked = await open({
       directory: true,
@@ -301,74 +296,6 @@ export function EvidenceDocumentPreview({
         </div>
       </div>
     </div>
-  );
-
-  const sumarioAside = (
-    <nav
-      className="flex w-full shrink-0 flex-col gap-3 rounded-[12px] border border-[#E4E4E7] bg-white p-3 sm:w-[200px]"
-      aria-label="Sumário do documento"
-    >
-      <p className="font-mono text-[13px] font-semibold text-[#18181B]">
-        Sumário
-      </p>
-      <ul className="flex list-none flex-col gap-2 font-mono text-[12px]">
-        <li className="pl-4">
-          <button
-            type="button"
-            className={cn(
-              "w-full rounded px-2 py-1 text-left text-[#5946DB] underline-offset-4 hover:bg-[#FAFAFA] hover:underline",
-            )}
-            onClick={() =>
-              scrollIframeToSection("evidence-section-summary")
-            }
-          >
-            Resumo executivo
-          </button>
-        </li>
-        <li className="pl-4">
-          <button
-            type="button"
-            className={cn(
-              "w-full rounded px-2 py-1 text-left text-[#5946DB] underline-offset-4 hover:bg-[#FAFAFA] hover:underline",
-            )}
-            onClick={() => scrollIframeToSection("evidence-section-commits")}
-          >
-            Commits ({payload.commits.length})
-          </button>
-        </li>
-        <li className="pl-4">
-          <button
-            type="button"
-            className={cn(
-              "w-full rounded px-2 py-1 text-left text-[#5946DB] underline-offset-4 hover:bg-[#FAFAFA] hover:underline",
-            )}
-            onClick={() => scrollIframeToSection("evidence-section-files")}
-          >
-            Arquivos e métricas
-          </button>
-        </li>
-        <li className="pl-4">
-          {payload.screenshots.length > 0 ? (
-            <button
-              type="button"
-              className={cn(
-                "w-full rounded px-2 py-1 text-left text-[#5946DB] underline-offset-4 hover:bg-[#FAFAFA] hover:underline",
-              )}
-              onClick={() =>
-                scrollIframeToSection("evidence-section-screenshots")
-              }
-            >
-              Evidências visuais
-            </button>
-          ) : (
-            <span className="block rounded px-2 py-1 text-[#71717A]" title="Sem screenshots neste âmbito">
-              Evidências visuais{" "}
-              <span className="text-[11px]">(vazio)</span>
-            </span>
-          )}
-        </li>
-      </ul>
-    </nav>
   );
 
   const sqliteStripe = isExportStep ? (
@@ -574,10 +501,7 @@ export function EvidenceDocumentPreview({
             </div>
           </div>
 
-          <div className="flex flex-col gap-4 lg:flex-row lg:gap-[14px]">
-            {sumarioAside}
-            {previewFrameArea}
-          </div>
+          {previewFrameArea}
           <p
             data-testid="preview-update-copy"
             className="flex items-start gap-2 font-mono text-[11px] text-[#71717A]"
@@ -633,7 +557,7 @@ export function EvidenceDocumentPreview({
         ) : (
           <>
             Abre o diálogo de impressão do sistema — escolha «Guardar como PDF» ou uma
-            impressora. Utilize «Sumário» para saltar dentro da pré-visualização.
+            impressora. Use o scroll dentro da pré-visualização para percorrer o documento.
           </>
         )}
       </p>

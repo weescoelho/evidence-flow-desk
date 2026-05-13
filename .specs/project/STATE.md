@@ -1,7 +1,7 @@
 # Estado do projeto — EvidenceFlow Desk
 
 **Última atualização:** 2026-05-12  
-**Trabalho atual:** MVP narrativa/export + **RF-015** incremental (SQLite: preferências/templates; PDF silencioso quando existir especificação — pendente). **UI-R06:** ecrã 06 (Documentos/histórico) já existente; **07 Configurações** com vista stub navegável na sidebar (2026-05-12). Próximo: **Templates** / **Screenshots** globais como stubs opcionais, QA passos 4–5 vs `design-assets/`, ou evolução RF-015 (PDF silencioso / metadados em `saved_evidence_documents`).
+**Trabalho atual:** MVP narrativa/export + **RF-015** incremental. **UI-R01:** sidebar com **Templates** e **Screenshots** navegáveis (stubs 2026-05-12). **Próximo:** QA visual passos 4–5 vs `design-assets/`; **RF-015** metadados extra em `saved_evidence_documents` (opcional).
 
 
 ---
@@ -36,6 +36,14 @@
 
 **Impacto:** Features de documento, resumo, Git e screenshots referenciam `product-ui-journey` onde o layout é relevante.
 
+### AD-004: PDF sem diálogo de impressão não é objectivo (2026-05-12)
+
+**Decisão:** Não implementar exportação PDF «silenciosa» (sem diálogo de impressão / pipeline headless nativo ou servidor próprio).
+
+**Motivo:** A complexidade e manutenção não se justificam face ao fluxo actual (impressão do sistema + Guardar como PDF), que cumpre o PRD para desktop local sem SaaS.
+
+**Impacto:** `document-export-mvp` mantém apenas DOC-R03; backlog e tarefas deixam de referir esta evolução.
+
 ---
 
 ## Bloqueadores ativos
@@ -68,4 +76,4 @@ _Nenhuma listada._
 
 - [x] Feature `git-repository-and-branches`: UAT T12; estado **Approved** em [tasks.md](../features/git-repository-and-branches/tasks.md).
 - [x] Feature `git-commits-and-changes`: UAT manual (refs branch/tag/SHA + atalhos) — **OK** 2026-05-12; [tasks.md](../features/git-commits-and-changes/tasks.md).
-- [ ] **RF-015 evolução** — PDF silencioso ou metadados extra por linha em `saved_evidence_documents` (opcional). *Entregue:* histórico + índice HTML + migração `index.json`; **preferências KV** (`export.default_directory`, `evidence.active_template_id`, `evidence.change_id`, `evidence.environment`) + **templates personalizados** na mesma SQLite (`evidence_templates`); hidratação em `App` + sincronização debounced dos campos do passo 3; pasta de export persistida no passo 5.
+- [ ] **RF-015 evolução** — Metadados extra por linha em `saved_evidence_documents` (opcional). *Entregue:* histórico + índice HTML + migração `index.json`; **preferências KV** (`export.default_directory`, `evidence.active_template_id`, `evidence.change_id`, `evidence.environment`) + **templates personalizados** na mesma SQLite (`evidence_templates`); hidratação em `App` + sincronização debounced dos campos do passo 3; pasta de export persistida no passo 5.
