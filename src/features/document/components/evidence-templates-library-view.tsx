@@ -35,9 +35,9 @@ export function EvidenceTemplatesLibraryView() {
           Modelos de documento
         </h1>
         <p className="max-w-[56ch] font-mono text-sm text-muted-foreground">
-          O template ativo define o rótulo no HTML/PDF. Presets personalizados
-          seguem o mesmo layout do MVP; edição visual de secções fica para fases
-          posteriores (RF-009).
+          O template ativo combina rótulo e modelo visual no PDF/HTML (três variantes:
+          enterprise, mínimo, auditoria). Secções do relatório são as mesmas; mudam
+          tipografia e ênfase — núcleo RF-009 nesta versão.
         </p>
       </header>
 

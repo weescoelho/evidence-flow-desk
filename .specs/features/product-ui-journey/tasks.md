@@ -40,7 +40,7 @@
 | [x] 3.2 | Campos **Change ID / ticket** e **Ambiente** (estado global exportável para HTML/PDF) | UI-R03 | DOC-R01 |
 | [x] 3.3 | Layout duas colunas: narrativa + métricas «Mudanças no código» | UI-R03 | — |
 | [x] 3.4 | Blocos IA / resumo corporativo: placeholder Fase 2 ou desactivado explícito | UI-R03 | Copy aprovada |
-| [x] 3.5 | Secção screenshots com título e acções «Importar arquivo» / «Nova captura» conforme layout | UI-R03 | SCR-* |
+| [x] 3.5 | Secção screenshots com título e acção «Importar arquivo» conforme layout | UI-R03 | SCR-* |
 
 ---
 
@@ -66,7 +66,7 @@
 |------|------|--------|
 | 2026-05-12 | **1.1** | Sidebar com 5 itens Lucide (`App.tsx`), estilo activo `Repositórios` = `docs/UI-COMPONENTS.md`; outros desactivados até rotas 06/07 e vistas globais. |
 | 2026-05-12 | **2.2–2.4** | `EvidenceCreationWizard`: `STEP_PAGE` (H1+sub por passo); tablist removida; stepper clicável; rodapé «Cancelar» (volta um passo; passo 1 inactivo) + primários UI-R02 + ícones; passo 5 aciona `exportPdfTriggerRef` → «Exportar PDF…». `App.tsx` já sem cabeçalho genérico duplicado. |
-| 2026-05-12 | **3.1–3.5 (MVP)** | Store `evidence-metadata-store`; `EvidenceDocumentMetadataSection`; `EvidenceNarrativeMetrics` (2 colunas); metadados no HTML (`build-evidence-html`); preview lê store em `ScopeDocumentPreviewPanel`; screenshots: título + Importar + Nova captura (stub); `resetSession` no `resetGitStore`. |
+| 2026-05-12 | **3.1–3.5 (MVP)** | Store `evidence-metadata-store`; `EvidenceDocumentMetadataSection`; `EvidenceNarrativeMetrics` (2 colunas); metadados no HTML (`build-evidence-html`); preview lê store em `ScopeDocumentPreviewPanel`; screenshots: título + Importar; `resetSession` no `resetGitStore`. |
 | 2026-05-12 | **4.1–4.2** | `EvidenceDocumentPreview`: passo 4 barra «Páginas • zoom ±», área única com scroll; copy «Atualiza ao mudar…»; (`id` mantidos nas secções HTML para âncoras/relatório); passo 5 destino/pasta, nome → `<title>`, opções PDF, faixa SQLite; `buildEvidencePrintHtml`. |
 | 2026-05-12 | **1.3 (completo)** | **Templates**: `EvidenceTemplatesLibraryView`; **Screenshots**: `EvidenceScreenshotsLibraryView` (reutiliza `EvidenceScreenshotsSection` / store de sessão); entradas da sidebar activas (`App.tsx`). Histórico = Documentos; Config = settings. |
 | 2026-05-13 | QA 4–5 + assets | PNG `docs/design-assets/X80A7.png`, `Kym43.png` (Pencil MCP); ícone atualização preview + faixa SQLite; zoom textual `−`/`+` 34×34 alinhados ao pen. |

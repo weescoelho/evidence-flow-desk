@@ -30,6 +30,38 @@ export function EvidenceDocumentMetadataSection({
   const setChangeId = useEvidenceMetadataStore((s) => s.setChangeId);
   const environment = useEvidenceMetadataStore((s) => s.environment);
   const setEnvironment = useEvidenceMetadataStore((s) => s.setEnvironment);
+  const productName = useEvidenceMetadataStore((s) => s.productName);
+  const setProductName = useEvidenceMetadataStore((s) => s.setProductName);
+  const releaseVersion = useEvidenceMetadataStore((s) => s.releaseVersion);
+  const setReleaseVersion = useEvidenceMetadataStore((s) => s.setReleaseVersion);
+  const deploymentDate = useEvidenceMetadataStore((s) => s.deploymentDate);
+  const setDeploymentDate = useEvidenceMetadataStore((s) => s.setDeploymentDate);
+  const technicalOwner = useEvidenceMetadataStore((s) => s.technicalOwner);
+  const setTechnicalOwner = useEvidenceMetadataStore((s) => s.setTechnicalOwner);
+  const approver = useEvidenceMetadataStore((s) => s.approver);
+  const setApprover = useEvidenceMetadataStore((s) => s.setApprover);
+  const outOfScope = useEvidenceMetadataStore((s) => s.outOfScope);
+  const setOutOfScope = useEvidenceMetadataStore((s) => s.setOutOfScope);
+  const documentVersion = useEvidenceMetadataStore((s) => s.documentVersion);
+  const setDocumentVersion = useEvidenceMetadataStore((s) => s.setDocumentVersion);
+  const documentRevisionDate = useEvidenceMetadataStore(
+    (s) => s.documentRevisionDate,
+  );
+  const setDocumentRevisionDate = useEvidenceMetadataStore(
+    (s) => s.setDocumentRevisionDate,
+  );
+  const documentRevisionSummary = useEvidenceMetadataStore(
+    (s) => s.documentRevisionSummary,
+  );
+  const setDocumentRevisionSummary = useEvidenceMetadataStore(
+    (s) => s.setDocumentRevisionSummary,
+  );
+  const documentRevisionAuthor = useEvidenceMetadataStore(
+    (s) => s.documentRevisionAuthor,
+  );
+  const setDocumentRevisionAuthor = useEvidenceMetadataStore(
+    (s) => s.setDocumentRevisionAuthor,
+  );
   const hydrated = useEvidenceMetadataStore((s) => s.hydrated);
 
   if (!repositoryPath) {
@@ -61,8 +93,9 @@ export function EvidenceDocumentMetadataSection({
               Template e campos do documento
             </h3>
             <p className="text-[12px] text-[#71717A]">
-              Use um preset corporativo e preencha metadados de rastreio. Presets
-              personalizados ficam no SQLite local (RF-015).
+              Use um preset corporativo e preencha metadados de rastreio. O preset
+              integrado segue estrutura de mercado (capa, escopo, changelog).
+              Presets personalizados ficam no SQLite local (RF-015).
             </p>
           </div>
           <button
@@ -121,6 +154,139 @@ export function EvidenceDocumentMetadataSection({
               onChange={(e) => setEnvironment(e.target.value)}
               placeholder="ex.: HML — cluster azul"
               className="h-10 rounded-[10px] border border-[#E4E4E7] bg-white px-3 text-[13px] outline-none placeholder:text-[#71717A] focus-visible:ring-2 focus-visible:ring-[#5946DB]/35"
+            />
+          </label>
+        </div>
+
+        <div className="flex flex-col gap-2 border-t border-[#E4E4E7] pt-5">
+          <h4 className="text-[13px] font-semibold text-[#18181B]">
+            Capa e controlo do documento
+          </h4>
+          <p className="text-[12px] text-[#71717A]">
+            Campos opcionais para o modelo IEEE / ITIL no PDF/HTML (vazios viram
+            «—» ou valor por omissão).
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="flex flex-col gap-1.5 sm:col-span-2">
+              <span className="text-[12px] font-semibold text-[#71717A]">
+                Produto / sistema
+              </span>
+              <input
+                type="text"
+                value={productName}
+                onChange={(e) => setProductName(e.target.value)}
+                placeholder="Omite para usar o nome da pasta do repositório"
+                className="h-10 rounded-[10px] border border-[#E4E4E7] bg-white px-3 text-[13px] outline-none placeholder:text-[#71717A] focus-visible:ring-2 focus-visible:ring-[#5946DB]/35"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-[12px] font-semibold text-[#71717A]">
+                Versão da entrega
+              </span>
+              <input
+                type="text"
+                value={releaseVersion}
+                onChange={(e) => setReleaseVersion(e.target.value)}
+                placeholder="ex.: v2.3.1"
+                className="h-10 rounded-[10px] border border-[#E4E4E7] bg-white px-3 text-[13px] outline-none placeholder:text-[#71717A] focus-visible:ring-2 focus-visible:ring-[#5946DB]/35"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-[12px] font-semibold text-[#71717A]">
+                Data de implantação
+              </span>
+              <input
+                type="text"
+                value={deploymentDate}
+                onChange={(e) => setDeploymentDate(e.target.value)}
+                placeholder="ex.: 12/05/2026"
+                className="h-10 rounded-[10px] border border-[#E4E4E7] bg-white px-3 text-[13px] outline-none placeholder:text-[#71717A] focus-visible:ring-2 focus-visible:ring-[#5946DB]/35"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-[12px] font-semibold text-[#71717A]">
+                Responsável técnico
+              </span>
+              <input
+                type="text"
+                value={technicalOwner}
+                onChange={(e) => setTechnicalOwner(e.target.value)}
+                className="h-10 rounded-[10px] border border-[#E4E4E7] bg-white px-3 text-[13px] outline-none placeholder:text-[#71717A] focus-visible:ring-2 focus-visible:ring-[#5946DB]/35"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-[12px] font-semibold text-[#71717A]">
+                Aprovador
+              </span>
+              <input
+                type="text"
+                value={approver}
+                onChange={(e) => setApprover(e.target.value)}
+                className="h-10 rounded-[10px] border border-[#E4E4E7] bg-white px-3 text-[13px] outline-none placeholder:text-[#71717A] focus-visible:ring-2 focus-visible:ring-[#5946DB]/35"
+              />
+            </label>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="flex flex-col gap-1.5">
+              <span className="text-[12px] font-semibold text-[#71717A]">
+                Versão do documento
+              </span>
+              <input
+                type="text"
+                value={documentVersion}
+                onChange={(e) => setDocumentVersion(e.target.value)}
+                placeholder="ex.: 1.0"
+                className="h-10 rounded-[10px] border border-[#E4E4E7] bg-white px-3 text-[13px] outline-none placeholder:text-[#71717A] focus-visible:ring-2 focus-visible:ring-[#5946DB]/35"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-[12px] font-semibold text-[#71717A]">
+                Data da revisão do documento
+              </span>
+              <input
+                type="text"
+                value={documentRevisionDate}
+                onChange={(e) => setDocumentRevisionDate(e.target.value)}
+                placeholder="Data da última revisão deste PDF"
+                className="h-10 rounded-[10px] border border-[#E4E4E7] bg-white px-3 text-[13px] outline-none placeholder:text-[#71717A] focus-visible:ring-2 focus-visible:ring-[#5946DB]/35"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-[12px] font-semibold text-[#71717A]">
+                Autor da revisão do documento
+              </span>
+              <input
+                type="text"
+                value={documentRevisionAuthor}
+                onChange={(e) => setDocumentRevisionAuthor(e.target.value)}
+                className="h-10 rounded-[10px] border border-[#E4E4E7] bg-white px-3 text-[13px] outline-none placeholder:text-[#71717A] focus-visible:ring-2 focus-visible:ring-[#5946DB]/35"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5 sm:col-span-2">
+              <span className="text-[12px] font-semibold text-[#71717A]">
+                O quê mudou nesta versão do documento
+              </span>
+              <textarea
+                value={documentRevisionSummary}
+                onChange={(e) => setDocumentRevisionSummary(e.target.value)}
+                placeholder="ex.: Emissão inicial; inclusão de screenshots"
+                rows={2}
+                className="min-h-[56px] rounded-[10px] border border-[#E4E4E7] bg-white px-3 py-2 text-[13px] outline-none placeholder:text-[#71717A] focus-visible:ring-2 focus-visible:ring-[#5946DB]/35"
+              />
+            </label>
+          </div>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-[12px] font-semibold text-[#71717A]">
+              Fora do âmbito desta versão
+            </span>
+            <textarea
+              value={outOfScope}
+              onChange={(e) => setOutOfScope(e.target.value)}
+              placeholder="Itens explicitamente excluídos desta entrega"
+              rows={2}
+              className="min-h-[56px] rounded-[10px] border border-[#E4E4E7] bg-white px-3 py-2 text-[13px] outline-none placeholder:text-[#71717A] focus-visible:ring-2 focus-visible:ring-[#5946DB]/35"
             />
           </label>
         </div>

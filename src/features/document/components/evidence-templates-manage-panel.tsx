@@ -9,17 +9,21 @@ import {
   evidencePreferenceKeys,
   loadEvidenceAppPersistedState,
   setEvidencePreference,
+  setEvidenceTemplateLayout,
 } from "../api/evidence-app-state.commands";
+import {
+  EVIDENCE_TEMPLATE_LAYOUT_KEYS,
+  EVIDENCE_TEMPLATE_LAYOUT_LABELS,
+  normalizeEvidenceTemplateLayoutKey,
+  type EvidenceTemplateLayoutKey,
+} from "../lib/evidence-template-layouts";
 import { useEvidenceMetadataStore } from "../store/evidence-metadata-store";
 
 export type EvidenceTemplatesManagePanelProps = {
   className?: string;
-  /** Título da área de gestão (p.ex. dialog vs página). */
   heading?: string;
-  /** `aria-labelledby` no modal. */
   headingId?: string;
   intro?: string;
-  /** Só no modal: botão «Fechar». */
   onRequestClose?: () => void;
 };
 
@@ -27,13 +31,15 @@ export function EvidenceTemplatesManagePanel({
   className,
   heading = "Gerenciar templates",
   headingId,
-  intro = "Presets ficam na base SQLite local. O corpo do documento é o mesmo MVP; altera-se o rótulo no PDF/HTML.",
+  intro = "Cada preset tem um nome (rótulo no PDF) e um modelo visual. O conteúdo do relatório segue o mesmo conjunto de secções; mudam tipografia e ênfase (subset RF-009).",
   onRequestClose,
 }: EvidenceTemplatesManagePanelProps) {
   const templates = useEvidenceMetadataStore((s) => s.templates);
   const setTemplates = useEvidenceMetadataStore((s) => s.setTemplates);
   const hydrated = useEvidenceMetadataStore((s) => s.hydrated);
   const [label, setLabel] = useState("");
+  const [newLayoutKey, setNewLayoutKey] =
+    useState<EvidenceTemplateLayoutKey>("enterprise");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,8 +64,9 @@ export function EvidenceTemplatesManagePanel({
     setBusy(true);
     setError(null);
     try {
-      await createEvidenceCustomTemplate(trimmed);
+      await createEvidenceCustomTemplate(trimmed, newLayoutKey);
       setLabel("");
+      setNewLayoutKey("enterprise");
       await syncTemplatesAndMaybePersistActive();
     } catch (e) {
       setError(
@@ -83,6 +90,26 @@ export function EvidenceTemplatesManagePanel({
         e instanceof Error
           ? e.message
           : "Não foi possível remover o template.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleLayoutChange(
+    templateId: string,
+    layoutKey: EvidenceTemplateLayoutKey,
+  ) {
+    setBusy(true);
+    setError(null);
+    try {
+      await setEvidenceTemplateLayout(templateId, layoutKey);
+      await syncTemplatesAndMaybePersistActive();
+    } catch (e) {
+      setError(
+        e instanceof Error
+          ? e.message
+          : "Não foi possível actualizar o modelo visual.",
       );
     } finally {
       setBusy(false);
@@ -117,7 +144,7 @@ export function EvidenceTemplatesManagePanel({
         ) : null}
       </div>
 
-      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end">
         <label className="flex min-w-0 flex-1 flex-col gap-1">
           <span className="text-[12px] font-semibold text-[#71717A]">
             Novo preset
@@ -131,6 +158,27 @@ export function EvidenceTemplatesManagePanel({
             className="h-10 rounded-[10px] border border-[#E4E4E7] bg-white px-3 text-[13px] outline-none placeholder:text-[#71717A] focus-visible:ring-2 focus-visible:ring-[#5946DB]/35"
             onChange={(ev) => setLabel(ev.target.value)}
           />
+        </label>
+        <label className="flex w-full flex-col gap-1 sm:w-[min(100%,280px)]">
+          <span className="text-[12px] font-semibold text-[#71717A]">
+            Modelo visual
+          </span>
+          <select
+            disabled={busy}
+            value={newLayoutKey}
+            className="h-10 rounded-[10px] border border-[#E4E4E7] bg-white px-3 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-[#5946DB]/35"
+            onChange={(ev) =>
+              setNewLayoutKey(
+                normalizeEvidenceTemplateLayoutKey(ev.target.value),
+              )
+            }
+          >
+            {EVIDENCE_TEMPLATE_LAYOUT_KEYS.map((k) => (
+              <option key={k} value={k}>
+                {EVIDENCE_TEMPLATE_LAYOUT_LABELS[k]}
+              </option>
+            ))}
+          </select>
         </label>
         <button
           type="button"
@@ -147,32 +195,59 @@ export function EvidenceTemplatesManagePanel({
       ) : null}
 
       <ul className="flex flex-col gap-2">
-        {templates.map((t) => (
-          <li
-            key={t.id}
-            className="flex items-center justify-between gap-2 rounded-[10px] border border-[#E4E4E7] bg-[#F4F4F5] px-3 py-2.5"
-          >
-            <div className="min-w-0">
-              <p className="truncate text-[13px] text-[#18181B]">{t.label}</p>
-              <p className="text-[11px] text-[#71717A]">
-                {t.isBuiltin ? "Integrado" : `id: ${t.id.slice(0, 8)}…`}
-              </p>
-            </div>
-            {t.isBuiltin ? (
-              <span className="shrink-0 text-[11px] text-[#71717A]">—</span>
-            ) : (
-              <button
-                type="button"
-                disabled={busy}
-                title="Remover preset personalizado"
-                className="flex size-9 shrink-0 items-center justify-center rounded-[8px] border border-[#E4E4E7] bg-white text-[#71717A] hover:bg-red-50 hover:text-red-700 disabled:opacity-50"
-                onClick={() => void handleDelete(t.id)}
-              >
-                <Trash2 className="size-4" aria-hidden />
-              </button>
-            )}
-          </li>
-        ))}
+        {templates.map((t) => {
+          const lk = normalizeEvidenceTemplateLayoutKey(t.layoutKey);
+          return (
+            <li
+              key={t.id}
+              className="flex flex-col gap-2 rounded-[10px] border border-[#E4E4E7] bg-[#F4F4F5] px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[13px] text-[#18181B]">{t.label}</p>
+                <p className="text-[11px] text-[#71717A]">
+                  {t.isBuiltin ? "Integrado" : `id: ${t.id.slice(0, 8)}…`}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="flex flex-col gap-0.5">
+                  <span className="text-[10px] font-medium text-[#71717A]">
+                    Modelo PDF/HTML
+                  </span>
+                  <select
+                    disabled={busy}
+                    value={lk}
+                    className="h-9 min-w-[200px] rounded-[10px] border border-[#E4E4E7] bg-white px-2 text-[12px]"
+                    onChange={(ev) =>
+                      void handleLayoutChange(
+                        t.id,
+                        normalizeEvidenceTemplateLayoutKey(ev.target.value),
+                      )
+                    }
+                  >
+                    {EVIDENCE_TEMPLATE_LAYOUT_KEYS.map((k) => (
+                      <option key={k} value={k}>
+                        {EVIDENCE_TEMPLATE_LAYOUT_LABELS[k]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {t.isBuiltin ? (
+                  <span className="hidden shrink-0 text-[11px] text-[#71717A] sm:inline sm:w-9" />
+                ) : (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    title="Remover preset personalizado"
+                    className="flex size-9 shrink-0 items-center justify-center rounded-[8px] border border-[#E4E4E7] bg-white text-[#71717A] hover:bg-red-50 hover:text-red-700 disabled:opacity-50"
+                    onClick={() => void handleDelete(t.id)}
+                  >
+                    <Trash2 className="size-4" aria-hidden />
+                  </button>
+                )}
+              </div>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

@@ -10,6 +10,7 @@ export {
   FALLBACK_EVIDENCE_TEMPLATES,
   useEvidenceMetadataStore,
   activeTemplateLabel,
+  activeTemplateLayoutKey,
   type EvidenceTemplateId,
 } from "./store/evidence-metadata-store";
 export { SavedEvidenceDocumentsPanel } from "./components/saved-evidence-documents-panel";

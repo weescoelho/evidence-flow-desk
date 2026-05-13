@@ -69,14 +69,6 @@ export function EvidenceScreenshotsSection() {
           />
           <button
             type="button"
-            disabled
-            title="Automatização / Playwright — fase 2"
-            className="rounded-[10px] border border-[#E4E4E7] bg-[#F4F4F5] px-3 py-1.5 text-[12px] font-medium text-[#71717A]"
-          >
-            Nova captura
-          </button>
-          <button
-            type="button"
             className="rounded-[10px] border border-[#E4E4E7] bg-white px-3 py-1.5 text-[12px] font-medium text-[#18181B] hover:bg-[#F4F4F5]"
             onClick={() => fileRef.current?.click()}
           >

@@ -126,10 +126,6 @@ Esse processo é lento e sujeito a falhas.
 
 - HTML → PDF
 
-## Browser Automation
-
-- Playwright
-
 ## Syntax Highlight
 
 - Shiki
@@ -348,15 +344,7 @@ O usuário deve conseguir anexar screenshots manualmente.
 
 # RF-013 — Automação de Screenshots
 
-O sistema deve permitir automações Playwright.
-
-## Ações
-
-- goto
-- click
-- fill
-- wait
-- screenshot
+**Fora do escopo.** A automação de browser (incl. Playwright) não faz parte do produto. Evidências visuais via **screenshots manuais** — ver RF-012.
 
 ---
 
@@ -630,29 +618,9 @@ interface AIProvider {
 
 # 14. Sistema de Screenshots
 
-## Fluxo
+No **MVP**, as evidências visuais são **anexos manuais** (PNG, JPEG, WebP, GIF) com validação e limite na aplicação — ver **RF-012**. As imagens podem **persistir por repositório** (SQLite local).
 
-```txt
-Abrir página
-↓
-Executar ações
-↓
-Capturar screenshot
-↓
-Associar evidência
-```
-
----
-
-## Modelagem
-
-```ts
-type ScreenshotStep = {
-  action: 'goto' | 'click' | 'fill' | 'wait' | 'screenshot'
-  selector?: string
-  value?: string
-}
-```
+A automação de browser e pipelines do tipo *goto* / *click* / *screenshot* (**RF-013**) está **fora do escopo**; não há execução de «passos» Playwright nem fila de acções integrada.
 
 ---
 
@@ -665,8 +633,8 @@ O sistema deve persistir:
 - templates
 - histórico
 - preferências
-- automações
 - documentos gerados
+- capturas de evidência por repositório (imagens, metadados SQLite)
 
 ---
 
@@ -681,6 +649,7 @@ O sistema deve persistir:
 - templates básicos
 - exportação PDF
 - screenshots manuais
+- assistência IA **opcional** via Google Gemini (resumo corporativo / reescrita do resumo técnico quando o utilizador configura a API — subset RF-017)
 
 ## Não Inclusos
 
@@ -689,7 +658,8 @@ O sistema deve persistir:
 - sincronização cloud
 - OCR
 - Jira
-- IA avançada
+- motores de IA adicionais e pipelines completos RF-007/008/017 (além do **subset** Gemini opcional em Configurações)
+- automação de browser (Playwright ou equivalente)
 
 ---
 
@@ -697,7 +667,6 @@ O sistema deve persistir:
 
 # Fase 2
 
-- automação Playwright
 - IA local
 - Jira
 - Azure DevOps
@@ -720,7 +689,6 @@ O sistema deve persistir:
 - execução local
 - operação offline
 - IA opcional
-- screenshots automatizados
 - integração Git nativa
 - foco corporativo
 - geração visual avançada

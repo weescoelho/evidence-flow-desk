@@ -1,6 +1,10 @@
 import type { CommitRow, FileChangeRow } from "@/features/git/types/git";
 
 import { escapeHtml } from "./escape-html";
+import {
+  evidenceTemplateLayoutCss,
+  normalizeEvidenceTemplateLayoutKey,
+} from "./evidence-template-layouts";
 
 export type EvidenceScreenshotPayload = {
   fileName: string;
@@ -13,11 +17,26 @@ export type EvidenceDocumentPayload = {
   repositoryPath: string;
   baseRef: string;
   compareRef: string;
-  /** Rótulo do template no documento (MVP: único preset). */
+  /** Rótulo do template no documento. */
   templateLabel: string;
+  /**
+   * Variante visual do PDF/HTML (persistida no template em SQLite — subset RF-009).
+   */
+  templateLayoutKey: string;
   /** Metadados de rastreio preenchidos no passo 3; vazios omitidos no texto como «—». */
   changeId: string;
   environment: string;
+  /** Capa / ITIL — opcionais; fallback «—» ou nome da pasta do repositório. */
+  productName?: string;
+  releaseVersion?: string;
+  deploymentDate?: string;
+  technicalOwner?: string;
+  approver?: string;
+  outOfScope?: string;
+  documentVersion?: string;
+  documentRevisionDate?: string;
+  documentRevisionSummary?: string;
+  documentRevisionAuthor?: string;
   technicalSummary: string;
   /** RF-007 — texto de negócio; omitido no HTML se vazio. */
   corporateSummary?: string;
@@ -41,69 +60,55 @@ function safeImageDataUrl(url: string): string {
   return url;
 }
 
-/**
- * Corpo do documento em HTML seguro (apenas texto escapado).
- * Reutilizado no preview (RF-010) e dentro do envoltório de impressão (RF-011).
- */
-export function buildEvidenceBodyHtml(p: EvidenceDocumentPayload): string {
-  const generatedAt = escapeHtml(new Date().toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  }));
-  const templateLine = escapeHtml(p.templateLabel.trim() || "padrão");
-  const changeLine = escapeHtml(p.changeId.trim() || "—");
-  const envLine = escapeHtml(p.environment.trim() || "—");
+function repositoryBasename(repositoryPath: string): string {
+  const parts = repositoryPath.split(/[/\\]/).filter(Boolean);
+  return parts[parts.length - 1] ?? "";
+}
 
-  const commitRows =
-    p.commits.length === 0
-      ? `<tr><td colspan="4">Nenhum commit no intervalo.</td></tr>`
-      : p.commits
-          .map((c) => {
-            const type = c.conventionalType
-              ? escapeHtml(c.conventionalType)
-              : "—";
-            return `<tr>
-<td><code>${escapeHtml(c.shortHash)}</code></td>
-<td>${type}</td>
-<td>${escapeHtml(c.authorName)}</td>
-<td>${escapeHtml(c.summary)}</td>
-</tr>`;
-          })
-          .join("\n");
+function displayOrDash(raw: string | undefined): string {
+  const t = (raw ?? "").trim();
+  return t.length > 0 ? escapeHtml(t) : "—";
+}
 
-  const fileRows =
-    p.files.length === 0
-      ? `<tr><td colspan="3">Nenhuma alteração de arquivo.</td></tr>`
-      : p.files
-          .map((f) => {
-            const delta =
-              f.linesAdded + f.linesRemoved > 0
-                ? `+${f.linesAdded} / −${f.linesRemoved}`
-                : "—";
-            const pathCell =
-              f.status === "renamed" &&
-              f.pathBefore &&
-              f.pathAfter &&
-              f.pathBefore !== f.pathAfter
-                ? `${escapeHtml(f.path)} <small>(${escapeHtml(f.pathBefore)} → ${escapeHtml(f.pathAfter)})</small>`
-                : escapeHtml(f.path);
-            return `<tr>
-<td>${pathCell}</td>
-<td>${escapeHtml(FILE_STATUS_PT[f.status])}</td>
-<td>${escapeHtml(delta)}</td>
-</tr>`;
-          })
-          .join("\n");
+function formatGeneratedAtLong(): string {
+  return escapeHtml(
+    new Date().toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    }),
+  );
+}
 
-  const truncNote = p.commitsTruncated
-    ? `<p class="warn"><strong>Atenção:</strong> a lista de commits foi truncada pelo limite de segurança da aplicação.</p>`
-    : "";
+function formatCommitTimestampPt(unix: number): string {
+  if (!Number.isFinite(unix) || unix <= 0) return "—";
+  return escapeHtml(
+    new Date(unix * 1000).toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+  );
+}
 
-  const screenshotSection =
-    p.screenshots.length === 0
-      ? ""
-      : `<section id="evidence-section-screenshots" class="screenshots">
+function changelogTipoLabel(conventional: string | null): string {
+  if (!conventional) return "Alteração";
+  const c = conventional.trim().toLowerCase();
+  if (c === "feat") return "Feature";
+  if (c === "fix") return "Correção";
+  if (c === "perf" || c === "refactor") return "Melhoria";
+  if (c === "chore") return "Manutenção";
+  if (c === "docs") return "Documentação";
+  if (c === "test") return "Teste";
+  if (c === "build" || c === "ci") return "Build / CI";
+  return escapeHtml(conventional);
+}
+
+function buildScreenshotSection(p: EvidenceDocumentPayload): string {
+  if (p.screenshots.length === 0) return "";
+  return `<section id="evidence-section-screenshots" class="screenshots">
   <h2>Screenshots (${p.screenshots.length})</h2>
   ${p.screenshots
     .map((s) => {
@@ -119,6 +124,65 @@ export function buildEvidenceBodyHtml(p: EvidenceDocumentPayload): string {
     })
     .join("\n")}
 </section>`;
+}
+
+function buildClassicCommitRows(p: EvidenceDocumentPayload): string {
+  if (p.commits.length === 0) {
+    return `<tr><td colspan="4">Nenhum commit no intervalo.</td></tr>`;
+  }
+  return p.commits
+    .map((c) => {
+      const type = c.conventionalType ? escapeHtml(c.conventionalType) : "—";
+      return `<tr>
+<td><code>${escapeHtml(c.shortHash)}</code></td>
+<td>${type}</td>
+<td>${escapeHtml(c.authorName)}</td>
+<td>${escapeHtml(c.summary)}</td>
+</tr>`;
+    })
+    .join("\n");
+}
+
+function buildClassicFileRows(p: EvidenceDocumentPayload): string {
+  if (p.files.length === 0) {
+    return `<tr><td colspan="3">Nenhuma alteração de arquivo.</td></tr>`;
+  }
+  return p.files
+    .map((f) => {
+      const delta =
+        f.linesAdded + f.linesRemoved > 0
+          ? `+${f.linesAdded} / −${f.linesRemoved}`
+          : "—";
+      const pathCell =
+        f.status === "renamed" &&
+        f.pathBefore &&
+        f.pathAfter &&
+        f.pathBefore !== f.pathAfter
+          ? `${escapeHtml(f.path)} <small>(${escapeHtml(f.pathBefore)} → ${escapeHtml(f.pathAfter)})</small>`
+          : escapeHtml(f.path);
+      return `<tr>
+<td>${pathCell}</td>
+<td>${escapeHtml(FILE_STATUS_PT[f.status])}</td>
+<td>${escapeHtml(delta)}</td>
+</tr>`;
+    })
+    .join("\n");
+}
+
+function buildClassicEvidenceBodyHtml(p: EvidenceDocumentPayload): string {
+  const generatedAt = formatGeneratedAtLong();
+  const templateLine = escapeHtml(p.templateLabel.trim() || "padrão");
+  const changeLine = escapeHtml(p.changeId.trim() || "—");
+  const envLine = escapeHtml(p.environment.trim() || "—");
+
+  const commitRows = buildClassicCommitRows(p);
+  const fileRows = buildClassicFileRows(p);
+
+  const truncNote = p.commitsTruncated
+    ? `<p class="warn"><strong>Atenção:</strong> a lista de commits foi truncada pelo limite de segurança da aplicação.</p>`
+    : "";
+
+  const screenshotSection = buildScreenshotSection(p);
 
   return `
 <header class="doc-header">
@@ -172,6 +236,157 @@ ${screenshotSection}
 `.trim();
 }
 
+function buildMarketChangelogRows(p: EvidenceDocumentPayload): string {
+  if (p.commits.length === 0) {
+    return `<tr><td colspan="5">Nenhum commit no intervalo.</td></tr>`;
+  }
+  return p.commits
+    .map(
+      (c) => `<tr>
+<td><code>${escapeHtml(c.shortHash)}</code></td>
+<td>${formatCommitTimestampPt(c.committedAtUnix)}</td>
+<td>${changelogTipoLabel(c.conventionalType)}</td>
+<td>${escapeHtml(c.summary)}</td>
+<td>${escapeHtml(c.authorName)}</td>
+</tr>`,
+    )
+    .join("\n");
+}
+
+function buildMarketStandardBodyHtml(p: EvidenceDocumentPayload): string {
+  const product =
+    (p.productName ?? "").trim() ||
+    repositoryBasename(p.repositoryPath) ||
+    "—";
+  const productTitle = escapeHtml(product);
+  const versionLine = displayOrDash(p.releaseVersion);
+  const deployLine = displayOrDash(p.deploymentDate);
+  const envLine = displayOrDash(p.environment);
+  const changeLine = displayOrDash(p.changeId);
+  const ownerLine = displayOrDash(p.technicalOwner);
+  const approverLine = displayOrDash(p.approver);
+  const templateLine = escapeHtml(p.templateLabel.trim() || "padrão");
+  const generatedAt = formatGeneratedAtLong();
+
+  const docVer = (p.documentVersion ?? "").trim() || "1.0";
+  const docDate =
+    (p.documentRevisionDate ?? "").trim() ||
+    new Date().toLocaleDateString("pt-BR");
+  const docWhat =
+    (p.documentRevisionSummary ?? "").trim() || "Emissão inicial";
+  const docAuthorRaw = (p.documentRevisionAuthor ?? "").trim();
+  const docAuthor =
+    docAuthorRaw.length > 0
+      ? escapeHtml(docAuthorRaw)
+      : displayOrDash(p.technicalOwner);
+
+  const corpor = (p.corporateSummary ?? "").trim();
+  const tech = p.technicalSummary;
+  const execBlock =
+    corpor.length > 0
+      ? `<pre class="technical">${escapeHtml(corpor)}</pre>${
+          tech.trim().length > 0
+            ? `<h3>Contexto técnico</h3><pre class="technical">${escapeHtml(tech)}</pre>`
+            : ""
+        }`
+      : `<pre class="technical">${escapeHtml(tech)}</pre>`;
+
+  const outScoped = (p.outOfScope ?? "").trim();
+  const scopeOutHtml =
+    outScoped.length > 0
+      ? `<pre class="technical">${escapeHtml(outScoped)}</pre>`
+      : `<p>—</p>`;
+
+  const fileList = p.files.slice(0, 50).map((f) => {
+    const line = f.path.trim() || "—";
+    return `<li>${escapeHtml(line)}</li>`;
+  });
+  const fileListHtml =
+    fileList.length > 0
+      ? `<ul>${fileList.join("\n")}</ul>`
+      : "<p>Nenhum arquivo listado no intervalo do escopo Git.</p>";
+
+  const truncNote = p.commitsTruncated
+    ? `<p class="warn"><strong>Atenção:</strong> a lista de commits foi truncada pelo limite de segurança da aplicação.</p>`
+    : "";
+
+  const changelogRows = buildMarketChangelogRows(p);
+  const commitRows = buildClassicCommitRows(p);
+  const fileRows = buildClassicFileRows(p);
+  const screenshotSection = buildScreenshotSection(p);
+
+  return `
+<section id="evidence-section-cover" class="cover">
+  <h1>Capa / identificação</h1>
+  <p style="margin:0 0 8pt;font-size:14pt;font-weight:600">${productTitle}</p>
+  <dl class="cover-grid">
+    <dt>Versão da entrega</dt><dd>${versionLine}</dd>
+    <dt>Data de implantação</dt><dd>${deployLine}</dd>
+    <dt>Ambiente</dt><dd>${envLine}</dd>
+    <dt>Change ID / ticket</dt><dd>${changeLine}</dd>
+    <dt>Responsável técnico</dt><dd>${ownerLine}</dd>
+    <dt>Aprovador</dt><dd>${approverLine}</dd>
+    <dt>Template documental</dt><dd>${templateLine}</dd>
+    <dt>Gerado em</dt><dd>${generatedAt}</dd>
+    <dt>Escopo Git (base → compare)</dt><dd>${escapeHtml(p.baseRef)} → ${escapeHtml(p.compareRef)}</dd>
+  </dl>
+</section>
+
+${truncNote}
+
+<section id="evidence-section-doc-revisions">
+  <h2>Controle de versões do documento</h2>
+  <table class="doc-revisions">
+    <thead>
+      <tr>
+        <th>Versão</th>
+        <th>Data</th>
+        <th>Alteração</th>
+        <th>Responsável</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>${escapeHtml(docVer)}</td>
+        <td>${escapeHtml(docDate)}</td>
+        <td>${escapeHtml(docWhat)}</td>
+        <td>${docAuthor}</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="evidence-section-exec-summary">
+  <h2>Resumo executivo</h2>
+  ${execBlock}
+</section>
+
+
+${screenshotSection}
+
+<section id="evidence-section-appendix-git">
+  <h3>Escopo técnico</h3>
+  <table class="evidence-files">
+    <thead><tr><th>Caminho</th><th>Estado</th><th>Linhas</th></tr></thead>
+    <tbody>${fileRows}</tbody>
+  </table>
+</section>
+
+`.trim();
+}
+
+/**
+ * Corpo do documento em HTML seguro (apenas texto escapado).
+ * Reutilizado no preview (RF-010) e dentro do envoltório de impressão (RF-011).
+ */
+export function buildEvidenceBodyHtml(p: EvidenceDocumentPayload): string {
+  const layout = normalizeEvidenceTemplateLayoutKey(p.templateLayoutKey);
+  if (layout === "market_standard") {
+    return buildMarketStandardBodyHtml(p);
+  }
+  return buildClassicEvidenceBodyHtml(p);
+}
+
 const PRINT_STYLES = `
   * { box-sizing: border-box; }
   body {
@@ -185,6 +400,7 @@ const PRINT_STYLES = `
   .doc-header h1 { font-size: 18pt; margin: 0 0 4pt; }
   .subtitle { margin: 0; color: #444; font-size: 10pt; }
   h2 { font-size: 12pt; margin: 14pt 0 6pt; border-bottom: 1px solid #ccc; padding-bottom: 2pt; }
+  h3 { font-size: 11pt; margin: 10pt 0 4pt; font-weight: 600; }
   .meta dl { display: grid; grid-template-columns: 9em 1fr; gap: 4pt 10pt; margin: 0; }
   .meta dt { font-weight: 600; margin: 0; }
   .meta dd { margin: 0; }
@@ -249,6 +465,8 @@ export type EvidencePrintHtmlOptions = {
   documentTitle?: string;
   /** Solicita números de página na impressão (suporte depende do motor de PDF). */
   numberPagesPrint?: boolean;
+  /** Estilos extra (tema do template activo). */
+  extraPrintStyles?: string;
 };
 
 export function wrapPrintDocument(
@@ -260,6 +478,7 @@ export function wrapPrintDocument(
   const title = escapeHtml(rawTitle);
   const styles =
     PRINT_STYLES +
+    (options?.extraPrintStyles ?? "") +
     (options?.numberPagesPrint ? PRINT_PAGE_NUMBER_STYLES : "");
   return `<!DOCTYPE html>
 <html lang="pt">
@@ -278,5 +497,11 @@ export function buildEvidencePrintHtml(
   p: EvidenceDocumentPayload,
   options?: EvidencePrintHtmlOptions,
 ): string {
-  return wrapPrintDocument(buildEvidenceBodyHtml(p), options);
+  const merged: EvidencePrintHtmlOptions = {
+    ...options,
+    extraPrintStyles:
+      (options?.extraPrintStyles ?? "") +
+      evidenceTemplateLayoutCss(p.templateLayoutKey),
+  };
+  return wrapPrintDocument(buildEvidenceBodyHtml(p), merged);
 }

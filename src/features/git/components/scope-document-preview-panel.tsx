@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import {
   EvidenceDocumentPreview,
   activeTemplateLabel,
+  activeTemplateLayoutKey,
   useEvidenceMetadataStore,
 } from "@/features/document";
 import { useEvidenceAttachmentsStore } from "@/features/evidence";
@@ -42,6 +43,22 @@ export function ScopeDocumentPreviewPanel({
   );
   const changeId = useEvidenceMetadataStore((s) => s.changeId);
   const environment = useEvidenceMetadataStore((s) => s.environment);
+  const productName = useEvidenceMetadataStore((s) => s.productName);
+  const releaseVersion = useEvidenceMetadataStore((s) => s.releaseVersion);
+  const deploymentDate = useEvidenceMetadataStore((s) => s.deploymentDate);
+  const technicalOwner = useEvidenceMetadataStore((s) => s.technicalOwner);
+  const approver = useEvidenceMetadataStore((s) => s.approver);
+  const outOfScope = useEvidenceMetadataStore((s) => s.outOfScope);
+  const documentVersion = useEvidenceMetadataStore((s) => s.documentVersion);
+  const documentRevisionDate = useEvidenceMetadataStore(
+    (s) => s.documentRevisionDate,
+  );
+  const documentRevisionSummary = useEvidenceMetadataStore(
+    (s) => s.documentRevisionSummary,
+  );
+  const documentRevisionAuthor = useEvidenceMetadataStore(
+    (s) => s.documentRevisionAuthor,
+  );
 
   const screenshotPayload = useMemo(
     () =>
@@ -69,8 +86,19 @@ export function ScopeDocumentPreviewPanel({
       baseRef={baseBranch}
       compareRef={compareBranch}
       templateLabel={activeTemplateLabel(activeTemplateId)}
+      templateLayoutKey={activeTemplateLayoutKey(activeTemplateId)}
       changeId={changeId}
       environment={environment}
+      productName={productName}
+      releaseVersion={releaseVersion}
+      deploymentDate={deploymentDate}
+      technicalOwner={technicalOwner}
+      approver={approver}
+      outOfScope={outOfScope}
+      documentVersion={documentVersion}
+      documentRevisionDate={documentRevisionDate}
+      documentRevisionSummary={documentRevisionSummary}
+      documentRevisionAuthor={documentRevisionAuthor}
       technicalSummary={technicalNarrative}
       corporateSummary={corporateNarrative}
       commits={data.commits}

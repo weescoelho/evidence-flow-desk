@@ -6,6 +6,16 @@ export const evidencePreferenceKeys = {
   activeTemplateId: "evidence.active_template_id",
   changeId: "evidence.change_id",
   environment: "evidence.environment",
+  productName: "evidence.product_name",
+  releaseVersion: "evidence.release_version",
+  deploymentDate: "evidence.deployment_date",
+  technicalOwner: "evidence.technical_owner",
+  approver: "evidence.approver",
+  outOfScope: "evidence.out_of_scope",
+  documentVersion: "evidence.document_version",
+  documentRevisionDate: "evidence.document_revision_date",
+  documentRevisionSummary: "evidence.document_revision_summary",
+  documentRevisionAuthor: "evidence.document_revision_author",
   aiGeminiApiKey: "ai.gemini.api_key",
   aiGeminiModel: "ai.gemini.model",
   aiGeminiApiBase: "ai.gemini.api_base",
@@ -19,6 +29,8 @@ export type PersistedEvidenceTemplate = {
   id: string;
   label: string;
   isBuiltin: boolean;
+  /** Variante visual do documento (`enterprise` | `minimal` | `audit`). */
+  layoutKey?: string;
 };
 
 export type EvidencePreferencesSnapshot = {
@@ -26,6 +38,16 @@ export type EvidencePreferencesSnapshot = {
   evidenceActiveTemplateId?: string | null;
   evidenceChangeId?: string | null;
   evidenceEnvironment?: string | null;
+  evidenceProductName?: string | null;
+  evidenceReleaseVersion?: string | null;
+  evidenceDeploymentDate?: string | null;
+  evidenceTechnicalOwner?: string | null;
+  evidenceApprover?: string | null;
+  evidenceOutOfScope?: string | null;
+  evidenceDocumentVersion?: string | null;
+  evidenceDocumentRevisionDate?: string | null;
+  evidenceDocumentRevisionSummary?: string | null;
+  evidenceDocumentRevisionAuthor?: string | null;
   aiGeminiApiBase?: string | null;
   aiGeminiModel?: string | null;
   aiGeminiApiKeyConfigured?: boolean;
@@ -40,6 +62,7 @@ export type CreateEvidenceTemplateResult = {
   id: string;
   label: string;
   isBuiltin: boolean;
+  layoutKey: string;
 };
 
 export function loadEvidenceAppPersistedState() {
@@ -50,9 +73,20 @@ export function setEvidencePreference(key: string, value: string) {
   return invoke<void>("set_evidence_preference", { key, value });
 }
 
-export function createEvidenceCustomTemplate(label: string) {
+export function createEvidenceCustomTemplate(
+  label: string,
+  layoutKey?: string | null,
+) {
   return invoke<CreateEvidenceTemplateResult>("create_evidence_custom_template", {
     label,
+    layout_key: layoutKey ?? null,
+  });
+}
+
+export function setEvidenceTemplateLayout(templateId: string, layoutKey: string) {
+  return invoke<void>("set_evidence_template_layout", {
+    template_id: templateId,
+    layout_key: layoutKey,
   });
 }
 

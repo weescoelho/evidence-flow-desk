@@ -1,7 +1,7 @@
 # Estado do projeto — EvidenceFlow Desk
 
-**Última atualização:** 2026-05-12  
-**Trabalho actual:** Persistência SQLite das capturas por repositório (`repository_evidence_screenshots`, comandos `list_*` / `sync_*`). **Seguinte:** fecho formal do MVP no PRD / roadmap se desejado; Fase 2 (Playwright RF-013, IA RF-007).
+**Última actualização:** 2026-05-12  
+**Trabalho actual:** Prioridade **templates (RF-009 subset)**: coluna `layout_key` SQLite, três variantes visuais (enterprise / minimal / audit) no PDF/HTML, UI na biblioteca e no painel «Gerenciar templates». Spec: [evidence-templates-layout](../features/evidence-templates-layout/spec.md). **Seguinte:** aprofundar RF-009 (secções/logo/cores) ou Fase 2 roadmap.
 
 ---
 
@@ -43,6 +43,12 @@
 
 **Impacto:** `document-export-mvp` mantém apenas DOC-R03; backlog e tarefas deixam de referir esta evolução.
 
+### AD-005: automação Playwright fora do escopo (2026-05-12)
+
+**Decisão:** Não implementar RF-013 (automação de browser / Playwright). O PRD foi actualizado: RF-013 marca **fora do escopo**; screenshots limitam-se a anexos manuais (RF-012).
+
+**Impacto:** Roadmap Fase 2 sem linha Playwright; UI sem botão «Nova captura» automatizado.
+
 ---
 
 ## Bloqueadores ativos
@@ -82,3 +88,4 @@ _Nenhuma listada._
 - [x] **RF-015 evolução (metadados por gravação)** — Colunas opcionais em `saved_evidence_documents`: `template_label`, `change_id`, `environment`, `document_title` (migração idempotente + `save_evidence_document`; lista/filtro em **Documentos**). *Já entregue antes:* histórico + índice HTML + migração `index.json`; preferências KV + `evidence_templates`; hidratação; pasta de export no passo 5.
 - [x] **Vista sidebar Screenshots** — `EvidenceScreenshotsLibraryView`: `EvidenceScreenshotsSection` + empty state sem repo (`useGitStore`).
 - [x] **Persistência por repositório** — tabela `repository_evidence_screenshots` na BD de documentos; hydrate ao abrir repo; sync debounced nas mutações (`sync_repository_evidence_screenshots`).
+- [x] **Templates — variantes de layout (RF-009 subset)** — `layout_key` em `evidence_templates`; CSS por preset no `buildEvidencePrintHtml`; gestão em [EvidenceTemplatesLibraryView](../../src/features/document/components/evidence-templates-library-view.tsx) / painel CRUD.

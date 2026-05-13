@@ -32,4 +32,4 @@
 | T1 | ✅ |
 | T2 | ✅ |
 
-**Próximo:** RF-013 automação Playwright ou refinamentos de produto.
+**Próximo:** refinamentos de produto ou outras features da Fase 2 (ver roadmap).

@@ -10,6 +10,7 @@ function basePayload(over: Partial<EvidenceDocumentPayload> = {}): EvidenceDocum
     baseRef: "main",
     compareRef: "dev",
     templateLabel: "Homologação — padrão enterprise",
+    templateLayoutKey: "enterprise",
     changeId: "CHG-1",
     environment: "HML",
     technicalSummary: "Resumo",
@@ -49,12 +50,29 @@ describe("escapeHtml", () => {
 });
 
 describe("buildEvidenceBodyHtml", () => {
-  it("não lista repositório nem refs nos metadados", () => {
+  it("não lista repositório nem refs nos metadados (layout enterprise)", () => {
     const html = buildEvidenceBodyHtml(basePayload());
     expect(html).not.toContain("Repositório");
     expect(html).not.toContain("Ref base");
     expect(html).not.toContain("Ref comparação");
     expect(html).not.toContain("/tmp/repo");
+  });
+
+  it("modelo mercado inclui secções IEEE/ITIL e não expõe paths indevidos no cabeçalho clássico", () => {
+    const html = buildEvidenceBodyHtml(
+      basePayload({
+        templateLayoutKey: "market_standard",
+        productName: "Meu Sistema",
+      }),
+    );
+    expect(html).toContain("Capa / identificação");
+    expect(html).toContain("Controle de versões do documento");
+    expect(html).toContain("Resumo executivo");
+    expect(html).toContain("Escopo da implementação");
+    expect(html).toContain("Histórico de evoluções (changelog)");
+    expect(html).toContain("Meu Sistema");
+    expect(html).toContain("main");
+    expect(html).toContain("dev");
   });
 
   it("inclui conteúdo principal do relatório nas secções seguintes", () => {
@@ -150,5 +168,21 @@ describe("buildEvidencePrintHtml", () => {
       documentTitle: "<invasão>",
     });
     expect(html).toContain("<title>&lt;invasão&gt;</title>");
+  });
+
+  it("injeta CSS da variante minimal no documento de impressão", () => {
+    const html = buildEvidencePrintHtml(
+      basePayload({ templateLayoutKey: "minimal" }),
+    );
+    expect(html).toContain("border-left: 3px solid");
+    expect(html).toContain("transparent");
+  });
+
+  it("injeta CSS do modelo mercado no documento de impressão", () => {
+    const html = buildEvidencePrintHtml(
+      basePayload({ templateLayoutKey: "market_standard" }),
+    );
+    expect(html).toContain(".cover");
+    expect(html).toContain("border-radius: 8px");
   });
 });

@@ -8,6 +8,10 @@ import {
   DEFAULT_GEMINI_API_BASE,
   DEFAULT_GEMINI_MODEL,
 } from "../api/evidence-app-state.commands";
+import {
+  normalizeEvidenceTemplateLayoutKey,
+  type EvidenceTemplateLayoutKey,
+} from "../lib/evidence-template-layouts";
 
 export type { PersistedEvidenceTemplate } from "../api/evidence-app-state.commands";
 
@@ -18,8 +22,9 @@ export const DEFAULT_BUILTIN_TEMPLATE_ID = "default";
 export const FALLBACK_EVIDENCE_TEMPLATES: PersistedEvidenceTemplate[] = [
   {
     id: DEFAULT_BUILTIN_TEMPLATE_ID,
-    label: "Homologação — padrão enterprise",
+    label: "Homologação — padrão mercado (IEEE / ITIL)",
     isBuiltin: true,
+    layoutKey: "market_standard",
   },
 ];
 
@@ -33,6 +38,16 @@ type EvidenceMetadataStore = {
   activeTemplateId: string;
   changeId: string;
   environment: string;
+  productName: string;
+  releaseVersion: string;
+  deploymentDate: string;
+  technicalOwner: string;
+  approver: string;
+  outOfScope: string;
+  documentVersion: string;
+  documentRevisionDate: string;
+  documentRevisionSummary: string;
+  documentRevisionAuthor: string;
   exportDefaultDirectory: string | null;
   /** Google Gemini (RF-017) — chave na BD, não no estado React. */
   aiGeminiApiBase: string;
@@ -43,6 +58,16 @@ type EvidenceMetadataStore = {
   setActiveTemplateId: (id: string) => void;
   setChangeId: (value: string) => void;
   setEnvironment: (value: string) => void;
+  setProductName: (value: string) => void;
+  setReleaseVersion: (value: string) => void;
+  setDeploymentDate: (value: string) => void;
+  setTechnicalOwner: (value: string) => void;
+  setApprover: (value: string) => void;
+  setOutOfScope: (value: string) => void;
+  setDocumentVersion: (value: string) => void;
+  setDocumentRevisionDate: (value: string) => void;
+  setDocumentRevisionSummary: (value: string) => void;
+  setDocumentRevisionAuthor: (value: string) => void;
   setExportDefaultDirectory: (path: string | null) => void;
   setAiGeminiApiBase: (value: string) => void;
   setAiGeminiModel: (value: string) => void;
@@ -57,7 +82,10 @@ function normalizeTemplates(
   list: PersistedEvidenceTemplate[] | undefined,
 ): PersistedEvidenceTemplate[] {
   if (list?.length) {
-    return list;
+    return list.map((t) => ({
+      ...t,
+      layoutKey: normalizeEvidenceTemplateLayoutKey(t.layoutKey),
+    }));
   }
   return [...FALLBACK_EVIDENCE_TEMPLATES];
 }
@@ -81,6 +109,16 @@ export const useEvidenceMetadataStore = create<EvidenceMetadataStore>(
     activeTemplateId: DEFAULT_BUILTIN_TEMPLATE_ID,
     changeId: "",
     environment: "",
+    productName: "",
+    releaseVersion: "",
+    deploymentDate: "",
+    technicalOwner: "",
+    approver: "",
+    outOfScope: "",
+    documentVersion: "",
+    documentRevisionDate: "",
+    documentRevisionSummary: "",
+    documentRevisionAuthor: "",
     exportDefaultDirectory: null,
     aiGeminiApiBase: DEFAULT_GEMINI_API_BASE,
     aiGeminiModel: DEFAULT_GEMINI_MODEL,
@@ -97,6 +135,19 @@ export const useEvidenceMetadataStore = create<EvidenceMetadataStore>(
 
     setChangeId: (changeId) => set({ changeId }),
     setEnvironment: (environment) => set({ environment }),
+    setProductName: (productName) => set({ productName }),
+    setReleaseVersion: (releaseVersion) => set({ releaseVersion }),
+    setDeploymentDate: (deploymentDate) => set({ deploymentDate }),
+    setTechnicalOwner: (technicalOwner) => set({ technicalOwner }),
+    setApprover: (approver) => set({ approver }),
+    setOutOfScope: (outOfScope) => set({ outOfScope }),
+    setDocumentVersion: (documentVersion) => set({ documentVersion }),
+    setDocumentRevisionDate: (documentRevisionDate) =>
+      set({ documentRevisionDate }),
+    setDocumentRevisionSummary: (documentRevisionSummary) =>
+      set({ documentRevisionSummary }),
+    setDocumentRevisionAuthor: (documentRevisionAuthor) =>
+      set({ documentRevisionAuthor }),
     setExportDefaultDirectory: (exportDefaultDirectory) =>
       set({ exportDefaultDirectory }),
     setAiGeminiApiBase: (aiGeminiApiBase) => set({ aiGeminiApiBase }),
@@ -117,6 +168,16 @@ export const useEvidenceMetadataStore = create<EvidenceMetadataStore>(
         activeTemplateId,
         changeId: prefs.evidenceChangeId ?? "",
         environment: prefs.evidenceEnvironment ?? "",
+        productName: prefs.evidenceProductName ?? "",
+        releaseVersion: prefs.evidenceReleaseVersion ?? "",
+        deploymentDate: prefs.evidenceDeploymentDate ?? "",
+        technicalOwner: prefs.evidenceTechnicalOwner ?? "",
+        approver: prefs.evidenceApprover ?? "",
+        outOfScope: prefs.evidenceOutOfScope ?? "",
+        documentVersion: prefs.evidenceDocumentVersion ?? "",
+        documentRevisionDate: prefs.evidenceDocumentRevisionDate ?? "",
+        documentRevisionSummary: prefs.evidenceDocumentRevisionSummary ?? "",
+        documentRevisionAuthor: prefs.evidenceDocumentRevisionAuthor ?? "",
         exportDefaultDirectory: prefs.exportDefaultDirectory ?? null,
         aiGeminiApiBase:
           prefs.aiGeminiApiBase?.trim() || DEFAULT_GEMINI_API_BASE,
@@ -132,6 +193,16 @@ export const useEvidenceMetadataStore = create<EvidenceMetadataStore>(
         activeTemplateId: DEFAULT_BUILTIN_TEMPLATE_ID,
         changeId: "",
         environment: "",
+        productName: "",
+        releaseVersion: "",
+        deploymentDate: "",
+        technicalOwner: "",
+        approver: "",
+        outOfScope: "",
+        documentVersion: "",
+        documentRevisionDate: "",
+        documentRevisionSummary: "",
+        documentRevisionAuthor: "",
         exportDefaultDirectory: null,
         aiGeminiApiBase: DEFAULT_GEMINI_API_BASE,
         aiGeminiModel: DEFAULT_GEMINI_MODEL,
@@ -144,6 +215,16 @@ export const useEvidenceMetadataStore = create<EvidenceMetadataStore>(
         activeTemplateId: DEFAULT_BUILTIN_TEMPLATE_ID,
         changeId: "",
         environment: "",
+        productName: "",
+        releaseVersion: "",
+        deploymentDate: "",
+        technicalOwner: "",
+        approver: "",
+        outOfScope: "",
+        documentVersion: "",
+        documentRevisionDate: "",
+        documentRevisionSummary: "",
+        documentRevisionAuthor: "",
         exportDefaultDirectory: null,
         aiGeminiApiBase: state.aiGeminiApiBase,
         aiGeminiModel: state.aiGeminiModel,
@@ -160,4 +241,10 @@ export const useEvidenceMetadataStore = create<EvidenceMetadataStore>(
 export function activeTemplateLabel(id: string): string {
   const t = useEvidenceMetadataStore.getState().templates.find((x) => x.id === id);
   return t?.label ?? id;
+}
+
+/** Chave de layout persistida no template para o gerador HTML/PDF. */
+export function activeTemplateLayoutKey(id: string): EvidenceTemplateLayoutKey {
+  const t = useEvidenceMetadataStore.getState().templates.find((x) => x.id === id);
+  return normalizeEvidenceTemplateLayoutKey(t?.layoutKey);
 }

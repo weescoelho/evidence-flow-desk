@@ -75,7 +75,7 @@ No passo 3 (`fZdOT` / `gbZwC`), o utilizador dispõe de:
    - Métricas agregadas: **ficheiros tocados**, **linhas +/-** (valores coerentes com [git-commits-and-changes](../git-commits-and-changes/spec.md)).
 
 5. **Screenshots**
-   - Secção «Screenshots e comparacao» com **Importar arquivo**, grelha de miniaturas (antes/depois), **Nova captura**.
+   - Secção «Screenshots e comparacao» com **Importar arquivo**, grelha de miniaturas (antes/depois).
    - Comportamento de dados: [evidence-screenshots-mvp](../evidence-screenshots-mvp/spec.md).
 
 **Critério:** Estrutura em colunas e blocos identificáveis no preview/export como as secções do `gbZwC`.

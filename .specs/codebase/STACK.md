@@ -48,4 +48,4 @@
 
 ## Divergências PRD ↔ repo
 
-Declarado em `docs/prd.md` mas **sem** entrada direta equivalente nas dependências atuais: TanStack Query, Handlebars/EJS, motor HTML→PDF, Playwright, Shiki — ver [.specs/project/PROJECT.md](../project/PROJECT.md).
+Declarado em `docs/prd.md` mas **sem** entrada direta equivalente nas dependências atuais: TanStack Query, Handlebars/EJS, motor HTML→PDF, Shiki — ver [.specs/project/PROJECT.md](../project/PROJECT.md).

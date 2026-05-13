@@ -2,7 +2,7 @@
 
 **PRD:** [RF-012](../../../docs/prd.md)  
 **Depende de:** [git-commits-and-changes](../git-commits-and-changes/spec.md), [document-export-mvp](../document-export-mvp/spec.md).  
-**UI:** secção **Screenshots e comparacao** no passo 3 — [product-ui-journey](../product-ui-journey/spec.md) (UI-R03), nó `fZdOT` / `gbZwC` (acções «Importar arquivo», «Nova captura», grelha de miniaturas).
+**UI:** secção **Screenshots e comparacao** no passo 3 — [product-ui-journey](../product-ui-journey/spec.md) (UI-R03), nó `fZdOT` / `gbZwC` (acção «Importar arquivo», grelha de miniaturas).
 
 ---
 

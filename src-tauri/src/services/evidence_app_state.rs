@@ -5,11 +5,22 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use rusqlite::{params, Connection, OptionalExtension};
+use std::collections::HashSet;
 
 pub const KEY_EXPORT_DEFAULT_DIRECTORY: &str = "export.default_directory";
 pub const KEY_EVIDENCE_ACTIVE_TEMPLATE_ID: &str = "evidence.active_template_id";
 pub const KEY_EVIDENCE_CHANGE_ID: &str = "evidence.change_id";
 pub const KEY_EVIDENCE_ENVIRONMENT: &str = "evidence.environment";
+pub const KEY_EVIDENCE_PRODUCT_NAME: &str = "evidence.product_name";
+pub const KEY_EVIDENCE_RELEASE_VERSION: &str = "evidence.release_version";
+pub const KEY_EVIDENCE_DEPLOYMENT_DATE: &str = "evidence.deployment_date";
+pub const KEY_EVIDENCE_TECHNICAL_OWNER: &str = "evidence.technical_owner";
+pub const KEY_EVIDENCE_APPROVER: &str = "evidence.approver";
+pub const KEY_EVIDENCE_OUT_OF_SCOPE: &str = "evidence.out_of_scope";
+pub const KEY_EVIDENCE_DOCUMENT_VERSION: &str = "evidence.document_version";
+pub const KEY_EVIDENCE_DOCUMENT_REVISION_DATE: &str = "evidence.document_revision_date";
+pub const KEY_EVIDENCE_DOCUMENT_REVISION_SUMMARY: &str = "evidence.document_revision_summary";
+pub const KEY_EVIDENCE_DOCUMENT_REVISION_AUTHOR: &str = "evidence.document_revision_author";
 pub const KEY_AI_GEMINI_API_KEY: &str = "ai.gemini.api_key";
 pub const KEY_AI_GEMINI_MODEL: &str = "ai.gemini.model";
 pub const KEY_AI_GEMINI_API_BASE: &str = "ai.gemini.api_base";
@@ -19,6 +30,16 @@ const KNOWN_KEYS: &[&str] = &[
     KEY_EVIDENCE_ACTIVE_TEMPLATE_ID,
     KEY_EVIDENCE_CHANGE_ID,
     KEY_EVIDENCE_ENVIRONMENT,
+    KEY_EVIDENCE_PRODUCT_NAME,
+    KEY_EVIDENCE_RELEASE_VERSION,
+    KEY_EVIDENCE_DEPLOYMENT_DATE,
+    KEY_EVIDENCE_TECHNICAL_OWNER,
+    KEY_EVIDENCE_APPROVER,
+    KEY_EVIDENCE_OUT_OF_SCOPE,
+    KEY_EVIDENCE_DOCUMENT_VERSION,
+    KEY_EVIDENCE_DOCUMENT_REVISION_DATE,
+    KEY_EVIDENCE_DOCUMENT_REVISION_SUMMARY,
+    KEY_EVIDENCE_DOCUMENT_REVISION_AUTHOR,
     KEY_AI_GEMINI_API_KEY,
     KEY_AI_GEMINI_MODEL,
     KEY_AI_GEMINI_API_BASE,
@@ -35,6 +56,16 @@ pub struct EvidencePreferencesSnapshot {
     pub evidence_active_template_id: Option<String>,
     pub evidence_change_id: Option<String>,
     pub evidence_environment: Option<String>,
+    pub evidence_product_name: Option<String>,
+    pub evidence_release_version: Option<String>,
+    pub evidence_deployment_date: Option<String>,
+    pub evidence_technical_owner: Option<String>,
+    pub evidence_approver: Option<String>,
+    pub evidence_out_of_scope: Option<String>,
+    pub evidence_document_version: Option<String>,
+    pub evidence_document_revision_date: Option<String>,
+    pub evidence_document_revision_summary: Option<String>,
+    pub evidence_document_revision_author: Option<String>,
     pub ai_gemini_api_base: Option<String>,
     pub ai_gemini_model: Option<String>,
     pub ai_gemini_api_key_configured: bool,
@@ -47,6 +78,8 @@ pub struct EvidenceTemplateRecord {
     pub label: String,
     #[serde(rename = "isBuiltin")]
     pub is_builtin: bool,
+    #[serde(rename = "layoutKey")]
+    pub layout_key: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -63,6 +96,8 @@ pub struct CreateEvidenceTemplateResult {
     pub label: String,
     #[serde(rename = "isBuiltin")]
     pub is_builtin: bool,
+    #[serde(rename = "layoutKey")]
+    pub layout_key: String,
 }
 
 /// Extensões de schema aplicadas sempre que se abre a BD (compatível com instalações antigas).
@@ -82,6 +117,62 @@ pub fn ensure_app_state_tables(conn: &Connection) -> Result<(), String> {
         VALUES ('default', 'Homologação — padrão enterprise', 1, 0);
         CREATE INDEX IF NOT EXISTS idx_templates_sort
             ON evidence_templates (is_builtin, sort_order, label);",
+    )
+    .map_err(|e| e.to_string())?;
+    ensure_templates_layout_key_column(conn)?;
+    migrate_default_template_to_market_standard(conn)?;
+    Ok(())
+}
+
+fn migrate_default_template_to_market_standard(conn: &Connection) -> Result<(), String> {
+    let n = conn
+        .execute(
+            "UPDATE evidence_templates SET layout_key = 'market_standard'
+             WHERE id = 'default' AND layout_key = 'enterprise'",
+            [],
+        )
+        .map_err(|e| e.to_string())?;
+    if n > 0 {
+        conn.execute(
+            "UPDATE evidence_templates SET label = ?1
+             WHERE id = 'default' AND label = 'Homologação — padrão enterprise'",
+            params!["Homologação — padrão mercado (IEEE / ITIL)"],
+        )
+        .map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+fn normalize_layout_key(raw: Option<String>) -> String {
+    let s = raw
+        .as_deref()
+        .unwrap_or("enterprise")
+        .trim()
+        .to_ascii_lowercase();
+    let allowed = ["enterprise", "minimal", "audit", "market_standard"];
+    if allowed.contains(&s.as_str()) {
+        s
+    } else {
+        "enterprise".to_string()
+    }
+}
+
+fn ensure_templates_layout_key_column(conn: &Connection) -> Result<(), String> {
+    let mut stmt = conn
+        .prepare("PRAGMA table_info(evidence_templates)")
+        .map_err(|e| e.to_string())?;
+    let cols: HashSet<String> = stmt
+        .query_map([], |row| row.get::<_, String>(1))
+        .map_err(|e| e.to_string())?
+        .collect::<Result<_, _>>()
+        .map_err(|e| e.to_string())?;
+
+    if cols.contains("layout_key") {
+        return Ok(());
+    }
+
+    conn.execute_batch(
+        "ALTER TABLE evidence_templates ADD COLUMN layout_key TEXT NOT NULL DEFAULT 'enterprise';",
     )
     .map_err(|e| e.to_string())?;
     Ok(())
@@ -131,6 +222,36 @@ pub fn load_snapshot(conn: &Connection) -> Result<EvidenceAppPersistedSnapshot, 
         evidence_environment: trim_opt(
             pref_get(conn, KEY_EVIDENCE_ENVIRONMENT).map_err(|e| e.to_string())?,
         ),
+        evidence_product_name: trim_opt(
+            pref_get(conn, KEY_EVIDENCE_PRODUCT_NAME).map_err(|e| e.to_string())?,
+        ),
+        evidence_release_version: trim_opt(
+            pref_get(conn, KEY_EVIDENCE_RELEASE_VERSION).map_err(|e| e.to_string())?,
+        ),
+        evidence_deployment_date: trim_opt(
+            pref_get(conn, KEY_EVIDENCE_DEPLOYMENT_DATE).map_err(|e| e.to_string())?,
+        ),
+        evidence_technical_owner: trim_opt(
+            pref_get(conn, KEY_EVIDENCE_TECHNICAL_OWNER).map_err(|e| e.to_string())?,
+        ),
+        evidence_approver: trim_opt(
+            pref_get(conn, KEY_EVIDENCE_APPROVER).map_err(|e| e.to_string())?,
+        ),
+        evidence_out_of_scope: trim_opt(
+            pref_get(conn, KEY_EVIDENCE_OUT_OF_SCOPE).map_err(|e| e.to_string())?,
+        ),
+        evidence_document_version: trim_opt(
+            pref_get(conn, KEY_EVIDENCE_DOCUMENT_VERSION).map_err(|e| e.to_string())?,
+        ),
+        evidence_document_revision_date: trim_opt(
+            pref_get(conn, KEY_EVIDENCE_DOCUMENT_REVISION_DATE).map_err(|e| e.to_string())?,
+        ),
+        evidence_document_revision_summary: trim_opt(
+            pref_get(conn, KEY_EVIDENCE_DOCUMENT_REVISION_SUMMARY).map_err(|e| e.to_string())?,
+        ),
+        evidence_document_revision_author: trim_opt(
+            pref_get(conn, KEY_EVIDENCE_DOCUMENT_REVISION_AUTHOR).map_err(|e| e.to_string())?,
+        ),
         ai_gemini_api_base: trim_opt(
             pref_get(conn, KEY_AI_GEMINI_API_BASE).map_err(|e| e.to_string())?,
         ),
@@ -144,17 +265,19 @@ pub fn load_snapshot(conn: &Connection) -> Result<EvidenceAppPersistedSnapshot, 
 
     let mut stmt = conn
         .prepare(
-            "SELECT id, label, is_builtin FROM evidence_templates
+            "SELECT id, label, is_builtin, layout_key FROM evidence_templates
              ORDER BY is_builtin DESC, sort_order ASC, label ASC",
         )
         .map_err(|e| e.to_string())?;
 
     let rows = stmt
         .query_map([], |row| {
+            let layout_raw: String = row.get(3)?;
             Ok(EvidenceTemplateRecord {
                 id: row.get(0)?,
                 label: row.get(1)?,
                 is_builtin: row.get::<_, i64>(2)? != 0,
+                layout_key: normalize_layout_key(Some(layout_raw)),
             })
         })
         .map_err(|e| e.to_string())?;
@@ -187,7 +310,11 @@ pub fn set_preference(conn: &Connection, key: String, value: String) -> Result<(
     Ok(())
 }
 
-pub fn create_custom_template(conn: &Connection, label_raw: String) -> Result<CreateEvidenceTemplateResult, String> {
+pub fn create_custom_template(
+    conn: &Connection,
+    label_raw: String,
+    layout_key_raw: Option<String>,
+) -> Result<CreateEvidenceTemplateResult, String> {
     ensure_app_state_tables(conn)?;
     let label = label_raw.trim().to_string();
     if label.is_empty() {
@@ -196,6 +323,8 @@ pub fn create_custom_template(conn: &Connection, label_raw: String) -> Result<Cr
     if label.len() > 200 {
         return Err("Nome do template demasiado longo (max. 200).".to_string());
     }
+
+    let layout_key = normalize_layout_key(layout_key_raw);
 
     let next_order: i64 = conn
         .query_row(
@@ -208,9 +337,9 @@ pub fn create_custom_template(conn: &Connection, label_raw: String) -> Result<Cr
     let id = Uuid::new_v4().to_string();
 
     conn.execute(
-        "INSERT INTO evidence_templates (id, label, is_builtin, sort_order)
-         VALUES (?1, ?2, 0, ?3)",
-        params![id, label, next_order],
+        "INSERT INTO evidence_templates (id, label, is_builtin, sort_order, layout_key)
+         VALUES (?1, ?2, 0, ?3, ?4)",
+        params![id, label, next_order, layout_key],
     )
     .map_err(|e| e.to_string())?;
 
@@ -218,7 +347,27 @@ pub fn create_custom_template(conn: &Connection, label_raw: String) -> Result<Cr
         id,
         label,
         is_builtin: false,
+        layout_key,
     })
+}
+
+pub fn set_template_layout(
+    conn: &Connection,
+    template_id: String,
+    layout_key_raw: String,
+) -> Result<(), String> {
+    ensure_app_state_tables(conn)?;
+    let layout_key = normalize_layout_key(Some(layout_key_raw));
+    let n = conn
+        .execute(
+            "UPDATE evidence_templates SET layout_key = ?1 WHERE id = ?2",
+            params![layout_key, template_id],
+        )
+        .map_err(|e| e.to_string())?;
+    if n == 0 {
+        return Err("Template não encontrado.".to_string());
+    }
+    Ok(())
 }
 
 pub fn delete_custom_template(conn: &Connection, id: &str) -> Result<(), String> {
@@ -268,17 +417,20 @@ mod tests {
     }
 
     #[test]
-    fn seed_default_template_exists() {
+    fn seed_default_template_exists_and_uses_market_layout() {
         let (_tmp, conn) = open_schema();
         let s = load_snapshot(&conn).unwrap();
-        assert!(s.templates.iter().any(|t| t.id == "default" && t.is_builtin));
+        let def = s.templates.iter().find(|t| t.id == "default").unwrap();
+        assert!(def.is_builtin);
+        assert_eq!(def.layout_key, "market_standard");
     }
 
     #[test]
     fn create_list_delete_custom_roundtrip() {
         let (_tmp, conn) = open_schema();
-        let created = create_custom_template(&conn, "  QA release  ".into()).unwrap();
+        let created = create_custom_template(&conn, "  QA release  ".into(), None).unwrap();
         assert_ne!(created.id, "default");
+        assert_eq!(created.layout_key, "enterprise");
         let list = load_snapshot(&conn).unwrap();
         assert!(list.templates.iter().any(|t| t.id == created.id));
 
@@ -329,5 +481,23 @@ mod tests {
 
         let err = set_preference(&conn, "unknown".into(), "x".into()).unwrap_err();
         assert!(err.contains("desconhecida"));
+    }
+
+    #[test]
+    fn custom_template_respects_layout_and_set_updates() {
+        let (_tmp, conn) = open_schema();
+        let created =
+            create_custom_template(&conn, "L".into(), Some("minimal".into())).unwrap();
+        assert_eq!(created.layout_key, "minimal");
+
+        set_template_layout(&conn, created.id.clone(), "audit".into()).unwrap();
+        let list = load_snapshot(&conn).unwrap();
+        let row = list.templates.iter().find(|t| t.id == created.id).unwrap();
+        assert_eq!(row.layout_key, "audit");
+
+        set_template_layout(&conn, "default".into(), "market_standard".into()).unwrap();
+        let list2 = load_snapshot(&conn).unwrap();
+        let def = list2.templates.iter().find(|t| t.id == "default").unwrap();
+        assert_eq!(def.layout_key, "market_standard");
     }
 }

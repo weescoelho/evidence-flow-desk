@@ -68,10 +68,22 @@ pub fn set_evidence_preference(app: AppHandle, key: String, value: String) -> Re
 pub fn create_evidence_custom_template(
     app: AppHandle,
     label: String,
+    layout_key: Option<String>,
 ) -> Result<CreateEvidenceTemplateResult, String> {
     let store = EvidenceDocumentsStore::for_app(&app)?;
     let conn = store.conn()?;
-    evidence_app_state::create_custom_template(&conn, label)
+    evidence_app_state::create_custom_template(&conn, label, layout_key)
+}
+
+#[tauri::command]
+pub fn set_evidence_template_layout(
+    app: AppHandle,
+    template_id: String,
+    layout_key: String,
+) -> Result<(), String> {
+    let store = EvidenceDocumentsStore::for_app(&app)?;
+    let conn = store.conn()?;
+    evidence_app_state::set_template_layout(&conn, template_id, layout_key)
 }
 
 #[tauri::command]

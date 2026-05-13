@@ -1,7 +1,7 @@
 # Roadmap — EvidenceFlow Desktop
 
-**Marco atual:** MVP (evidências básicas a partir de Git)
-**Estado:** Planejamento (código-base presente; funcionalidades do PRD por implementar)
+**Marco actual:** MVP núcleo **entregue em código** (fluxo Git → narrativa → documento → PDF por impressão → screenshots persistentes).
+**Estado:** Marco **MVP núcleo** fechado em código e alinhado no PRD (§14–16, §15). Próximo foco: **Fase 2** (ver secção abaixo) por prioridade de produto.
 
 ---
 
@@ -26,33 +26,31 @@
 - Extrair lista de commits (hash, autor, data, mensagem, tipo conventional) (RF-004)
 - Listar arquivos add/mod/del/rename + linhas +/- (RF-005)
 
-**Narrativa e documento** — IN PROGRESS *(resumo: [technical-summary-mvp](../features/technical-summary-mvp/spec.md); documento + PDF via impressão: [document-export-mvp](../features/document-export-mvp/spec.md))*
+**Narrativa e documento** — DONE *(resumo: [technical-summary-mvp](../features/technical-summary-mvp/spec.md); documento + PDF via impressão: [document-export-mvp](../features/document-export-mvp/spec.md); **templates / layouts:** [evidence-templates-layout](../features/evidence-templates-layout/spec.md))*
 
 - Resumo técnico simples sem LLM obrigatório (RF-006 subset)
 - Template único + preview + exportação «Guardar como PDF» via impressão (RF-009/010/011 subset)
 
-**Evidências visuais** — IN PROGRESS *(TLC: [evidence-screenshots-mvp](../features/evidence-screenshots-mvp/spec.md))*
+**Evidências visuais** — DONE *(TLC: [evidence-screenshots-mvp](../features/evidence-screenshots-mvp/spec.md))*
 
-- Anexar screenshots manuais (RF-012); incluídos no documento/PDF
+- Anexar screenshots manuais (RF-012); incluídos no documento/PDF; persistência por repositório na SQLite
 
-**Persistência MVP** — IN PROGRESS
+**Persistência MVP** — DONE *(núcleo PRD §15 shipado)*
 
-- Índice de cópias HTML em **SQLite** (`evidence_documents_index.sqlite3`; migração automática desde `evidence_documents/index.json` quando a base está vazia).
-- SQLite para templates/histórico/preferências conforme PRD §15 — planeado incrementalmente
+- Índice de cópias HTML em **SQLite** + migração legado `index.json`.
+- Templates, preferências KV, metadados por gravação (RF-015), capturas por repo — evoluções futuras podem expandir campos sem alterar este marco.
 
-**Infraestrutura app** — IN PROGRESS *(scaffolding existe)*
+**Infraestrutura app** — DONE *(MVP)*
 
-- Shell Tauri + React + navegação — alinhar com [product-ui-journey](../features/product-ui-journey/spec.md) (PRD §21: sidebar + wizard). **Templates** na sidebar: vista dedicada com preset activo + CRUD SQLite (`EvidenceTemplatesLibraryView`); **Screenshots** na sidebar: vista dedicada partilhando estado de sessão do passo 3 (`EvidenceScreenshotsLibraryView`).
+- Shell Tauri + React + navegação alinhada a [product-ui-journey](../features/product-ui-journey/spec.md) (sidebar + wizard); **Templates** (`EvidenceTemplatesLibraryView`); **Screenshots** (`EvidenceScreenshotsLibraryView`).
 
 ---
 
-## Fase 2 — Automação e IA (PRD §17)
+## Fase 2 — IA e integrações (PRD §17)
 
-**Objetivo:** Automação Playwright, IA remota opcional (Gemini), comparativos visuais, integrações.
+**Objetivo:** IA remota opcional (Gemini), comparativos visuais, integrações.
 
 ### Features
-
-**Playwright / screenshots automatizados** — PLANNED (RF-013)
 
 **IA — resumo corporativo, release notes, categorização** — PLANNED (RF-007, RF-008, RF-017 expand)
 

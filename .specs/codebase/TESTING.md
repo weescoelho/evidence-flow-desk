@@ -6,7 +6,7 @@
 |------|------------|-----------|
 | Unitário (JS/TS) | **Ausente** | Sem `vitest`, `jest`, `@testing-library/*` em `package.json`; sem ficheiros `*.test.ts(x)` sob `src/`. |
 | Unitário / integração (Rust) | **Ausente** | `Cargo.toml` sem `dev-dependencies` (`cargo test` só compilaria exemplo vazio — sem `#[cfg(test)]` em `src-tauri/src/` ). |
-| E2E | **Ausente** | Sem Playwright/Cypress na raíz do projeto. |
+| E2E | **Ausente** | Sem suite E2E (Cypress/Playwright de testes) na raiz do projeto. |
 
 ## Organização de testes
 

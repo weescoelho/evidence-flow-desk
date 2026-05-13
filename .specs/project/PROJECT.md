@@ -24,7 +24,7 @@
 
 **Planejado / referência PRD (ainda não refletido inteiramente em `package.json`):**
 
-- TanStack Query, SQLite, Handlebars ou EJS, pipeline HTML→PDF, Playwright para automação, Shiki para highlight
+- TanStack Query, SQLite, Handlebars ou EJS, pipeline HTML→PDF, Shiki para highlight
 - Linguagem Rust no `src-tauri` para comandos IPC e serviços locais
 
 Consultar também: [docs/ARCH-GUIDELINES.md](../../docs/ARCH-GUIDELINES.md), `docs/UI-COMPONENTS.md`, `docs/CLEAN-CODE-GUIDELINES.md`.

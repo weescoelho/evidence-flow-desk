@@ -535,13 +535,13 @@ Layout de duas colunas (`flex gap-4 w-full`):
 
 **Node ID**: `Ubxms`
 
+Barra da secção: botão **Importar arquivo** (sem automação de browser — fora do escopo do produto).
+
 ```
 flex gap-3 w-full
 ├── thumbnail (×N): rounded-[10px] bg-[#F4F4F5] border border-[#E4E4E7] p-[10px] flex flex-col gap-2 flex-1
 │   ├── área imagem: rounded-[8px] bg-white border border-[#E4E4E7] h-[112px]
 │   └── caption: 11px normal #71717A
-└── add: rounded-[10px] bg-white border border-[#E4E4E7] p-[10px] flex flex-col items-center justify-center gap-2 w-[160px]
-    └── plus 22px #71717A + "Nova captura" 11px semibold #71717A
 ```
 
 ```tsx
@@ -552,10 +552,6 @@ flex gap-3 w-full
       <span className="font-mono text-[11px] text-[#71717A]">{s.caption}</span>
     </div>
   ))}
-  <button className="flex w-[160px] flex-col items-center justify-center gap-2 rounded-[10px] border border-[#E4E4E7] bg-white p-2.5">
-    <Plus size={22} className="text-[#71717A]" />
-    <span className="font-mono text-[11px] font-semibold text-[#71717A]">Nova captura</span>
-  </button>
 </div>
 ```
 
