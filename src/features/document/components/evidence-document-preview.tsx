@@ -1,6 +1,6 @@
 import { join } from "@tauri-apps/api/path";
 import { open, save } from "@tauri-apps/plugin-dialog";
-import { Check, Database, Minus, Plus, RefreshCw } from "lucide-react";
+import { Check, Database, RefreshCw } from "lucide-react";
 import type { RefObject } from "react";
 import {
   useCallback,
@@ -228,7 +228,7 @@ export function EvidenceDocumentPreview({
   const previewFrameArea = (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-[10px] border border-[#E4E4E7] bg-[#F4F4F5] px-3 py-2">
-        <p className="font-mono text-[12px] text-[#18181B]">
+        <p className="font-mono text-[12px] font-normal text-[#71717A]">
           Páginas:
           <span className="tabular-nums" data-testid="preview-page-count">
             {" "}
@@ -240,20 +240,20 @@ export function EvidenceDocumentPreview({
           </span>
           %
         </p>
-        <div className="flex gap-1">
+        <div className="flex gap-2">
           <button
             type="button"
             aria-label="Reduzir zoom"
             disabled={zoomPct <= ZOOM_MIN}
             data-testid="preview-zoom-minus"
             className={cn(
-              "flex h-8 w-8 items-center justify-center rounded-[8px] border border-[#E4E4E7] bg-white text-[#71717A] hover:bg-[#FAFAFA] disabled:cursor-not-allowed disabled:opacity-40",
+              "flex size-[34px] items-center justify-center rounded-[8px] border border-[#E4E4E7] bg-white font-mono text-[16px] font-normal leading-none text-[#18181B] hover:bg-[#FAFAFA] disabled:cursor-not-allowed disabled:opacity-40",
             )}
             onClick={() =>
               setZoomPct((z) => Math.max(ZOOM_MIN, z - ZOOM_STEP))
             }
           >
-            <Minus className="size-4" strokeWidth={2} />
+            <span aria-hidden>−</span>
           </button>
           <button
             type="button"
@@ -261,13 +261,13 @@ export function EvidenceDocumentPreview({
             disabled={zoomPct >= ZOOM_MAX}
             data-testid="preview-zoom-plus"
             className={cn(
-              "flex h-8 w-8 items-center justify-center rounded-[8px] border border-[#E4E4E7] bg-white text-[#71717A] hover:bg-[#FAFAFA] disabled:cursor-not-allowed disabled:opacity-40",
+              "flex size-[34px] items-center justify-center rounded-[8px] border border-[#E4E4E7] bg-white font-mono text-[16px] font-normal leading-none text-[#18181B] hover:bg-[#FAFAFA] disabled:cursor-not-allowed disabled:opacity-40",
             )}
             onClick={() =>
               setZoomPct((z) => Math.min(ZOOM_MAX, z + ZOOM_STEP))
             }
           >
-            <Plus className="size-4" strokeWidth={2} />
+            <span aria-hidden>+</span>
           </button>
         </div>
       </div>

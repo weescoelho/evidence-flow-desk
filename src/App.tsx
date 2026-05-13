@@ -14,7 +14,7 @@ import {
   EvidenceAppSettingsView,
   EvidenceDocumentsLibraryView,
   EvidenceScreenshotsPlaceholderView,
-  EvidenceTemplatesPlaceholderView,
+  EvidenceTemplatesLibraryView,
   useHydrateEvidenceAppState,
   useEvidencePreferenceSync,
 } from "@/features/document";
@@ -151,7 +151,7 @@ function App() {
         ) : activeSection === "settings" ? (
           <EvidenceAppSettingsView />
         ) : activeSection === "templates" ? (
-          <EvidenceTemplatesPlaceholderView />
+          <EvidenceTemplatesLibraryView />
         ) : activeSection === "screenshots" ? (
           <EvidenceScreenshotsPlaceholderView />
         ) : (

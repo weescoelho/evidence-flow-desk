@@ -1,7 +1,7 @@
 # Estado do projeto — EvidenceFlow Desk
 
-**Última atualização:** 2026-05-13  
-**Trabalho atual:** MVP narrativa/export + **RF-015** incremental; **QA visual passos 4–5** concluído (PNG em `docs/design-assets/`; paridade ícone atualização + faixa SQLite). Ver **Aprendizados**.
+**Última atualização:** 2026-05-12  
+**Trabalho atual:** MVP núcleo — checklist [product-ui-journey/tasks.md](../features/product-ui-journey/tasks.md) fechado (P1–P2 marcados); vista global **Templates** com gestão SQLite alinhada ao passo 3. **Seguinte:** stub **Screenshots** na sidebar (biblioteca agregada) ou endurecer critérios de fecho MVP no PRD; Fase 2 (Playwright RF-013, IA RF-007) quando priorizado.
 
 ---
 
@@ -56,7 +56,7 @@ _Nenhum._
 ### QA UI passos 4–5 (`X80A7`, `Kym43`)
 
 - **Painel Documentos dentro do wizard (passos 4–5):** existe no código e não no crop do frame único no Pencil; mantido no MVP (**desvio aceite** — utilidade sobre paridade estrita do screenshot).
-- **Toolbar de zoom:** Pencil usa rótulos textuais `−` / `+`; a app usa ícones Lucide — equivalente funcional.
+- **Toolbar de zoom:** alinhado ao pen (rótulos `−` / `+` mono 16px, 34×34px; gap 8px; linha «Páginas • zoom» `#71717A`).
 - **Grafia / locale:** Pencil usa formas como «Paginas», «Opcoes», «Destino do arquivo», «Salve no historico»; a UI da app mantém PT-PT acentuado («Páginas», «Destino do ficheiro», «Guarde no histórico») conforme texto do wizard já alinhado à spec.
 
 ---
@@ -80,3 +80,4 @@ _Nenhuma listada._
 - [x] Feature `git-repository-and-branches`: UAT T12; estado **Approved** em [tasks.md](../features/git-repository-and-branches/tasks.md).
 - [x] Feature `git-commits-and-changes`: UAT manual (refs branch/tag/SHA + atalhos) — **OK** 2026-05-12; [tasks.md](../features/git-commits-and-changes/tasks.md).
 - [x] **RF-015 evolução (metadados por gravação)** — Colunas opcionais em `saved_evidence_documents`: `template_label`, `change_id`, `environment`, `document_title` (migração idempotente + `save_evidence_document`; lista/filtro em **Documentos**). *Já entregue antes:* histórico + índice HTML + migração `index.json`; preferências KV + `evidence_templates`; hidratação; pasta de export no passo 5.
+- [x] **Vista sidebar Templates** — `EvidenceTemplatesLibraryView`: selector de template ativo (persistência KV) + painel partilhado com o modal «Gerenciar templates» (`EvidenceTemplatesManagePanel`).
