@@ -7,7 +7,6 @@ export type EvidenceScreenshotPayload = {
   /** Só `data:image/*;base64,` confiável para &lt;img src&gt; */
   dataUrl: string;
   caption: string;
-  linkedCommitShort: string | null;
 };
 
 export type EvidenceDocumentPayload = {
@@ -113,13 +112,9 @@ export function buildEvidenceBodyHtml(p: EvidenceDocumentPayload): string {
         return `<figure class="shot"><p class="warn">Imagem omitida (formato inválido).</p></figure>`;
       }
       const cap = escapeHtml(s.caption.trim() || s.fileName);
-      const linkNote = s.linkedCommitShort
-        ? `<p class="screenshot-meta">Associado ao commit <code>${escapeHtml(s.linkedCommitShort)}</code></p>`
-        : "";
       return `<figure class="shot">
   <img src="${src}" alt="${cap}" />
   <figcaption>${cap}</figcaption>
-  ${linkNote}
 </figure>`;
     })
     .join("\n")}
@@ -216,7 +211,6 @@ const PRINT_STYLES = `
   .warn { color: #7a5b00; background: #fff8e6; border: 1px solid #e6d08c; padding: 8pt; border-radius: 4px; }
   figure.shot { margin: 12pt 0; page-break-inside: avoid; }
   figure.shot img { max-width: 100%; height: auto; border: 1px solid #ddd; display: block; }
-  figure.shot .screenshot-meta { font-size: 9pt; color: #444; margin: 4pt 0 0; }
   figure.shot figcaption { font-size: 9pt; margin-top: 4pt; }
   .doc-footer { margin-top: 16pt; font-size: 9pt; color: #555; }
   @media screen {

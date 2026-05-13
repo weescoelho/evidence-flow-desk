@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { useEvidenceAttachmentsStore } from "@/features/evidence";
-
 import { getRepositoryScopeSummary } from "../api/git.commands";
 import { parseGitCommandError } from "../api/parse-git-error";
 import { buildTechnicalSummary } from "../lib/technical-summary";
@@ -129,14 +127,6 @@ export function useRepositoryScopeSummary(): RepositoryScopeSummaryState {
 
   const technicalNarrative =
     draftNarrative !== null ? draftNarrative : technicalNarrativeGenerated;
-
-  const setScopeCommits = useEvidenceAttachmentsStore(
-    (s) => s.setScopeCommits,
-  );
-
-  useEffect(() => {
-    setScopeCommits(data?.commits ?? []);
-  }, [data, setScopeCommits]);
 
   return {
     repositoryPath,

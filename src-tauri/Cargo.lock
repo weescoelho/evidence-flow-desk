@@ -936,6 +936,7 @@ dependencies = [
 name = "evidence-flow-desk"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "git2",
  "reqwest 0.12.28",
  "rusqlite",

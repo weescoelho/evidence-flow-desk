@@ -88,7 +88,6 @@ describe("buildEvidenceBodyHtml", () => {
             fileName: "x.png",
             dataUrl: "data:image/png;base64,xxx",
             caption: "Legenda",
-            linkedCommitShort: "abcd123",
           },
         ],
       }),
@@ -96,7 +95,7 @@ describe("buildEvidenceBodyHtml", () => {
     expect(html).toContain("Screenshots");
     expect(html).toContain("data:image/png;base64,xxx");
     expect(html).toContain("Legenda");
-    expect(html).toContain("abcd123");
+    expect(html).not.toContain("Associado ao commit");
   });
 
   it("expõe ids de secção estáveis no HTML do relatório", () => {
@@ -130,7 +129,6 @@ describe("buildEvidenceBodyHtml", () => {
             fileName: "x.png",
             dataUrl: "data:image/png;base64,xxx",
             caption: "L",
-            linkedCommitShort: null,
           },
         ],
       }),

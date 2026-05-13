@@ -1,12 +1,10 @@
-/** Screenshot anexado pelo utilizador (dados em memória — sessão atual). */
+/** Screenshot anexado pelo utilizador; a lista em sessão sincroniza com SQLite por repositório. */
 export type EvidenceScreenshot = {
   id: string;
   fileName: string;
   /** data:image/…;base64,… */
   dataUrl: string;
   caption: string;
-  /** Hash completo do commit quando associado (RF-014 subset). */
-  linkedCommitHash: string | null;
 };
 
 export const MAX_EVIDENCE_SCREENSHOTS = 12;

@@ -22,9 +22,9 @@ O utilizador pode **disparar a impressão do sistema** com o documento formatado
 
 Todo o texto proveniente do repositório ou do resumo técnico deve ser **escapado** ao gerar HTML para evitar injecção de marcação.
 
-### DOC-R05 — Secção de screenshots (RF-012 / RF-014)
+### DOC-R05 — Secção de screenshots (RF-012)
 
-Quando existirem anexos de imagem na sessão, o corpo do documento inclui uma secção **Screenshots** com figuras, legenda e referência opcional ao commit — ver [evidence-screenshots-mvp](../evidence-screenshots-mvp/spec.md).
+Quando existirem anexos de imagem na sessão, o corpo do documento inclui uma secção **Screenshots** com figuras e legenda — ver [evidence-screenshots-mvp](../evidence-screenshots-mvp/spec.md).
 
 ---
 

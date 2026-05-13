@@ -1,6 +1,12 @@
 import { create } from "zustand";
 
-import type { CommitRow } from "@/features/git/types/git";
+import { useGitStore } from "@/features/git/store/git-store";
+import { invokeErrorMessage } from "@/lib/invoke-error-message";
+
+import {
+  listRepositoryEvidenceScreenshots,
+  syncRepositoryEvidenceScreenshots,
+} from "../api/repository-screenshots.commands";
 
 import {
   ALLOWED_IMAGE_TYPES,
@@ -10,10 +16,12 @@ import {
 } from "../types";
 
 type AttachmentsState = {
-  scopeCommits: CommitRow[];
   attachments: EvidenceScreenshot[];
 
-  setScopeCommits: (commits: CommitRow[]) => void;
+  /**
+   * Recarrega anexos a partir da BD SQLite para o caminho canónico do repositório.
+   */
+  hydrateFromPersistence: (repositoryPath: string) => Promise<void>;
   /**
    * Valida ficheiros síncrono; leitura assíncrona acumula no fim.
    * Devolve avisos (tipo/tamanho/limite); erros de leitura aparecem no estado `lastAddError`.
@@ -21,11 +29,32 @@ type AttachmentsState = {
   addFromFiles: (files: File[]) => string[];
   remove: (id: string) => void;
   updateCaption: (id: string, caption: string) => void;
-  updateLinkedCommit: (id: string, hash: string | null) => void;
   clear: () => void;
   lastAddError: string | null;
   clearLastAddError: () => void;
 };
+
+let persistTimer: ReturnType<typeof setTimeout> | null = null;
+
+function scheduleAttachmentsPersist(get: () => AttachmentsState) {
+  const repoAtSchedule = useGitStore.getState().repositoryPath;
+  if (!repoAtSchedule) return;
+  if (persistTimer) clearTimeout(persistTimer);
+  persistTimer = setTimeout(() => {
+    persistTimer = null;
+    const repoNow = useGitStore.getState().repositoryPath;
+    if (repoNow !== repoAtSchedule) return;
+    const shots = get().attachments;
+    void syncRepositoryEvidenceScreenshots(repoNow, shots).catch((e) => {
+      useEvidenceAttachmentsStore.setState({
+        lastAddError: invokeErrorMessage(
+          e,
+          "Não foi possível guardar capturas.",
+        ),
+      });
+    });
+  }, 450);
+}
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -37,13 +66,33 @@ function readFileAsDataUrl(file: File): Promise<string> {
 }
 
 export const useEvidenceAttachmentsStore = create<AttachmentsState>((set, get) => ({
-  scopeCommits: [],
   attachments: [],
   lastAddError: null,
 
   clearLastAddError: () => set({ lastAddError: null }),
 
-  setScopeCommits: (scopeCommits) => set({ scopeCommits }),
+  hydrateFromPersistence: async (repositoryPath) => {
+    set({ lastAddError: null });
+    try {
+      const rows = await listRepositoryEvidenceScreenshots(repositoryPath);
+      set({
+        attachments: rows.map((r) => ({
+          id: r.id,
+          fileName: r.fileName,
+          dataUrl: r.dataUrl,
+          caption: r.caption,
+        })),
+      });
+    } catch (e) {
+      set({
+        lastAddError: invokeErrorMessage(
+          e,
+          "Não foi possível carregar capturas guardadas.",
+        ),
+        attachments: [],
+      });
+    }
+  },
 
   addFromFiles: (files) => {
     const errors: string[] = [];
@@ -88,7 +137,6 @@ export const useEvidenceAttachmentsStore = create<AttachmentsState>((set, get) =
           fileName: validFiles[i]!.name,
           dataUrl,
           caption: "",
-          linkedCommitHash: null,
         }));
         set((state) => ({
           attachments: [...state.attachments, ...newShots].slice(
@@ -96,6 +144,7 @@ export const useEvidenceAttachmentsStore = create<AttachmentsState>((set, get) =
             MAX_EVIDENCE_SCREENSHOTS,
           ),
         }));
+        scheduleAttachmentsPersist(get);
       })
       .catch(() => {
         set({ lastAddError: "Não foi possível ler um ou mais ficheiros." });
@@ -104,25 +153,21 @@ export const useEvidenceAttachmentsStore = create<AttachmentsState>((set, get) =
     return errors;
   },
 
-  remove: (id) =>
+  remove: (id) => {
     set((s) => ({
       attachments: s.attachments.filter((a) => a.id !== id),
-    })),
+    }));
+    scheduleAttachmentsPersist(get);
+  },
 
-  updateCaption: (id, caption) =>
+  updateCaption: (id, caption) => {
     set((s) => ({
       attachments: s.attachments.map((a) =>
         a.id === id ? { ...a, caption } : a,
       ),
-    })),
+    }));
+    scheduleAttachmentsPersist(get);
+  },
 
-  updateLinkedCommit: (id, hash) =>
-    set((s) => ({
-      attachments: s.attachments.map((a) =>
-        a.id === id ? { ...a, linkedCommitHash: hash } : a,
-      ),
-    })),
-
-  clear: () =>
-    set({ attachments: [], scopeCommits: [], lastAddError: null }),
+  clear: () => set({ attachments: [], lastAddError: null }),
 }));

@@ -26,6 +26,7 @@ serde_json = "1"
 uuid = { version = "1", features = ["v4"] }
 git2 = { version = "0.20", default-features = false, features = ["vendored-libgit2"] }
 rusqlite = { version = "0.37", features = ["bundled"] }
+base64 = "0.22"
 reqwest = { version = "0.12", default-features = false, features = ["json", "blocking", "native-tls"] }
 
 [dev-dependencies]

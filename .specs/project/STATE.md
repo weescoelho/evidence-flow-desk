@@ -1,7 +1,7 @@
 # Estado do projeto — EvidenceFlow Desk
 
 **Última atualização:** 2026-05-12  
-**Trabalho atual:** Sidebar **Templates** e **Screenshots** com vistas dedicadas (última: mesma sessão que passo 3). **Seguinte:** persistência global de capturas (nova tabela / ficheiros) se o produto priorizar; ou fecho formal do MVP no PRD; Fase 2 (Playwright RF-013, IA RF-007).
+**Trabalho actual:** Persistência SQLite das capturas por repositório (`repository_evidence_screenshots`, comandos `list_*` / `sync_*`). **Seguinte:** fecho formal do MVP no PRD / roadmap se desejado; Fase 2 (Playwright RF-013, IA RF-007).
 
 ---
 
@@ -81,3 +81,4 @@ _Nenhuma listada._
 - [x] Feature `git-commits-and-changes`: UAT manual (refs branch/tag/SHA + atalhos) — **OK** 2026-05-12; [tasks.md](../features/git-commits-and-changes/tasks.md).
 - [x] **RF-015 evolução (metadados por gravação)** — Colunas opcionais em `saved_evidence_documents`: `template_label`, `change_id`, `environment`, `document_title` (migração idempotente + `save_evidence_document`; lista/filtro em **Documentos**). *Já entregue antes:* histórico + índice HTML + migração `index.json`; preferências KV + `evidence_templates`; hidratação; pasta de export no passo 5.
 - [x] **Vista sidebar Screenshots** — `EvidenceScreenshotsLibraryView`: `EvidenceScreenshotsSection` + empty state sem repo (`useGitStore`).
+- [x] **Persistência por repositório** — tabela `repository_evidence_screenshots` na BD de documentos; hydrate ao abrir repo; sync debounced nas mutações (`sync_repository_evidence_screenshots`).

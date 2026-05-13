@@ -3,7 +3,7 @@ import { useGitStore } from "@/features/git/store/git-store";
 
 /**
  * Vista global Screenshots (UI-R01): mesma lista/CRUD do passo 3 (`useEvidenceAttachmentsStore`),
- * acessível pela sidebar — sessão actual; sem biblioteca SQLite (SCR-R02).
+ * acessível pela sidebar — mesma lista que o passo 3; persistência por repositório na SQLite.
  */
 export function EvidenceScreenshotsLibraryView() {
   const repositoryPath = useGitStore((s) => s.repositoryPath);
@@ -18,9 +18,8 @@ export function EvidenceScreenshotsLibraryView() {
           Biblioteca de capturas
         </h1>
         <p className="max-w-[56ch] font-mono text-sm text-muted-foreground">
-          Anexe imagens, legendas e associação a commits do escopo actual. Os dados são
-          os mesmos do passo 3 do assistente e limpam-se ao mudar o repositório
-          (MVP — persistência global planeada com evolução do produto).
+          Anexe imagens e legendas; os dados são os mesmos do passo 3 e persistem neste
+          computador por pasta Git (SQLite).
         </p>
       </header>
 

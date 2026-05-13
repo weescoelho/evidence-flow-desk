@@ -1,6 +1,6 @@
 # Especificação: screenshots manuais MVP (`evidence-screenshots-mvp`)
 
-**PRD:** [RF-012](../../../docs/prd.md), [RF-014](../../../docs/prd.md) (subset)  
+**PRD:** [RF-012](../../../docs/prd.md)  
 **Depende de:** [git-commits-and-changes](../git-commits-and-changes/spec.md), [document-export-mvp](../document-export-mvp/spec.md).  
 **UI:** secção **Screenshots e comparacao** no passo 3 — [product-ui-journey](../product-ui-journey/spec.md) (UI-R03), nó `fZdOT` / `gbZwC` (acções «Importar arquivo», «Nova captura», grelha de miniaturas).
 
@@ -12,19 +12,17 @@
 
 Com repositório válido seleccionado, o utilizador pode escolher **um ou mais** ficheiros de imagem (PNG, JPEG, WebP, GIF) até um limite documentado; ficheiros inválidos ou demasiado grandes são recusados com mensagem clara.
 
-### SCR-R02 — Dados em sessão
+### SCR-R02 — Dados por sessão e persistência
 
-Os anexos vivem em **memória** da sessão; ao mudar o repositório seleccionado, a lista é **limpa** (MVP sem RF-015 persistência).
+Os anexos continuam associados ao **repositório Git canónico** actual. Em **memória** durante a sessão; ao mudar o repositório seleccionado, carrega-se a lista guardada para o novo caminho.
 
-### SCR-R03 — Associação a commits (RF-014 subset)
+**Evolução (2026-05-12):** As capturas **persistem** na mesma SQLite que o índice de documentos (`repository_evidence_screenshots`, por `repository_path` canónico). Limite e formatos iguais ao frontend; sincronização substitui o conjunto por repositório.
 
-Por cada anexo, o utilizador pode opcionalmente associar um **commit** da lista do escopo atual (atualizada quando o resumo do escopo carrega).
+### SCR-R03 — Documento e PDF
 
-### SCR-R04 — Documento e PDF
+Screenshots entram no **HTML** do documento de evidência (secção dedicada) e na **exportação por impressão** (RF-011), com legenda.
 
-Screenshots entram no **HTML** do documento de evidência (secção dedicada) e na **exportação por impressão** (RF-011), com legenda e nota de commit associado quando definido.
-
-### SCR-R05 — Segurança em `<img>`
+### SCR-R04 — Segurança em `<img>`
 
 Apenas URLs `data:image/…` geradas localmente a partir do `FileReader` são emitidas no HTML; outras origens são omitidas.
 

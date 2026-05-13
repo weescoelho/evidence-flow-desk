@@ -11,17 +11,21 @@ export function EvidenceScreenshotsSection() {
   const repositoryPath = useGitStore((s) => s.repositoryPath);
   const {
     attachments,
-    scopeCommits,
     addFromFiles,
     remove,
     updateCaption,
-    updateLinkedCommit,
     lastAddError,
     clearLastAddError,
   } = useEvidenceAttachmentsStore();
 
   useEffect(() => {
-    useEvidenceAttachmentsStore.getState().clear();
+    if (!repositoryPath) {
+      useEvidenceAttachmentsStore.getState().clear();
+      return;
+    }
+    void useEvidenceAttachmentsStore
+      .getState()
+      .hydrateFromPersistence(repositoryPath);
   }, [repositoryPath]);
 
   if (!repositoryPath) {
@@ -42,8 +46,7 @@ export function EvidenceScreenshotsSection() {
             Screenshots e comparação
           </h2>
           <p className="mt-1 text-[12px] text-[#71717A]">
-            Importe ficheiros ou anexe capturas; associe opcionalmente a um
-            commit do escopo (RF-012 / RF-014).
+            Importe ficheiros ou anexe capturas para o documento de evidência (RF-012).
           </p>
         </div>
         <div className="flex flex-col items-end gap-1 sm:flex-row sm:gap-2">
@@ -122,27 +125,6 @@ export function EvidenceScreenshotsSection() {
                     onChange={(ev) => updateCaption(a.id, ev.target.value)}
                     className="rounded-[10px] border border-[#E4E4E7] bg-white px-2 py-1 text-[#18181B] outline-none focus-visible:ring-2 focus-visible:ring-[#5946DB]/35"
                   />
-                </label>
-                <label className="flex flex-col gap-1 text-[#71717A]">
-                  Associar a commit
-                  <select
-                    value={a.linkedCommitHash ?? ""}
-                    onChange={(ev) =>
-                      updateLinkedCommit(
-                        a.id,
-                        ev.target.value ? ev.target.value : null,
-                      )
-                    }
-                    className="rounded-[10px] border border-[#E4E4E7] bg-white px-2 py-1 font-mono text-[#18181B]"
-                  >
-                    <option value="">— Nenhum —</option>
-                    {scopeCommits.map((c) => (
-                      <option key={c.hash} value={c.hash}>
-                        {c.shortHash} — {c.summary.slice(0, 60)}
-                        {c.summary.length > 60 ? "…" : ""}
-                      </option>
-                    ))}
-                  </select>
                 </label>
                 <button
                   type="button"

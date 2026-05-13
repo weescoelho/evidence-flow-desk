@@ -33,7 +33,7 @@
 
 **Evidências visuais** — IN PROGRESS *(TLC: [evidence-screenshots-mvp](../features/evidence-screenshots-mvp/spec.md))*
 
-- Anexar e associar screenshots manuais a commits no escopo (RF-012, RF-014 subset); incluídos no documento/PDF
+- Anexar screenshots manuais (RF-012); incluídos no documento/PDF
 
 **Persistência MVP** — IN PROGRESS
 

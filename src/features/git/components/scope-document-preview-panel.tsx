@@ -49,9 +49,6 @@ export function ScopeDocumentPreviewPanel({
         fileName: a.fileName,
         dataUrl: a.dataUrl,
         caption: a.caption,
-        linkedCommitShort: a.linkedCommitHash
-          ? a.linkedCommitHash.slice(0, 7)
-          : null,
       })),
     [evidenceAttachments],
   );

@@ -7,6 +7,9 @@ use crate::services::evidence_documents::{
     delete_document, list_documents, save_document, EvidenceDocumentsStore,
     SaveEvidenceDocumentResult, SavedEvidenceDocumentInfo,
 };
+use crate::services::repository_screenshots::{
+    self, RepositoryEvidenceScreenshotInput, RepositoryEvidenceScreenshotRow,
+};
 
 #[tauri::command]
 pub fn save_evidence_document(
@@ -76,4 +79,25 @@ pub fn delete_evidence_custom_template(app: AppHandle, id: String) -> Result<(),
     let store = EvidenceDocumentsStore::for_app(&app)?;
     let conn = store.conn()?;
     evidence_app_state::delete_custom_template(&conn, &id)
+}
+
+#[tauri::command]
+pub fn list_repository_evidence_screenshots(
+    app: AppHandle,
+    repository_path: String,
+) -> Result<Vec<RepositoryEvidenceScreenshotRow>, String> {
+    let store = EvidenceDocumentsStore::for_app(&app)?;
+    let conn = store.conn()?;
+    repository_screenshots::list_repository_screenshots(&conn, &repository_path)
+}
+
+#[tauri::command]
+pub fn sync_repository_evidence_screenshots(
+    app: AppHandle,
+    repository_path: String,
+    screenshots: Vec<RepositoryEvidenceScreenshotInput>,
+) -> Result<(), String> {
+    let store = EvidenceDocumentsStore::for_app(&app)?;
+    let mut conn = store.conn()?;
+    repository_screenshots::sync_repository_screenshots(&mut conn, &repository_path, screenshots)
 }

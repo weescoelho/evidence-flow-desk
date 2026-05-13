@@ -4,8 +4,9 @@ mod services;
 
 use commands::evidence::{
     create_evidence_custom_template, delete_evidence_custom_template,
-    delete_saved_evidence_document, list_saved_evidence_documents,
-    load_evidence_app_persisted_state, save_evidence_document, set_evidence_preference,
+    delete_saved_evidence_document, list_repository_evidence_screenshots,
+    list_saved_evidence_documents, load_evidence_app_persisted_state, save_evidence_document,
+    set_evidence_preference, sync_repository_evidence_screenshots,
 };
 use commands::llm::{llm_generate_corporate_summary, llm_rewrite_technical_summary};
 use commands::git::{
@@ -33,6 +34,8 @@ pub fn run() {
             set_evidence_preference,
             create_evidence_custom_template,
             delete_evidence_custom_template,
+            list_repository_evidence_screenshots,
+            sync_repository_evidence_screenshots,
             llm_generate_corporate_summary,
             llm_rewrite_technical_summary,
             write_text_file,

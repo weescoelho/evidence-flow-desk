@@ -128,6 +128,7 @@ impl EvidenceDocumentsStore {
         Self::migrate_legacy_json_if_needed(&self.root, &mut conn)?;
         Self::ensure_saved_documents_extra_columns(&conn)?;
         crate::services::evidence_app_state::ensure_app_state_tables(&conn)?;
+        crate::services::repository_screenshots::ensure_repository_screenshots_table(&conn)?;
         Ok(())
     }
 
