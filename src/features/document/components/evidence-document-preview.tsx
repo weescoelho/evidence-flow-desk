@@ -1,6 +1,6 @@
 import { join } from "@tauri-apps/api/path";
 import { open, save } from "@tauri-apps/plugin-dialog";
-import { Check, Database, Minus, Plus } from "lucide-react";
+import { Check, Database, Minus, Plus, RefreshCw } from "lucide-react";
 import type { RefObject } from "react";
 import {
   useCallback,
@@ -183,6 +183,10 @@ export function EvidenceDocumentPreview({
         repositoryPath: payload.repositoryPath,
         baseRef: payload.baseRef,
         compareRef: payload.compareRef,
+        templateLabel: payload.templateLabel,
+        changeId: payload.changeId,
+        environment: payload.environment,
+        documentTitle: printOptions.documentTitle,
       });
       setSaveStatus({ ok: r.htmlPath });
       onLocalSaveSuccess?.();
@@ -305,9 +309,8 @@ export function EvidenceDocumentPreview({
           aria-hidden
         />
         <p className="font-mono text-[12px] leading-snug text-[#71717A]">
-          Metadados de documentos e preferências (template, Change ID, pasta de
-          exportação) na base SQLite local; «Documentos» na barra lateral lista
-          cópias HTML quando usa «Guardar cópia local».
+          Ao usar «Guardar cópia local (HTML)», registámos metadata na SQLite para
+          pesquisa em «Documentos».
         </p>
       </div>
     ) : null;
@@ -504,11 +507,13 @@ export function EvidenceDocumentPreview({
           {previewFrameArea}
           <p
             data-testid="preview-update-copy"
-            className="flex items-start gap-2 font-mono text-[11px] text-[#71717A]"
+            className="flex items-center gap-2.5 font-mono text-[11px] text-[#71717A]"
           >
-            <span className="tabular-nums" aria-hidden>
-              •
-            </span>
+            <RefreshCw
+              className="size-4 shrink-0 text-[#5946DB]"
+              strokeWidth={2}
+              aria-hidden
+            />
             Atualiza ao mudar template ou commits marcados
           </p>
         </>

@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -38,6 +39,14 @@ pub struct SavedEvidenceDocumentInfo {
     pub base_ref: String,
     pub compare_ref: String,
     pub html_path: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub template_label: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub change_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub environment: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub document_title: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -117,7 +126,46 @@ impl EvidenceDocumentsStore {
         .map_err(|e| e.to_string())?;
 
         Self::migrate_legacy_json_if_needed(&self.root, &mut conn)?;
+        Self::ensure_saved_documents_extra_columns(&conn)?;
         crate::services::evidence_app_state::ensure_app_state_tables(&conn)?;
+        Ok(())
+    }
+
+    fn ensure_saved_documents_extra_columns(conn: &Connection) -> Result<(), String> {
+        let mut stmt = conn
+            .prepare("PRAGMA table_info(saved_evidence_documents)")
+            .map_err(|e| e.to_string())?;
+        let cols: HashSet<String> = stmt
+            .query_map([], |row| row.get::<_, String>(1))
+            .map_err(|e| e.to_string())?
+            .collect::<Result<_, _>>()
+            .map_err(|e| e.to_string())?;
+
+        let alters = [
+            (
+                "template_label",
+                "ALTER TABLE saved_evidence_documents ADD COLUMN template_label TEXT",
+            ),
+            (
+                "change_id",
+                "ALTER TABLE saved_evidence_documents ADD COLUMN change_id TEXT",
+            ),
+            (
+                "environment",
+                "ALTER TABLE saved_evidence_documents ADD COLUMN environment TEXT",
+            ),
+            (
+                "document_title",
+                "ALTER TABLE saved_evidence_documents ADD COLUMN document_title TEXT",
+            ),
+        ];
+
+        for (name, sql) in alters {
+            if !cols.contains(name) {
+                conn.execute_batch(sql).map_err(|e| e.to_string())?;
+            }
+        }
+
         Ok(())
     }
 
@@ -221,12 +269,27 @@ impl EvidenceDocumentsStore {
         }
     }
 
+    fn normalize_opt(s: Option<String>) -> Option<String> {
+        s.and_then(|t| {
+            let t = t.trim();
+            if t.is_empty() {
+                None
+            } else {
+                Some(t.to_string())
+            }
+        })
+    }
+
     pub fn save(
         &self,
         html: String,
         repository_path: String,
         base_ref: String,
         compare_ref: String,
+        template_label: Option<String>,
+        change_id: Option<String>,
+        environment: Option<String>,
+        document_title: Option<String>,
     ) -> Result<SaveEvidenceDocumentResult, String> {
         fs::create_dir_all(&self.root).map_err(|e| e.to_string())?;
 
@@ -242,16 +305,26 @@ impl EvidenceDocumentsStore {
 
         let html_path_str = normalize_path(&html_path);
 
+        let template_label = Self::normalize_opt(template_label);
+        let change_id = Self::normalize_opt(change_id);
+        let environment = Self::normalize_opt(environment);
+        let document_title = Self::normalize_opt(document_title);
+
         conn.execute(
             "INSERT INTO saved_evidence_documents
-             (id, saved_at_ms, repository_path, base_ref, compare_ref)
-             VALUES (?1, ?2, ?3, ?4, ?5)",
+             (id, saved_at_ms, repository_path, base_ref, compare_ref,
+              template_label, change_id, environment, document_title)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
             params![
                 id,
                 Self::now_ms(),
                 repository_path,
                 base_ref,
                 compare_ref,
+                template_label,
+                change_id,
+                environment,
+                document_title,
             ],
         )
         .map_err(|e| {
@@ -269,7 +342,8 @@ impl EvidenceDocumentsStore {
         let conn = self.conn()?;
         let mut stmt = conn
             .prepare(
-                "SELECT id, saved_at_ms, repository_path, base_ref, compare_ref
+                "SELECT id, saved_at_ms, repository_path, base_ref, compare_ref,
+                        template_label, change_id, environment, document_title
                  FROM saved_evidence_documents
                  ORDER BY saved_at_ms DESC, id DESC",
             )
@@ -277,27 +351,26 @@ impl EvidenceDocumentsStore {
 
         let rows = stmt
             .query_map([], |row| {
-                Ok(IndexEntry {
+                Ok(SavedEvidenceDocumentInfo {
                     id: row.get(0)?,
                     saved_at_ms: row.get(1)?,
                     repository_path: row.get(2)?,
                     base_ref: row.get(3)?,
                     compare_ref: row.get(4)?,
+                    template_label: row.get(5)?,
+                    change_id: row.get(6)?,
+                    environment: row.get(7)?,
+                    document_title: row.get(8)?,
+                    html_path: String::new(),
                 })
             })
             .map_err(|e| e.to_string())?;
 
         let mut result = Vec::new();
         for r in rows {
-            let e = r.map_err(|e| e.to_string())?;
-            result.push(SavedEvidenceDocumentInfo {
-                html_path: normalize_path(&self.html_path_for_id(&e.id)),
-                id: e.id,
-                saved_at_ms: e.saved_at_ms,
-                repository_path: e.repository_path,
-                base_ref: e.base_ref,
-                compare_ref: e.compare_ref,
-            });
+            let mut e = r.map_err(|e| e.to_string())?;
+            e.html_path = normalize_path(&self.html_path_for_id(&e.id));
+            result.push(e);
         }
 
         Ok(result)
@@ -335,8 +408,21 @@ pub fn save_document(
     repository_path: String,
     base_ref: String,
     compare_ref: String,
+    template_label: Option<String>,
+    change_id: Option<String>,
+    environment: Option<String>,
+    document_title: Option<String>,
 ) -> Result<SaveEvidenceDocumentResult, String> {
-    EvidenceDocumentsStore::for_app(app)?.save(html, repository_path, base_ref, compare_ref)
+    EvidenceDocumentsStore::for_app(app)?.save(
+        html,
+        repository_path,
+        base_ref,
+        compare_ref,
+        template_label,
+        change_id,
+        environment,
+        document_title,
+    )
 }
 
 pub fn list_documents(app: &AppHandle) -> Result<Vec<SavedEvidenceDocumentInfo>, String> {
@@ -367,6 +453,10 @@ mod tests {
                 "/repo".to_string(),
                 "main".to_string(),
                 "feat".to_string(),
+                Some("Tpl A".into()),
+                Some("CHG-1".into()),
+                Some("staging".into()),
+                Some("Meu projeto — Evidência".into()),
             )
             .unwrap();
 
@@ -377,6 +467,13 @@ mod tests {
         assert_eq!(list[0].repository_path, "/repo");
         assert_eq!(list[0].base_ref, "main");
         assert_eq!(list[0].compare_ref, "feat");
+        assert_eq!(list[0].template_label.as_deref(), Some("Tpl A"));
+        assert_eq!(list[0].change_id.as_deref(), Some("CHG-1"));
+        assert_eq!(list[0].environment.as_deref(), Some("staging"));
+        assert_eq!(
+            list[0].document_title.as_deref(),
+            Some("Meu projeto — Evidência")
+        );
     }
 
     fn count_subdirs(root: &Path) -> usize {
@@ -400,17 +497,17 @@ mod tests {
         let store = EvidenceDocumentsStore::with_paths(root, db, 2).unwrap();
 
         let first = store
-            .save("a".into(), "r".into(), "a".into(), "b".into())
+            .save("a".into(), "r".into(), "a".into(), "b".into(), None, None, None, None)
             .unwrap();
         thread::sleep(Duration::from_millis(12));
         let second = store
-            .save("b".into(), "r".into(), "a".into(), "b".into())
+            .save("b".into(), "r".into(), "a".into(), "b".into(), None, None, None, None)
             .unwrap();
         assert_eq!(count_subdirs(&store.root), 2);
 
         thread::sleep(Duration::from_millis(12));
         let third = store
-            .save("c".into(), "r".into(), "a".into(), "b".into())
+            .save("c".into(), "r".into(), "a".into(), "b".into(), None, None, None, None)
             .unwrap();
 
         assert!(!Path::new(&first.html_path).exists());
@@ -432,7 +529,7 @@ mod tests {
         let store = EvidenceDocumentsStore::with_paths(root, db, 10).unwrap();
 
         let r = store
-            .save("x".into(), "/r".into(), "a".into(), "b".into())
+            .save("x".into(), "/r".into(), "a".into(), "b".into(), None, None, None, None)
             .unwrap();
         assert!(Path::new(&r.html_path).exists());
 

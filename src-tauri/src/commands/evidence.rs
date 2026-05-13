@@ -15,6 +15,10 @@ pub fn save_evidence_document(
     repository_path: String,
     base_ref: String,
     compare_ref: String,
+    template_label: Option<String>,
+    change_id: Option<String>,
+    environment: Option<String>,
+    document_title: Option<String>,
 ) -> Result<SaveEvidenceDocumentResult, String> {
     save_document(
         &app,
@@ -22,6 +26,10 @@ pub fn save_evidence_document(
         repository_path,
         base_ref,
         compare_ref,
+        template_label,
+        change_id,
+        environment,
+        document_title,
     )
 }
 

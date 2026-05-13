@@ -1,8 +1,7 @@
 # Estado do projeto — EvidenceFlow Desk
 
-**Última atualização:** 2026-05-12  
-**Trabalho atual:** MVP narrativa/export + **RF-015** incremental. **UI-R01:** sidebar com **Templates** e **Screenshots** navegáveis (stubs 2026-05-12). **Próximo:** QA visual passos 4–5 vs `design-assets/`; **RF-015** metadados extra em `saved_evidence_documents` (opcional).
-
+**Última atualização:** 2026-05-13  
+**Trabalho atual:** MVP narrativa/export + **RF-015** incremental; **QA visual passos 4–5** concluído (PNG em `docs/design-assets/`; paridade ícone atualização + faixa SQLite). Ver **Aprendizados**.
 
 ---
 
@@ -54,7 +53,11 @@ _Nenhum._
 
 ## Aprendizados
 
-_Nenhum registrado._
+### QA UI passos 4–5 (`X80A7`, `Kym43`)
+
+- **Painel Documentos dentro do wizard (passos 4–5):** existe no código e não no crop do frame único no Pencil; mantido no MVP (**desvio aceite** — utilidade sobre paridade estrita do screenshot).
+- **Toolbar de zoom:** Pencil usa rótulos textuais `−` / `+`; a app usa ícones Lucide — equivalente funcional.
+- **Grafia / locale:** Pencil usa formas como «Paginas», «Opcoes», «Destino do arquivo», «Salve no historico»; a UI da app mantém PT-PT acentuado («Páginas», «Destino do ficheiro», «Guarde no histórico») conforme texto do wizard já alinhado à spec.
 
 ---
 
@@ -76,4 +79,4 @@ _Nenhuma listada._
 
 - [x] Feature `git-repository-and-branches`: UAT T12; estado **Approved** em [tasks.md](../features/git-repository-and-branches/tasks.md).
 - [x] Feature `git-commits-and-changes`: UAT manual (refs branch/tag/SHA + atalhos) — **OK** 2026-05-12; [tasks.md](../features/git-commits-and-changes/tasks.md).
-- [ ] **RF-015 evolução** — Metadados extra por linha em `saved_evidence_documents` (opcional). *Entregue:* histórico + índice HTML + migração `index.json`; **preferências KV** (`export.default_directory`, `evidence.active_template_id`, `evidence.change_id`, `evidence.environment`) + **templates personalizados** na mesma SQLite (`evidence_templates`); hidratação em `App` + sincronização debounced dos campos do passo 3; pasta de export persistida no passo 5.
+- [x] **RF-015 evolução (metadados por gravação)** — Colunas opcionais em `saved_evidence_documents`: `template_label`, `change_id`, `environment`, `document_title` (migração idempotente + `save_evidence_document`; lista/filtro em **Documentos**). *Já entregue antes:* histórico + índice HTML + migração `index.json`; preferências KV + `evidence_templates`; hidratação; pasta de export no passo 5.

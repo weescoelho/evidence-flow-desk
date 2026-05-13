@@ -15,18 +15,42 @@ function ellipsizePath(p: string, max = 52): string {
   return `${p.slice(0, head)}…${p.slice(-tail)}`;
 }
 
+function textOrEmpty(v: string | null | undefined): string {
+  return v?.trim() ? v.trim() : "";
+}
+
+function metaLine(doc: SavedEvidenceDocumentInfo): string | null {
+  const parts = [
+    textOrEmpty(doc.templateLabel)
+      ? `Template: ${textOrEmpty(doc.templateLabel)}`
+      : "",
+    textOrEmpty(doc.changeId)
+      ? `Ticket: ${textOrEmpty(doc.changeId)}`
+      : "",
+    textOrEmpty(doc.environment)
+      ? `Ambiente: ${textOrEmpty(doc.environment)}`
+      : "",
+  ].filter(Boolean);
+  return parts.length > 0 ? parts.join(" · ") : null;
+}
+
 function matchesFilter(
   doc: SavedEvidenceDocumentInfo,
   query: string,
 ): boolean {
   const q = query.trim().toLowerCase();
   if (!q) return true;
-  return (
-    doc.repositoryPath.toLowerCase().includes(q) ||
-    doc.baseRef.toLowerCase().includes(q) ||
-    doc.compareRef.toLowerCase().includes(q) ||
-    doc.htmlPath.toLowerCase().includes(q)
-  );
+  const blobs = [
+    doc.repositoryPath,
+    doc.baseRef,
+    doc.compareRef,
+    doc.htmlPath,
+    textOrEmpty(doc.templateLabel),
+    textOrEmpty(doc.changeId),
+    textOrEmpty(doc.environment),
+    textOrEmpty(doc.documentTitle),
+  ];
+  return blobs.some((b) => b.toLowerCase().includes(q));
 }
 
 function formatSavedAt(ms: number): string {
@@ -174,7 +198,7 @@ export function SavedEvidenceDocumentsPanel({
             type="search"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            placeholder="Repositório, ref base/compare ou caminho…"
+            placeholder="Repositório, refs, ticket, template, ambiente ou título…"
             className="rounded-md border border-border bg-background px-2 py-1.5 text-foreground placeholder:text-muted-foreground"
             data-testid="saved-evidence-filter"
             aria-label="Filtrar documentos guardados"
@@ -213,6 +237,17 @@ export function SavedEvidenceDocumentsPanel({
                   {doc.compareRef}
                 </span>
               </div>
+              {textOrEmpty(doc.documentTitle) ? (
+                <p
+                  className="mt-1 line-clamp-2 text-[11px] font-semibold text-foreground"
+                  title={textOrEmpty(doc.documentTitle)}
+                >
+                  {textOrEmpty(doc.documentTitle)}
+                </p>
+              ) : null}
+              {metaLine(doc) ? (
+                <p className="mt-0.5 text-[10px] text-muted-foreground">{metaLine(doc)}</p>
+              ) : null}
               <p
                 className="mt-1 truncate text-[10px] text-muted-foreground"
                 title={doc.repositoryPath}
