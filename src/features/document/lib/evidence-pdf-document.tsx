@@ -21,6 +21,10 @@ import {
   type DocumentRevisionRow,
 } from "./document-revision-history";
 import {
+  MarkdownView,
+  type MarkdownPdfTheme,
+} from "./markdown-to-pdf";
+import {
   normalizeEvidenceTemplateLayoutKey,
   type EvidenceTemplateLayoutKey,
 } from "./evidence-template-layouts";
@@ -328,7 +332,107 @@ function createStyles(layout: EvidenceTemplateLayoutKey): Styles {
       textTransform: "uppercase",
       color: "#a8a29e",
     },
+    markdownContainer: {
+      backgroundColor: audit ? "#ffffff" : "#fafaf9",
+      borderWidth: 1,
+      borderColor: border,
+      borderRadius: audit ? 0 : 6,
+      padding: 10,
+    },
+    markdownParagraph: {
+      fontSize: 9.75,
+      fontFamily: "Helvetica",
+      lineHeight: 1.55,
+      color: audit ? "#000000" : "#1c1917",
+    },
+    markdownStrong: {
+      fontFamily: "Helvetica",
+      fontWeight: 700,
+      color: audit ? "#000000" : "#1c1917",
+    },
+    markdownEm: {
+      fontFamily: "Helvetica",
+      fontStyle: "italic",
+      color: audit ? "#000000" : "#1c1917",
+    },
+    markdownCodespan: {
+      fontFamily: "Courier",
+      fontSize: 9,
+      backgroundColor: "#f4f4f5",
+      paddingHorizontal: 2,
+      color: audit ? "#000000" : "#1c1917",
+    },
+    markdownH1: {
+      fontSize: 12,
+      fontWeight: 700,
+      color: audit ? "#000000" : "#292524",
+      fontFamily: "Helvetica",
+    },
+    markdownH2: {
+      fontSize: 11,
+      fontWeight: 700,
+      color: audit ? "#18181b" : "#292524",
+      fontFamily: "Helvetica",
+    },
+    markdownH3: {
+      fontSize: 10.5,
+      fontWeight: 700,
+      color: "#44403c",
+      fontFamily: "Helvetica",
+    },
+    markdownBulletRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      marginBottom: 4,
+    },
+    markdownBulletGlyph: {
+      width: 14,
+      marginRight: 6,
+      fontSize: 9.75,
+      color: audit ? "#000000" : "#1c1917",
+    },
+    markdownOrderedGlyph: {
+      width: 20,
+      marginRight: 6,
+      fontSize: 9.75,
+      color: audit ? "#000000" : "#1c1917",
+    },
+    markdownCodeBlock: {
+      fontFamily: "Courier",
+      fontSize: 9,
+      lineHeight: 1.45,
+      backgroundColor: "#f4f4f5",
+      borderWidth: 1,
+      borderColor: border,
+      borderRadius: audit ? 0 : 4,
+      padding: 8,
+      color: audit ? "#000000" : "#1c1917",
+    },
+    markdownHr: {
+      borderBottomWidth: 1,
+      borderBottomColor: border,
+      marginVertical: 8,
+      width: "100%",
+    },
   });
+}
+
+function markdownPdfTheme(styles: Styles): MarkdownPdfTheme {
+  return {
+    container: styles.markdownContainer,
+    paragraph: styles.markdownParagraph,
+    strong: styles.markdownStrong,
+    em: styles.markdownEm,
+    codespan: styles.markdownCodespan,
+    heading1: styles.markdownH1,
+    heading2: styles.markdownH2,
+    heading3: styles.markdownH3,
+    bulletRow: styles.markdownBulletRow,
+    bulletGlyph: styles.markdownBulletGlyph,
+    orderedGlyph: styles.markdownOrderedGlyph,
+    codeBlock: styles.markdownCodeBlock,
+    hr: styles.markdownHr,
+  };
 }
 
 function SectionTitle({
@@ -446,16 +550,18 @@ function ClassicBody({
       ) : null}
 
       <SectionTitle styles={styles}>Resumo técnico</SectionTitle>
-      <View style={styles.pre}>
-        <Text>{safeText(p.technicalSummary)}</Text>
-      </View>
+      <MarkdownView
+        markdown={safeText(p.technicalSummary)}
+        theme={markdownPdfTheme(styles)}
+      />
 
       {p.corporateSummary?.trim() ? (
         <View>
           <SectionTitle styles={styles}>Resumo corporativo</SectionTitle>
-          <View style={styles.pre}>
-            <Text>{safeText(p.corporateSummary.trim())}</Text>
-          </View>
+          <MarkdownView
+            markdown={safeText(p.corporateSummary.trim())}
+            theme={markdownPdfTheme(styles)}
+          />
         </View>
       ) : null}
 
@@ -777,22 +883,19 @@ function MarketBody({
       <SectionTitle styles={styles}>Resumo executivo</SectionTitle>
       {corpor.length > 0 ? (
         <View>
-          <View style={styles.pre}>
-            <Text>{safeText(corpor)}</Text>
-          </View>
+          <MarkdownView
+            markdown={safeText(corpor)}
+            theme={markdownPdfTheme(styles)}
+          />
           {tech.trim().length > 0 ? (
             <View>
               <Text style={styles.h3}>Contexto técnico</Text>
-              <View style={styles.pre}>
-                <Text>{tech}</Text>
-              </View>
+              <MarkdownView markdown={tech} theme={markdownPdfTheme(styles)} />
             </View>
           ) : null}
         </View>
       ) : (
-        <View style={styles.pre}>
-          <Text>{tech}</Text>
-        </View>
+        <MarkdownView markdown={tech} theme={markdownPdfTheme(styles)} />
       )}
 
       <ScreenshotsSection p={p} styles={styles} />

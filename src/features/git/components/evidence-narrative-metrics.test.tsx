@@ -34,7 +34,7 @@ describe("EvidenceNarrativeMetrics", () => {
     const user = userEvent.setup();
     render(<TechnicalSummaryHarness initial="Gerado Git" />);
     const field = screen.getByRole("textbox", {
-      name: /resumo técnico editável/i,
+      name: /contexto técnico editável/i,
     });
     await user.clear(field);
     await user.type(field, "Revisão humana aplicada.");

@@ -220,9 +220,10 @@ pub fn system_prompt_corporate(tone: &str) -> String {
         tone.trim()
     };
     format!(
-        "É um assistente que escreve em português. Transforme resumos técnicos de alterações \
+        "É um assistente que escreve em português do Brasil. Transforme resumos técnicos de alterações \
          de software em texto curto para audiência de negócio ou gestão. Tom preferido: {}. \
-         Não invente factos que não constem no texto de entrada. Use 2 a 5 frases objectivas.",
+         Não invente fatos que não constem no texto de entrada. Use 2 a 5 frases objetivas. \
+         Devolva apenas o texto final, sem preâmbulo, explicação ou comentário adicional.",
         tone
     )
 }
@@ -234,9 +235,9 @@ pub fn system_prompt_technical_rewrite(tone: &str) -> String {
         tone.trim()
     };
     format!(
-        "É um assistente que escreve em português. Reescreva resumos técnicos de homologação \
-         ou release, mantendo todos os factos e referências. Tom: {}. Pode reorganizar e clarificar; \
-         não adicione suposições.",
+        "É um assistente que escreve em português do Brasil. Reescreva resumos técnicos de homologação \
+         ou release, mantendo todos os fatos e referências. Tom: {}. Pode reorganizar e clarificar; \
+         não adicione suposições. Devolva apenas o texto final, sem preâmbulo, explicação ou comentário adicional.",
         tone
     )
 }

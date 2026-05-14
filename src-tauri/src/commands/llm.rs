@@ -35,7 +35,7 @@ pub async fn llm_generate_corporate_summary(
         read_gemini_prefs(&conn)?
     };
     let system = system_prompt_corporate(&tone);
-    let user_text = format!("Resumo técnico a converter:\n\n{}", technical_summary);
+    let user_text = format!("Contexto técnico a converter:\n\n{}", technical_summary);
     let inner = tauri::async_runtime::spawn_blocking(move || {
         generate_content(&base, &key, &model, &system, &user_text)
     })

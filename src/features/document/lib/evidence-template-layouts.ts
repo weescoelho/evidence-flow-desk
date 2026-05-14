@@ -38,7 +38,7 @@ const MINIMAL_EXTRA_STYLES = `
   .doc-header h1 { font-size: 16pt; font-weight: 600; }
   .subtitle { color: #52525b; }
   h2 { font-size: 11pt; margin: 10pt 0 4pt; border-bottom: none; }
-  pre.technical {
+  .markdown-body {
     background: transparent;
     border: none;
     border-left: 3px solid #d4d4d8;
@@ -63,7 +63,7 @@ const AUDIT_EXTRA_STYLES = `
     border-bottom: 2px solid #000;
     margin-top: 16pt;
   }
-  pre.technical {
+  .markdown-body {
     background: #fff;
     border: 2px solid #18181b;
     border-radius: 0;

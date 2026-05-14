@@ -1,4 +1,6 @@
 import type { CommitRow, FileChangeRow } from "@/features/git/types/git";
+import DOMPurify from "isomorphic-dompurify";
+import { marked } from "marked";
 
 import {
   collectRevisionTableRows,
@@ -10,6 +12,56 @@ import {
   evidenceTemplateLayoutCss,
   normalizeEvidenceTemplateLayoutKey,
 } from "./evidence-template-layouts";
+
+marked.setOptions({
+  breaks: true,
+  gfm: true,
+});
+
+const MARKDOWN_ALLOWED_TAGS = [
+  "p",
+  "br",
+  "strong",
+  "em",
+  "del",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "ul",
+  "ol",
+  "li",
+  "blockquote",
+  "code",
+  "pre",
+  "hr",
+  "table",
+  "thead",
+  "tbody",
+  "tr",
+  "th",
+  "td",
+  "a",
+];
+
+/** Markdown → HTML seguro para embutir no documento de impressão (HTML cru sanitizado). */
+export function renderMarkdownHtml(raw: string): string {
+  const t = raw.trim();
+  if (!t) return "";
+  try {
+    const dirty = marked.parse(t, { async: false });
+    const html = typeof dirty === "string" ? dirty : "";
+    return DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: MARKDOWN_ALLOWED_TAGS,
+      ALLOWED_ATTR: ["href", "title", "align", "start"],
+      ALLOW_DATA_ATTR: false,
+    });
+  } catch {
+    return `<p>${escapeHtml(raw)}</p>`;
+  }
+}
 
 export type EvidenceScreenshotPayload = {
   fileName: string;
@@ -243,14 +295,14 @@ ${truncNote}
 
 <section id="evidence-section-summary">
   <h2>Resumo técnico</h2>
-  <pre class="technical">${escapeHtml(p.technicalSummary)}</pre>
+  <div class="markdown-body">${renderMarkdownHtml(p.technicalSummary)}</div>
 </section>
 
 ${
     p.corporateSummary?.trim()
       ? `<section id="evidence-section-corporate">
   <h2>Resumo corporativo</h2>
-  <pre class="technical">${escapeHtml(p.corporateSummary.trim())}</pre>
+  <div class="markdown-body">${renderMarkdownHtml(p.corporateSummary.trim())}</div>
 </section>`
       : ""
   }
@@ -325,12 +377,12 @@ function buildMarketStandardBodyHtml(p: EvidenceDocumentPayload): string {
   const tech = p.technicalSummary;
   const execBlock =
     corpor.length > 0
-      ? `<pre class="technical">${escapeHtml(corpor)}</pre>${
+      ? `<div class="markdown-body">${renderMarkdownHtml(corpor)}</div>${
           tech.trim().length > 0
-            ? `<h3>Contexto técnico</h3><pre class="technical">${escapeHtml(tech)}</pre>`
+            ? `<h3>Contexto técnico</h3><div class="markdown-body">${renderMarkdownHtml(tech)}</div>`
             : ""
         }`
-      : `<pre class="technical">${escapeHtml(tech)}</pre>`;
+      : `<div class="markdown-body">${renderMarkdownHtml(tech)}</div>`;
 
   const truncNote = p.commitsTruncated
     ? `<p class="warn"><strong>Atenção:</strong> a lista de commits foi truncada pelo limite de segurança da aplicação.</p>`
@@ -393,7 +445,8 @@ ${screenshotSection}
 }
 
 /**
- * Corpo do documento em HTML seguro (apenas texto escapado).
+ * Corpo do documento em HTML seguro (texto escapado nas zonas estruturais;
+ * resumos em Markdown interpretados para melhor legibilidade).
  * Reutilizado no preview (RF-010) e dentro do envoltório de impressão (RF-011).
  */
 export function buildEvidenceBodyHtml(p: EvidenceDocumentPayload): string {
@@ -521,15 +574,112 @@ const PRINT_STYLES = `
     font-family: ui-monospace, "Cascadia Mono", "Segoe UI Mono", "Consolas", monospace;
     font-size: 9.75pt;
   }
-  pre.technical {
-    white-space: pre-wrap;
+  .markdown-body {
+    white-space: normal;
     word-wrap: break-word;
+    overflow-wrap: anywhere;
     background: #fafaf9;
     border: 1px solid #e7e5e4;
     padding: 10pt 12pt;
     border-radius: 6px;
     line-height: 1.55;
     margin: 4pt 0 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    font-size: 10pt;
+    color: #1c1917;
+  }
+  .markdown-body > :first-child {
+    margin-top: 0;
+  }
+  .markdown-body > :last-child {
+    margin-bottom: 0;
+  }
+  .markdown-body p {
+    margin: 0 0 8pt;
+    line-height: 1.55;
+  }
+  .markdown-body h1,
+  .markdown-body h2,
+  .markdown-body h3,
+  .markdown-body h4 {
+    margin: 10pt 0 6pt;
+    line-height: 1.25;
+    font-weight: 700;
+    color: #292524;
+  }
+  .markdown-body h1 { font-size: 12pt; }
+  .markdown-body h2 { font-size: 11pt; }
+  .markdown-body h3,
+  .markdown-body h4 { font-size: 10.25pt; }
+  .markdown-body ul,
+  .markdown-body ol {
+    margin: 0 0 8pt;
+    padding-left: 1.35em;
+  }
+  .markdown-body li {
+    margin: 3pt 0;
+    line-height: 1.5;
+  }
+  .markdown-body blockquote {
+    margin: 0 0 8pt;
+    padding-left: 10pt;
+    border-left: 3px solid #d6d3d1;
+    color: #44403c;
+  }
+  .markdown-body hr {
+    border: none;
+    border-top: 1px solid #e7e5e4;
+    margin: 10pt 0;
+  }
+  .markdown-body table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.5pt;
+    margin: 6pt 0 10pt;
+  }
+  .markdown-body th,
+  .markdown-body td {
+    border: 1px solid #e7e5e4;
+    padding: 5pt 7pt;
+    vertical-align: top;
+  }
+  .markdown-body th {
+    background: #f5f5f4;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 8pt;
+    letter-spacing: 0.04em;
+    color: #44403c;
+  }
+  .markdown-body code {
+    font-family: ui-monospace, "Cascadia Mono", "Segoe UI Mono", "Consolas", monospace;
+    font-size: 9pt;
+    background: #f4f4f5;
+    padding: 1pt 4pt;
+    border-radius: 3px;
+    border: 1px solid #e4e4e7;
+  }
+  .markdown-body pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    margin: 0 0 8pt;
+    padding: 8pt 10pt;
+    background: #f4f4f5;
+    border: 1px solid #e7e5e4;
+    border-radius: 6px;
+    font-size: 9pt;
+    line-height: 1.45;
+  }
+  .markdown-body pre code {
+    background: transparent;
+    border: none;
+    padding: 0;
+    font-size: inherit;
+  }
+  .markdown-body a {
+    color: #5946db;
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
   table {
     width: 100%;

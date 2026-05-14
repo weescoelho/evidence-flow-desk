@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { Loader2 } from "lucide-react";
 
@@ -53,9 +53,16 @@ export function EvidenceNarrativeMetrics({
   const [iaPending, setIaPending] = useState<IaPending>(null);
   const [iaError, setIaError] = useState<string | null>(null);
   const iaBusy = iaPending !== null;
+  const iaGenerationRef = useRef(0);
+
+  function cancelIaRequest() {
+    iaGenerationRef.current += 1;
+    setIaPending(null);
+  }
 
   async function handleRewriteTechnical() {
     if (!technicalNarrative.trim()) return;
+    const token = ++iaGenerationRef.current;
     setIaError(null);
     setIaPending("rewrite");
     try {
@@ -63,8 +70,10 @@ export function EvidenceNarrativeMetrics({
         technicalNarrative,
         IA_TONE,
       );
+      if (iaGenerationRef.current !== token) return;
       onTechnicalNarrativeChange(next);
     } catch (e) {
+      if (iaGenerationRef.current !== token) return;
       setIaError(
         invokeErrorMessage(
           e,
@@ -72,12 +81,15 @@ export function EvidenceNarrativeMetrics({
         ),
       );
     } finally {
-      setIaPending(null);
+      if (iaGenerationRef.current === token) {
+        setIaPending(null);
+      }
     }
   }
 
   async function handleCorporate() {
     if (!technicalNarrative.trim()) return;
+    const token = ++iaGenerationRef.current;
     setIaError(null);
     setIaPending("corporate");
     try {
@@ -85,8 +97,10 @@ export function EvidenceNarrativeMetrics({
         technicalNarrative,
         IA_TONE,
       );
+      if (iaGenerationRef.current !== token) return;
       onCorporateNarrativeChange(next);
     } catch (e) {
+      if (iaGenerationRef.current !== token) return;
       setIaError(
         invokeErrorMessage(
           e,
@@ -94,7 +108,9 @@ export function EvidenceNarrativeMetrics({
         ),
       );
     } finally {
-      setIaPending(null);
+      if (iaGenerationRef.current === token) {
+        setIaPending(null);
+      }
     }
   }
 
@@ -106,7 +122,7 @@ export function EvidenceNarrativeMetrics({
       <div className="flex min-w-0 flex-col gap-4">
         <div className="flex flex-col gap-2">
           <span className="text-[12px] font-semibold text-[#71717A]">
-            Resumo técnico
+            Contexto técnico
           </span>
           <div className="rounded-[10px] border border-[#E4E4E7] bg-white p-3">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#71717A]">
@@ -135,31 +151,29 @@ export function EvidenceNarrativeMetrics({
             <textarea
               value={technicalNarrative}
               onChange={(e) => onTechnicalNarrativeChange(e.target.value)}
-              aria-label="Resumo técnico editável"
+              aria-label="Contexto técnico editável"
               aria-disabled={iaBusy}
               disabled={iaBusy}
               rows={14}
               className="max-h-[min(28rem,55vh)] min-h-[12rem] w-full resize-y overflow-y-auto rounded-[10px] border border-[#E4E4E7] bg-white px-2.5 py-2 font-mono text-[12px] leading-relaxed text-[#18181B] placeholder:text-[#71717A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5946DB]/35 disabled:cursor-wait disabled:opacity-60"
               data-testid="technical-summary"
             />
+            {iaPending === "rewrite" ? (
+              <p
+                className="mt-2 flex items-center gap-2 text-[12px] text-[#71717A]"
+                aria-live="polite"
+              >
+                <Loader2
+                  className="size-4 shrink-0 animate-spin text-[#5946DB]"
+                  aria-hidden
+                />
+                A contactar o Gemini para reescrever o contexto técnico…
+              </p>
+            ) : null}
           </div>
         </div>
 
         <div className="flex flex-col gap-2">
-          {iaBusy ? (
-            <p
-              className="flex items-center gap-2 text-[12px] text-[#71717A]"
-              aria-live="polite"
-            >
-              <Loader2
-                className="size-4 shrink-0 animate-spin text-[#5946DB]"
-                aria-hidden
-              />
-              {iaPending === "rewrite"
-                ? "A contactar o Gemini para reescrever o resumo técnico…"
-                : "A contactar o Gemini para o resumo corporativo…"}
-            </p>
-          ) : null}
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
@@ -170,7 +184,7 @@ export function EvidenceNarrativeMetrics({
               }
               title={
                 geminiReady
-                  ? "Reescreve com Google Gemini (tom formal)"
+                  ? "Reescreve o contexto técnico com Google Gemini (tom formal)"
                   : "Configure a chave API em Configurações (Gemini)."
               }
               onClick={() => void handleRewriteTechnical()}
@@ -190,6 +204,15 @@ export function EvidenceNarrativeMetrics({
                 "Regenerar com IA"
               )}
             </button>
+            {iaPending === "rewrite" ? (
+              <button
+                type="button"
+                className="flex h-[34px] items-center justify-center rounded-[10px] border border-[#E4E4E7] bg-white px-3 text-[12px] font-semibold text-[#18181B] hover:bg-[#F4F4F5]"
+                onClick={() => cancelIaRequest()}
+              >
+                Cancelar
+              </button>
+            ) : null}
             <span
               className="flex h-[34px] items-center rounded-[10px] border border-transparent px-3 text-[12px] font-semibold text-[#5946DB] opacity-80"
               aria-hidden
@@ -208,37 +231,48 @@ export function EvidenceNarrativeMetrics({
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-end justify-between gap-2">
             <span className="text-[12px] font-semibold text-[#71717A]">
-              Resumo corporativo
+              Resumo executivo
             </span>
-            <button
-              type="button"
-              disabled={
-                !geminiReady ||
-                iaBusy ||
-                !technicalNarrative.trim()
-              }
-              title={
-                geminiReady
-                  ? "Gera texto de negócio a partir do resumo técnico (Gemini)"
-                  : "Configure a chave API em Configurações."
-              }
-              onClick={() => void handleCorporate()}
-              className={cn(
-                "flex min-w-[10.5rem] items-center justify-center gap-2 rounded-[10px] border px-3 py-1.5 text-[11px] font-semibold",
-                geminiReady && technicalNarrative.trim()
-                  ? "border-[#E4E4E7] bg-white text-[#18181B] hover:bg-[#F4F4F5]"
-                  : "border-[#E4E4E7] bg-[#F4F4F5] text-[#71717A]",
-              )}
-            >
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                disabled={
+                  !geminiReady ||
+                  iaBusy ||
+                  !technicalNarrative.trim()
+                }
+                title={
+                  geminiReady
+                    ? "Gera o resumo executivo a partir do contexto técnico (Gemini)"
+                    : "Configure a chave API em Configurações."
+                }
+                onClick={() => void handleCorporate()}
+                className={cn(
+                  "flex min-w-[10.5rem] items-center justify-center gap-2 rounded-[10px] border px-3 py-1.5 text-[11px] font-semibold",
+                  geminiReady && technicalNarrative.trim()
+                    ? "border-[#E4E4E7] bg-white text-[#18181B] hover:bg-[#F4F4F5]"
+                    : "border-[#E4E4E7] bg-[#F4F4F5] text-[#71717A]",
+                )}
+              >
+                {iaPending === "corporate" ? (
+                  <>
+                    <Loader2 className="size-3.5 shrink-0 animate-spin" aria-hidden />
+                    A gerar…
+                  </>
+                ) : (
+                  "Gerar com Gemini"
+                )}
+              </button>
               {iaPending === "corporate" ? (
-                <>
-                  <Loader2 className="size-3.5 shrink-0 animate-spin" aria-hidden />
-                  A gerar…
-                </>
-              ) : (
-                "Gerar com Gemini"
-              )}
-            </button>
+                <button
+                  type="button"
+                  className="rounded-[10px] border border-[#E4E4E7] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#18181B] hover:bg-[#F4F4F5]"
+                  onClick={() => cancelIaRequest()}
+                >
+                  Cancelar
+                </button>
+              ) : null}
+            </div>
           </div>
           <textarea
             value={corporateNarrative}
@@ -246,10 +280,22 @@ export function EvidenceNarrativeMetrics({
             rows={5}
             disabled={iaBusy}
             aria-disabled={iaBusy}
-            placeholder="Texto orientado ao negócio (RF-007). Pode gerar a partir do resumo técnico ou escrever manualmente."
-            aria-label="Resumo corporativo editável"
+            placeholder="Resumo executivo orientado ao negócio (RF-007). Pode gerar a partir do contexto técnico ou escrever manualmente."
+            aria-label="Resumo executivo editável"
             className="min-h-[6rem] resize-y rounded-[10px] border border-[#E4E4E7] bg-white px-3 py-2 font-mono text-[12px] text-[#18181B] placeholder:text-[#71717A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5946DB]/35 disabled:cursor-wait disabled:opacity-60"
           />
+          {iaPending === "corporate" ? (
+            <p
+              className="flex items-center gap-2 text-[12px] text-[#71717A]"
+              aria-live="polite"
+            >
+              <Loader2
+                className="size-4 shrink-0 animate-spin text-[#5946DB]"
+                aria-hidden
+              />
+              A contactar o Gemini para o resumo executivo…
+            </p>
+          ) : null}
         </div>
 
         {iaError ? (

@@ -150,12 +150,13 @@ describe("buildEvidenceBodyHtml", () => {
     expect(full).toContain("table.evidence-files");
   });
 
-  it("escapa texto na secção de resumo técnico", () => {
+  it("sanitiza HTML perigoso na secção de resumo técnico (Markdown)", () => {
     const html = buildEvidenceBodyHtml(
       basePayload({ technicalSummary: "<script>bad</script>" }),
     );
     expect(html).not.toContain("<script>");
-    expect(html).toContain("&lt;script&gt;");
+    expect(html).not.toContain("</script>");
+    expect(html).toContain("markdown-body");
   });
 
   it("inclui screenshots quando fornecidos", () => {
