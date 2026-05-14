@@ -502,13 +502,12 @@ const PRINT_STYLES = `
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 8pt;
+    gap: 0;
     width: 100%;
   }
   .evidence-template-banner-slot {
-    flex: 1 1 0;
+    flex: 1 1 50%;
     min-width: 0;
-    max-width: 48%;
     min-height: 2pt;
     display: flex;
     align-items: flex-start;
@@ -521,7 +520,13 @@ const PRINT_STYLES = `
     width: auto;
     height: auto;
     object-fit: contain;
-    object-position: top center;
+    display: block;
+  }
+  .evidence-template-banner-left .evidence-template-header-img {
+    object-position: left top;
+  }
+  .evidence-template-banner-right .evidence-template-header-img {
+    object-position: right top;
   }
   section { margin-bottom: 2pt; }
   h2 {

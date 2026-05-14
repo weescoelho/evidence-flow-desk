@@ -80,8 +80,6 @@ const W_META_DD = PAGE_INNER_W - W_META_DT;
 const W_COVER_DT = ptPct(36);
 const W_COVER_DD = PAGE_INNER_W - W_COVER_DT;
 const W_SHOT_CELL = Math.floor(PAGE_INNER_W / 2);
-const W_HDR_SLOT = Math.floor(PAGE_INNER_W / 2) - 4;
-
 const FILE_STATUS_PT: Record<FileChangeRow["status"], string> = {
   added: "adicionado",
   deleted: "removido",
@@ -136,10 +134,25 @@ function createStyles(layout: EvidenceTemplateLayoutKey): Styles {
       justifyContent: "space-between",
       alignItems: "flex-start",
     },
-    headerImg: {
+    headerImgLeft: {
       maxHeight: 32,
       maxWidth: 118,
       objectFit: "contain",
+      objectPosition: "left top",
+    },
+    headerImgRight: {
+      maxHeight: 32,
+      maxWidth: 118,
+      objectFit: "contain",
+      objectPosition: "right top",
+    },
+    headerBannerSide: {
+      flexBasis: 0,
+      flexGrow: 1,
+      flexShrink: 1,
+      minWidth: 0,
+      flexDirection: "row",
+      alignItems: "flex-start",
     },
     pageFooter: {
       position: "absolute",
@@ -461,11 +474,11 @@ function TemplateHeader({
   if (!left && !right) return null;
   return (
     <View style={styles.headerBanner} fixed>
-      <View style={{ width: W_HDR_SLOT }}>
-        {left ? <Image src={left} style={styles.headerImg} /> : null}
+      <View style={[styles.headerBannerSide, { justifyContent: "flex-start" }]}>
+        {left ? <Image src={left} style={styles.headerImgLeft} /> : null}
       </View>
-      <View style={{ width: W_HDR_SLOT, alignItems: "flex-end" }}>
-        {right ? <Image src={right} style={styles.headerImg} /> : null}
+      <View style={[styles.headerBannerSide, { justifyContent: "flex-end" }]}>
+        {right ? <Image src={right} style={styles.headerImgRight} /> : null}
       </View>
     </View>
   );
