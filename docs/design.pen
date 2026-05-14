@@ -7049,6 +7049,72 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "wPd7S",
+      "x": 7632,
+      "y": 0,
+      "name": "App Icon — EvidenceFlow",
+      "clip": true,
+      "width": 512,
+      "height": 512,
+      "fill": "$--primary",
+      "cornerRadius": 112,
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "ATb5U",
+          "x": 168,
+          "y": 132,
+          "name": "page",
+          "opacity": 0.14,
+          "rotation": -6.000000000000001,
+          "fill": "#FFFFFF",
+          "width": 188,
+          "height": 248
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "tpy3F",
+          "x": 152,
+          "y": 118,
+          "name": "page2",
+          "opacity": 0.22,
+          "rotation": 4,
+          "fill": "#FFFFFF",
+          "width": 188,
+          "height": 248
+        },
+        {
+          "type": "icon_font",
+          "id": "xvPnH",
+          "x": 128,
+          "y": 128,
+          "name": "check",
+          "width": 256,
+          "height": 256,
+          "iconFontName": "file-check",
+          "iconFontFamily": "lucide",
+          "fill": "$--primary-foreground"
+        },
+        {
+          "type": "icon_font",
+          "id": "v8kMOw",
+          "x": 380,
+          "y": 380,
+          "name": "git",
+          "opacity": 0.45,
+          "width": 72,
+          "height": 72,
+          "iconFontName": "folder-git-2",
+          "iconFontFamily": "lucide",
+          "fill": "#F6F5FF"
+        }
+      ]
     }
   ],
   "variables": {
