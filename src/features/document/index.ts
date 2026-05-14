@@ -26,7 +26,11 @@ export {
   type EvidenceScreenshotPayload,
   type EvidencePrintHtmlOptions,
 } from "./lib/build-evidence-html";
-export { printHtmlDocument } from "./lib/print-html";
+export {
+  buildEvidencePdfBlob,
+  EvidencePdfDocument,
+  type EvidencePdfOptions,
+} from "./lib/evidence-pdf-document";
 export {
   buildEvidenceReportDraftJson,
   EVIDENCE_REPORT_DRAFT_SCHEMA_VERSION,
@@ -34,7 +38,11 @@ export {
   type EvidenceReportDraftV1,
 } from "./lib/evidence-report-draft";
 export { applyEvidenceReportDraft } from "./lib/apply-evidence-report-draft";
-export { writeTextFile } from "./api/io.commands";
+export {
+  writeBinaryFileBase64,
+  writePdfBlobToPath,
+  writeTextFile,
+} from "./api/io.commands";
 export {
   deleteSavedEvidenceDocument,
   listSavedEvidenceDocuments,

@@ -17,14 +17,17 @@ import {
   setEvidencePreference,
 } from "../api/evidence-app-state.commands";
 import { saveEvidenceDocument } from "../api/evidence.commands";
-import { writeTextFile } from "../api/io.commands";
+import {
+  writePdfBlobToPath,
+  writeTextFile,
+} from "../api/io.commands";
 import {
   buildEvidencePrintHtml,
   type EvidenceDocumentPayload,
   type EvidencePrintHtmlOptions,
 } from "../lib/build-evidence-html";
+import { buildEvidencePdfBlob } from "../lib/evidence-pdf-document";
 import { defaultEvidenceHtmlFileName } from "../lib/evidence-export-filename";
-import { printHtmlDocument } from "../lib/print-html";
 import { buildEvidenceReportDraftJson } from "../lib/evidence-report-draft";
 import {
   commitCurrentDocumentRevisionToHistory,
@@ -202,6 +205,27 @@ export function EvidenceDocumentPreview({
     }
   }
 
+  async function resolveDefaultPdfSavePath(): Promise<string | undefined> {
+    const stem = sanitizeFilenameStem(
+      projectName.trim() ? projectName.trim() : derivedProjectName,
+    );
+    const fileName =
+      stem && stem !== "projeto"
+        ? `${stem}-evidencia.pdf`
+        : defaultEvidenceHtmlFileName(payload.baseRef, payload.compareRef).replace(
+            /\.html$/i,
+            ".pdf",
+          );
+    if (!exportDirPath?.trim()) {
+      return fileName;
+    }
+    try {
+      return await join(exportDirPath.trim(), fileName);
+    } catch {
+      return fileName;
+    }
+  }
+
   async function handleExportPdf() {
     setExportPdfBusy(true);
     setSaveStatus("idle");
@@ -216,10 +240,33 @@ export function EvidenceDocumentPreview({
             ? e.message
             : "Não foi possível registar a cópia na biblioteca (SQLite). O PDF segue disponível.",
       });
+    }
+
+    try {
+      const defaultPathForDialog = await resolveDefaultPdfSavePath();
+      const path = await save({
+        title: "Guardar documento PDF",
+        filters: [{ name: "PDF", extensions: ["pdf"] }],
+        defaultPath: defaultPathForDialog,
+      });
+      if (path === null) {
+        return;
+      }
+      const blob = await buildEvidencePdfBlob(payload, {
+        documentTitle: printOptions.documentTitle,
+        numberPagesPrint,
+      });
+      await writePdfBlobToPath(path, blob);
+    } catch (e) {
+      setSaveStatus({
+        err:
+          e instanceof Error
+            ? e.message
+            : "Não foi possível gerar ou guardar o PDF.",
+      });
     } finally {
       setExportPdfBusy(false);
     }
-    printHtmlDocument(printReadyHtml);
   }
 
   const scale = zoomPct / 100;
@@ -633,16 +680,16 @@ export function EvidenceDocumentPreview({
       <p className="text-[11px] text-muted-foreground">
         {isExportStep ? (
           <>
-            Último passo: abra o diálogo de impressão e escolha «Guardar como PDF».
-            O título HTML segue «Nome do projeto». «Numerar páginas» só atua onde o
-            motor de impressão respeitar margens `@page`. Ao exportar, a app tenta
-            guardar também o rascunho na biblioteca local; se falhar, o PDF abre na
-            mesma mas verá o aviso em baixo.
+            «Exportar PDF…» gera um ficheiro PDF (numeração de páginas opcional) e
+            abre o diálogo para o guardar no disco. O nome sugerido segue «Nome do
+            projeto». A app tenta também registar HTML + rascunho na biblioteca
+            local; se falhar, o PDF gera na mesma — verá o aviso em baixo.
           </>
         ) : (
           <>
-            Abre o diálogo de impressão do sistema — escolha «Guardar como PDF» ou uma
-            impressora. Use o scroll dentro da pré-visualização para percorrer o documento.
+            «Exportar PDF…» gera o documento em PDF e pede onde guardar. A
+            pré-visualização em HTML reflecte o conteúdo; use o scroll para o
+            percorrer.
           </>
         )}
       </p>

@@ -15,7 +15,7 @@ use commands::git::{
     get_repository_scope_summary, list_branches, recent_repositories_add,
     recent_repositories_list, recent_repositories_remove, validate_git_repository,
 };
-use commands::io::write_text_file;
+use commands::io::{write_binary_file_base64, write_text_file};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -44,6 +44,7 @@ pub fn run() {
             llm_generate_corporate_summary,
             llm_rewrite_technical_summary,
             write_text_file,
+            write_binary_file_base64,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
