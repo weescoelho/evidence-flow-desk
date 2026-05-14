@@ -17,7 +17,7 @@ export function EvidenceScreenshotsLibraryView() {
         <h1 className="font-mono text-[28px] font-semibold tracking-tight text-foreground">
           Biblioteca de capturas
         </h1>
-        <p className="max-w-[56ch] font-mono text-sm text-muted-foreground">
+        <p className="font-mono text-sm text-muted-foreground">
           Anexe imagens e legendas; os dados são os mesmos do passo 3 e persistem neste
           computador por pasta Git (SQLite).
         </p>

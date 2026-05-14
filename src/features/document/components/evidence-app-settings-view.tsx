@@ -96,12 +96,11 @@ export function EvidenceAppSettingsView() {
         <h1 className="font-mono text-[28px] font-semibold tracking-tight text-foreground">
           Preferências da aplicação
         </h1>
-        <p className="max-w-[56ch] font-mono text-sm text-muted-foreground">
+        <p className="font-mono text-sm text-muted-foreground">
           Exportação, templates e metadados continuam a ser geridos no assistente.
           Abaixo: integração opcional com{" "}
           <strong className="text-foreground">Google Gemini</strong> (API
-          generativelanguage) para resumo corporativo e reescrita do resumo técnico —
-          só em diálogo explícito no passo 3 (RNF-002).
+          generativelanguage) para resumo corporativo e reescrita do resumo técnico.
         </p>
       </header>
 

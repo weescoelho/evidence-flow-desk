@@ -1,7 +1,6 @@
 import "./globals.css";
 
 import {
-  FileCheck,
   FileText,
   FolderGit2,
   ImagePlus,
@@ -84,9 +83,15 @@ function App() {
         aria-label="Navegação lateral"
       >
         <div className="flex items-center gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-primary text-primary-foreground">
-            <FileCheck className="size-[22px]" aria-hidden />
-          </div>
+          <img
+            src="/app-icon.png"
+            alt=""
+            width={40}
+            height={40}
+            className="size-10 shrink-0 rounded-[10px] object-cover"
+            draggable={false}
+            aria-hidden
+          />
           <span className="text-[17px] font-semibold leading-tight text-foreground">
             EvidenceFlow
           </span>
