@@ -144,7 +144,7 @@ describe("buildEvidenceBodyHtml", () => {
 
   it("marca a tabela de arquivos e estilos para quebra de caminhos longos", () => {
     const body = buildEvidenceBodyHtml(basePayload());
-    expect(body).toContain('class="evidence-files"');
+    expect(body).toContain("evidence-files");
     const full = buildEvidencePrintHtml(basePayload());
     expect(full).toContain("overflow-wrap");
     expect(full).toContain("table.evidence-files");
@@ -170,10 +170,13 @@ describe("buildEvidenceBodyHtml", () => {
         ],
       }),
     );
-    expect(html).toContain("Screenshots");
+    expect(html).toContain("Capturas de ecrã");
     expect(html).toContain("data:image/png;base64,xxx");
     expect(html).toContain("Legenda");
     expect(html).not.toContain("Associado ao commit");
+    expect(html).toContain("evidence-screenshots");
+    expect(html).toContain(">Imagem<");
+    expect(html).toContain(">Descrição<");
   });
 
   it("expõe ids de secção estáveis no HTML do relatório", () => {
@@ -244,5 +247,14 @@ describe("buildEvidencePrintHtml", () => {
     );
     expect(html).toContain(".cover");
     expect(html).toContain("border-radius: 8px");
+  });
+
+  it("reserva margem e padding do rodapé ao numerar páginas", () => {
+    const html = buildEvidencePrintHtml(basePayload(), {
+      numberPagesPrint: true,
+    });
+    expect(html).toContain("margin-bottom: 28mm");
+    expect(html).toContain("padding-top: 4mm");
+    expect(html).toContain("@bottom-center");
   });
 });

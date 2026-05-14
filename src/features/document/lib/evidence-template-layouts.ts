@@ -82,7 +82,7 @@ const MARKET_STANDARD_EXTRA_STYLES = `
     margin-bottom: 14pt;
     background: #fafafa;
   }
-  .cover h1 { font-size: 17pt; margin: 0 0 10pt; }
+  .cover .cover-title { font-size: 17pt; margin: 0 0 12pt; }
   .cover .cover-grid {
     display: grid;
     grid-template-columns: 10em 1fr;

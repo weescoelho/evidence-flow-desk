@@ -117,23 +117,52 @@ function prefixTemplateHeader(
   return `${banner}\n${bodyHtml}`;
 }
 
+function screenshotTableDescriptionHtml(s: EvidenceScreenshotPayload): string {
+  const cap = s.caption.trim();
+  const fileEsc = escapeHtml(s.fileName);
+  if (cap.length > 0) {
+    return `<p class="screenshot-desc-lead">${escapeHtml(cap)}</p>
+<p class="screenshot-desc-file"><span class="label-muted">Ficheiro</span> <code>${fileEsc}</code></p>`;
+  }
+  return `<p class="screenshot-desc-lead screenshot-desc-placeholder">Sem descrição informada.</p>
+<p class="screenshot-desc-file"><span class="label-muted">Ficheiro</span> <code>${fileEsc}</code></p>`;
+}
+
 function buildScreenshotSection(p: EvidenceDocumentPayload): string {
   if (p.screenshots.length === 0) return "";
-  return `<section id="evidence-section-screenshots" class="screenshots">
-  <h2>Screenshots (${p.screenshots.length})</h2>
-  ${p.screenshots
+  const rows = p.screenshots
     .map((s) => {
       const src = safeImageDataUrl(s.dataUrl);
       if (!src) {
-        return `<figure class="shot"><p class="warn">Imagem omitida (formato inválido).</p></figure>`;
+        return `<tr class="screenshot-row">
+  <td colspan="2" class="screenshot-desc-cell screenshot-desc-cell--invalid">
+    <p class="warn">Imagem omitida (formato inválido).</p>
+    <p class="screenshot-desc-file"><span class="label-muted">Ficheiro</span> <code>${escapeHtml(s.fileName)}</code></p>
+  </td>
+</tr>`;
       }
-      const cap = escapeHtml(s.caption.trim() || s.fileName);
-      return `<figure class="shot">
-  <img src="${src}" alt="${cap}" />
-  <figcaption>${cap}</figcaption>
-</figure>`;
+      const alt = escapeHtml(s.caption.trim() || s.fileName);
+      const descCell = screenshotTableDescriptionHtml(s);
+      return `<tr class="screenshot-row">
+  <td class="screenshot-img-cell"><div class="screenshot-img-wrap"><img src="${src}" alt="${alt}" /></div></td>
+  <td class="screenshot-desc-cell">${descCell}</td>
+</tr>`;
     })
-    .join("\n")}
+    .join("\n");
+  return `<section id="evidence-section-screenshots" class="screenshots">
+  <h2>Capturas de ecrã (${p.screenshots.length})</h2>
+  <p class="section-lead">Registo das evidências gráficas: cada linha liga a imagem à descrição e ao ficheiro de origem.</p>
+  <table class="evidence-screenshots">
+    <thead>
+      <tr>
+        <th scope="col">Imagem</th>
+        <th scope="col">Descrição</th>
+      </tr>
+    </thead>
+    <tbody>
+${rows}
+    </tbody>
+  </table>
 </section>`;
 }
 
@@ -228,7 +257,7 @@ ${
 
 <section id="evidence-section-commits">
   <h2>Commits (${p.commits.length})</h2>
-  <table>
+  <table class="evidence-table">
     <thead><tr><th>Hash</th><th>Tipo</th><th>Autor</th><th>Resumo</th></tr></thead>
     <tbody>${commitRows}</tbody>
   </table>
@@ -236,7 +265,7 @@ ${
 
 <section id="evidence-section-files">
   <h2>Arquivos (${p.files.length})</h2>
-  <table class="evidence-files">
+  <table class="evidence-files evidence-table">
     <thead><tr><th>Caminho</th><th>Estado</th><th>Linhas</th></tr></thead>
     <tbody>${fileRows}</tbody>
   </table>
@@ -312,7 +341,7 @@ function buildMarketStandardBodyHtml(p: EvidenceDocumentPayload): string {
 
   return `
 <section id="evidence-section-cover" class="cover">
-  <p style="margin:0 0 8pt;font-size:14pt;font-weight:600">${productTitle}</p>
+  <p class="cover-title">${productTitle}</p>
   <dl class="cover-grid">
     <dt>Versão da entrega</dt><dd>${versionLine}</dd>
     <dt>Data de implantação</dt><dd>${deployLine}</dd>
@@ -329,7 +358,7 @@ ${truncNote}
 
 <section id="evidence-section-doc-revisions">
   <h2>Controle de versões do documento</h2>
-  <table class="doc-revisions">
+  <table class="doc-revisions evidence-table">
     <thead>
       <tr>
         <th>Versão</th>
@@ -354,7 +383,7 @@ ${screenshotSection}
 
 <section id="evidence-section-appendix-git">
   <h3>Escopo técnico</h3>
-  <table class="evidence-files">
+  <table class="evidence-files evidence-table">
     <thead><tr><th>Caminho</th><th>Estado</th><th>Linhas</th></tr></thead>
     <tbody>${fileRows}</tbody>
   </table>
@@ -379,16 +408,43 @@ export function buildEvidenceBodyHtml(p: EvidenceDocumentPayload): string {
 const PRINT_STYLES = `
   * { box-sizing: border-box; }
   body {
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 11pt;
-    line-height: 1.45;
-    color: #111;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    font-size: 10.75pt;
+    line-height: 1.5;
+    color: #1c1917;
     margin: 0;
-    padding: 12mm 14mm;
+    padding: 11mm 13mm;
+    background: #fff;
   }
-  .doc-header h1 { font-size: 18pt; margin: 0 0 4pt; }
-  .subtitle { margin: 0; color: #444; font-size: 10pt; }
-  .evidence-template-banner { width: 100%; margin: 0 0 10pt; }
+  .doc-header {
+    margin-bottom: 12pt;
+    padding-bottom: 12pt;
+    border-bottom: 1px solid #e7e5e4;
+  }
+  .doc-header h1 {
+    font-size: 20pt;
+    font-weight: 700;
+    margin: 0 0 6pt;
+    color: #0c0a09;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+  .subtitle {
+    margin: 0;
+    color: #57534e;
+    font-size: 9.75pt;
+    font-weight: 500;
+  }
+  .subtitle strong { color: #44403c; font-weight: 600; }
+  .cover-title {
+    margin: 0 0 10pt;
+    font-size: 16pt;
+    font-weight: 700;
+    color: #0c0a09;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+  }
+  .evidence-template-banner { width: 100%; margin: 0 0 12pt; }
   .evidence-template-banner-inner {
     display: flex;
     justify-content: space-between;
@@ -414,20 +470,92 @@ const PRINT_STYLES = `
     object-fit: contain;
     object-position: top center;
   }
-  h2 { font-size: 12pt; margin: 14pt 0 6pt; border-bottom: 1px solid #ccc; padding-bottom: 2pt; }
-  h3 { font-size: 11pt; margin: 10pt 0 4pt; font-weight: 600; }
-  .meta dl { display: grid; grid-template-columns: 9em 1fr; gap: 4pt 10pt; margin: 0; }
-  .meta dt { font-weight: 600; margin: 0; }
-  .meta dd { margin: 0; }
-  code, pre { font-family: ui-monospace, "Cascadia Mono", "Segoe UI Mono", monospace; font-size: 10pt; }
+  section { margin-bottom: 2pt; }
+  h2 {
+    font-size: 11pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.055em;
+    color: #292524;
+    margin: 18pt 0 8pt;
+    padding-bottom: 6pt;
+    border-bottom: 2px solid #292524;
+  }
+  h3 {
+    font-size: 10.5pt;
+    font-weight: 700;
+    color: #44403c;
+    margin: 14pt 0 6pt;
+    letter-spacing: 0.02em;
+  }
+  .section-lead {
+    margin: -2pt 0 10pt;
+    font-size: 9.5pt;
+    color: #57534e;
+    line-height: 1.45;
+    max-width: 62em;
+  }
+  .meta { margin: 8pt 0 6pt; }
+  .meta dl {
+    display: grid;
+    grid-template-columns: 10.5em 1fr;
+    gap: 6pt 14pt;
+    margin: 0;
+    padding: 12pt 14pt;
+    background: #fafaf9;
+    border: 1px solid #e7e5e4;
+    border-radius: 6px;
+  }
+  .meta dt {
+    font-weight: 600;
+    color: #44403c;
+    margin: 0;
+    font-size: 9.5pt;
+  }
+  .meta dd {
+    margin: 0;
+    color: #1c1917;
+    font-size: 10pt;
+  }
+  code, pre {
+    font-family: ui-monospace, "Cascadia Mono", "Segoe UI Mono", "Consolas", monospace;
+    font-size: 9.75pt;
+  }
   pre.technical {
     white-space: pre-wrap;
-    background: #f6f6f6;
-    border: 1px solid #ddd;
-    padding: 8pt;
-    border-radius: 4px;
+    word-wrap: break-word;
+    background: #fafaf9;
+    border: 1px solid #e7e5e4;
+    padding: 10pt 12pt;
+    border-radius: 6px;
+    line-height: 1.55;
+    margin: 4pt 0 0;
   }
-  table { width: 100%; border-collapse: collapse; font-size: 10pt; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10pt;
+    margin: 6pt 0 10pt;
+  }
+  table.evidence-table tbody tr:nth-child(even) td {
+    background: #fafaf9;
+  }
+  thead th {
+    font-size: 8.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #44403c;
+    background: #f5f5f4;
+    border: 1px solid #d6d3d1;
+    padding: 7pt 9pt;
+    text-align: left;
+  }
+  tbody td {
+    border: 1px solid #e7e5e4;
+    padding: 7pt 9pt;
+    vertical-align: top;
+  }
   table.evidence-files {
     table-layout: fixed;
   }
@@ -437,26 +565,111 @@ const PRINT_STYLES = `
     word-break: break-word;
     overflow-wrap: anywhere;
   }
-  th, td { border: 1px solid #ccc; padding: 4pt 6pt; vertical-align: top; }
-  th { background: #f0f0f0; text-align: left; }
-  .warn { color: #7a5b00; background: #fff8e6; border: 1px solid #e6d08c; padding: 8pt; border-radius: 4px; }
-  figure.shot { margin: 12pt 0; page-break-inside: avoid; }
-  figure.shot img { max-width: 100%; height: auto; border: 1px solid #ddd; display: block; }
-  figure.shot figcaption { font-size: 9pt; margin-top: 4pt; }
-  .doc-footer { margin-top: 16pt; font-size: 9pt; color: #555; }
+  table.evidence-screenshots {
+    table-layout: fixed;
+    margin-top: 4pt;
+  }
+  table.evidence-screenshots thead th:first-child { width: 50%; }
+  table.evidence-screenshots thead th:nth-child(2) { width: 50%; }
+  table.evidence-screenshots tbody tr {
+    page-break-inside: avoid;
+  }
+  table.evidence-screenshots tbody tr:nth-child(even) .screenshot-img-cell {
+    background: #ebe9e6;
+  }
+  table.evidence-screenshots tbody tr:nth-child(even) .screenshot-desc-cell {
+    background: #f5f5f4;
+  }
+  table.evidence-screenshots tbody tr:nth-child(odd) .screenshot-img-cell {
+    background: #f0efed;
+  }
+  table.evidence-screenshots tbody tr:nth-child(odd) .screenshot-desc-cell {
+    background: #fff;
+  }
+  .screenshot-img-cell {
+    text-align: center;
+    vertical-align: middle;
+    padding: 10pt !important;
+  }
+  .screenshot-img-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 24pt;
+  }
+  .screenshot-img-cell img {
+    max-width: 100%;
+    max-height: 62mm;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border: 1px solid #d6d3d1;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    display: block;
+  }
+  .screenshot-desc-cell {
+    font-size: 10pt;
+    line-height: 1.5;
+  }
+  .screenshot-desc-cell--invalid .warn { margin-bottom: 8pt; }
+  .screenshot-desc-lead {
+    margin: 0 0 8pt;
+    color: #1c1917;
+  }
+  .screenshot-desc-placeholder {
+    color: #78716c;
+    font-style: italic;
+  }
+  .screenshot-desc-file {
+    margin: 0;
+    font-size: 9pt;
+    color: #57534e;
+  }
+  .label-muted {
+    font-size: 8.5pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #a8a29e;
+    margin-right: 6pt;
+  }
+  .screenshot-desc-file code {
+    font-size: 9pt;
+    color: #44403c;
+    background: transparent;
+    padding: 0;
+    border: none;
+  }
+  .warn {
+    color: #713f12;
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+    padding: 9pt 10pt;
+    border-radius: 6px;
+    font-size: 10pt;
+    line-height: 1.45;
+    margin: 0 0 8pt;
+  }
+  .doc-footer { margin-top: 18pt; font-size: 9pt; color: #57534e; }
   @media screen {
-    html {
-      min-height: 100%;
-    }
+    html { min-height: 100%; }
     body {
       width: 100%;
-      max-width: 100%;
-      padding: 1rem 1.25rem;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 1.25rem 1.5rem;
+      box-shadow: 0 0 0 1px #e7e5e4;
+      min-height: 100vh;
     }
   }
   @page { margin: 14mm; }
   @media print {
-    body { padding: 0; }
+    body {
+      padding: 0;
+      box-shadow: none;
+      max-width: none;
+    }
   }
 `;
 
@@ -465,11 +678,14 @@ const PRINT_PAGE_NUMBER_STYLES = `
   @media print {
     @page {
       margin: 14mm;
-      margin-bottom: 22mm;
+      margin-bottom: 28mm;
       @bottom-center {
         content: counter(page);
         font-size: 9pt;
         font-family: system-ui, sans-serif;
+        vertical-align: top;
+        padding-top: 4mm;
+        padding-bottom: 2mm;
       }
     }
   }
