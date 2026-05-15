@@ -9,6 +9,56 @@ const STATUS_LABEL: Record<FileChangeRow["status"], string> = {
   other: "outros",
 };
 
+/** Linhas máximas na lista de paths (evita texto demasiado longo para UI e IA). */
+const MAX_SUMMARY_FILE_LINES = 30;
+
+/** Estado no singular, adequado a uma linha por arquivo. */
+const FILE_LINE_STATUS: Record<FileChangeRow["status"], string> = {
+  added: "adicionado",
+  deleted: "removido",
+  modified: "modificado",
+  renamed: "renomeado",
+  copied: "copiado",
+  other: "outro",
+};
+
+function displayPathForSummary(f: FileChangeRow): string {
+  if (f.status === "renamed" && f.pathAfter) {
+    return f.pathBefore ? `${f.pathBefore} → ${f.pathAfter}` : f.pathAfter;
+  }
+  return f.path;
+}
+
+function appendSummarizedFiles(lines: string[], files: FileChangeRow[]): void {
+  const sorted = [...files].sort(
+    (a, b) =>
+      b.linesAdded +
+      b.linesRemoved -
+      (a.linesAdded + a.linesRemoved),
+  );
+  const take = Math.min(MAX_SUMMARY_FILE_LINES, sorted.length);
+
+  lines.push("");
+  lines.push(
+    "Arquivos com maior movimentação (resumo, não exaustivo):",
+  );
+
+  for (let i = 0; i < take; i++) {
+    const f = sorted[i]!;
+    const p = displayPathForSummary(f);
+    const st = FILE_LINE_STATUS[f.status];
+    lines.push(
+      `• ${p} (+${f.linesAdded} / −${f.linesRemoved} linhas, ${st})`,
+    );
+  }
+
+  if (sorted.length > take) {
+    lines.push(
+      `• … e mais ${sorted.length - take} arquivo(s) omitidos neste resumo.`,
+    );
+  }
+}
+
 function countByStatus(files: FileChangeRow[]): Record<FileChangeRow["status"], number> {
   const out: Record<FileChangeRow["status"], number> = {
     added: 0,
@@ -86,6 +136,8 @@ export function buildTechnicalSummary(data: TechnicalSummaryInput): string {
     if (parts.length > 0) {
       lines.push(`Por tipo: ${parts.join(", ")}.`);
     }
+
+    appendSummarizedFiles(lines, files);
   }
 
   lines.push("");

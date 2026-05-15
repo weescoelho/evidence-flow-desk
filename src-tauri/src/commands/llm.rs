@@ -57,7 +57,10 @@ pub async fn llm_rewrite_technical_summary(
         read_gemini_prefs(&conn)?
     };
     let system = system_prompt_technical_rewrite(&tone);
-    let user_text = format!("Texto actual:\n\n{}", technical_summary);
+    let user_text = format!(
+        "Siga a estrutura de relatório técnico das instruções de sistema; use Markdown (ficheiros e termos técnicos em `crases`); use apenas fatos presentes no texto abaixo.\n\nTexto actual:\n\n{}",
+        technical_summary
+    );
     let inner = tauri::async_runtime::spawn_blocking(move || {
         generate_content(&base, &key, &model, &system, &user_text)
     })
