@@ -9,10 +9,10 @@ import {
 } from "@/features/document";
 import { useEvidenceAttachmentsStore } from "@/features/evidence";
 
-import type { RepositoryScopeSummaryState } from "../hooks/use-repository-scope-summary";
+import type { MultiBranchScopeState } from "../hooks/use-multi-branch-scope";
 
 type ScopeDocumentPreviewPanelProps = {
-  scope: RepositoryScopeSummaryState;
+  scope: MultiBranchScopeState;
   variant?: "preview" | "export";
   onLocalSaveSuccess?: () => void;
   exportPdfTriggerRef?: RefObject<HTMLButtonElement | null>;
@@ -26,10 +26,10 @@ export function ScopeDocumentPreviewPanel({
 }: ScopeDocumentPreviewPanelProps) {
   const {
     repositoryPath,
-    baseBranch,
-    compareBranch,
+    selectedBranches,
     data,
-    sameBranch,
+    noBranchesSelected,
+    flattenedCommits,
     technicalNarrative,
     corporateNarrative,
   } = scope;
@@ -75,21 +75,14 @@ export function ScopeDocumentPreviewPanel({
     [evidenceAttachments],
   );
 
-  if (
-    !repositoryPath ||
-    !baseBranch ||
-    !compareBranch ||
-    sameBranch ||
-    !data
-  ) {
+  if (!repositoryPath || noBranchesSelected || !data) {
     return null;
   }
 
   return (
     <EvidenceDocumentPreview
       repositoryPath={repositoryPath}
-      baseRef={baseBranch}
-      compareRef={compareBranch}
+      branchRefs={selectedBranches}
       templateLabel={activeTemplateLabel(activeTemplateId)}
       templateLayoutKey={activeTemplateLayoutKey(activeTemplateId)}
       changeId={changeId}
@@ -109,7 +102,7 @@ export function ScopeDocumentPreviewPanel({
       templateHeaderImageRight={activeTemplate?.headerImageRight ?? ""}
       technicalSummary={technicalNarrative}
       corporateSummary={corporateNarrative}
-      commits={data.commits}
+      commits={flattenedCommits}
       files={data.files}
       commitsTruncated={data.commitsTruncated}
       screenshots={screenshotPayload}

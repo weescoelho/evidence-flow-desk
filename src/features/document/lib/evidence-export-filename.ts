@@ -1,9 +1,10 @@
 /** Nome sugerido para «Guardar HTML como» (refs Git sanitizadas). */
-export function defaultEvidenceHtmlFileName(
-  baseRef: string,
-  compareRef: string,
-): string {
-  return `evidencia-${safeFileNameSegment(baseRef)}-${safeFileNameSegment(compareRef)}.html`;
+export function defaultEvidenceHtmlFileName(branchRefs: string[]): string {
+  const seg = branchRefs
+    .map(safeFileNameSegment)
+    .join("-")
+    .slice(0, 120);
+  return `evidencia-${seg.length > 0 ? seg : "escopo"}.html`;
 }
 
 export function safeFileNameSegment(ref: string): string {

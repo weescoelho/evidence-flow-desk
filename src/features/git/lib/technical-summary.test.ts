@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { buildTechnicalSummary } from "./technical-summary";
-import type { RepositoryScopeSummary } from "../types/git";
+import { buildTechnicalSummary, type TechnicalSummaryInput } from "./technical-summary";
 
 describe("buildTechnicalSummary", () => {
   it("indica vazio quando não há commits nem arquivos", () => {
-    const data: RepositoryScopeSummary = {
+    const data: TechnicalSummaryInput = {
       commits: [],
       files: [],
       commitsTruncated: false,
@@ -14,7 +13,7 @@ describe("buildTechnicalSummary", () => {
   });
 
   it("lista commits convencionais e totais de arquivos", () => {
-    const data: RepositoryScopeSummary = {
+    const data: TechnicalSummaryInput = {
       commits: [
         {
           hash: "a".repeat(40),
@@ -50,7 +49,7 @@ describe("buildTechnicalSummary", () => {
   });
 
   it("menciona truncagem quando o servidor sinaliza limite", () => {
-    const data: RepositoryScopeSummary = {
+    const data: TechnicalSummaryInput = {
       commits: [
         {
           hash: "a".repeat(40),

@@ -17,8 +17,7 @@ export function resetEvidenceSession(): void {
     detached: false,
     recentRepos: useGitStore.getState().recentRepos,
     branchFilter: "",
-    baseBranch: null,
-    compareBranch: null,
+    selectedBranches: [],
   });
   useEvidenceAttachmentsStore.getState().clear();
 }

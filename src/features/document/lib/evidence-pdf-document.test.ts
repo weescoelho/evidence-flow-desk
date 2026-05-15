@@ -9,8 +9,7 @@ function basePayload(
 ): EvidenceDocumentPayload {
   return {
     repositoryPath: "/tmp/repo",
-    baseRef: "main",
-    compareRef: "dev",
+    branchRefs: ["main", "dev"],
     templateLabel: "Homologação — padrão enterprise",
     templateLayoutKey: "enterprise",
     changeId: "CHG-1",

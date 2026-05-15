@@ -37,8 +37,11 @@ pub struct SavedEvidenceDocumentInfo {
     pub id: String,
     pub saved_at_ms: u64,
     pub repository_path: String,
+    /// Legado (escopo base→compare); vazio em gravações novas.
     pub base_ref: String,
     pub compare_ref: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub branch_refs: Option<Vec<String>>,
     pub html_path: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub template_label: Option<String>,
@@ -161,6 +164,10 @@ impl EvidenceDocumentsStore {
             (
                 "document_title",
                 "ALTER TABLE saved_evidence_documents ADD COLUMN document_title TEXT",
+            ),
+            (
+                "branch_refs",
+                "ALTER TABLE saved_evidence_documents ADD COLUMN branch_refs TEXT",
             ),
         ];
 
@@ -292,8 +299,7 @@ impl EvidenceDocumentsStore {
         &self,
         html: String,
         repository_path: String,
-        base_ref: String,
-        compare_ref: String,
+        branch_refs: Vec<String>,
         template_label: Option<String>,
         change_id: Option<String>,
         environment: Option<String>,
@@ -324,21 +330,24 @@ impl EvidenceDocumentsStore {
         let environment = Self::normalize_opt(environment);
         let document_title = Self::normalize_opt(document_title);
 
+        let branch_refs_json = serde_json::to_string(&branch_refs).map_err(|e| e.to_string())?;
+
         conn.execute(
             "INSERT INTO saved_evidence_documents
              (id, saved_at_ms, repository_path, base_ref, compare_ref,
-              template_label, change_id, environment, document_title)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+              template_label, change_id, environment, document_title, branch_refs)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
             params![
                 id,
                 Self::now_ms(),
                 repository_path,
-                base_ref,
-                compare_ref,
+                "",
+                "",
                 template_label,
                 change_id,
                 environment,
                 document_title,
+                branch_refs_json,
             ],
         )
         .map_err(|e| {
@@ -357,7 +366,7 @@ impl EvidenceDocumentsStore {
         let mut stmt = conn
             .prepare(
                 "SELECT id, saved_at_ms, repository_path, base_ref, compare_ref,
-                        template_label, change_id, environment, document_title
+                        template_label, change_id, environment, document_title, branch_refs
                  FROM saved_evidence_documents
                  ORDER BY saved_at_ms DESC, id DESC",
             )
@@ -365,12 +374,21 @@ impl EvidenceDocumentsStore {
 
         let rows = stmt
             .query_map([], |row| {
+                let branch_refs_raw: Option<String> = row.get(9)?;
+                let branch_refs = branch_refs_raw.and_then(|raw| {
+                    let t = raw.trim();
+                    if t.is_empty() {
+                        return None;
+                    }
+                    serde_json::from_str::<Vec<String>>(t).ok()
+                });
                 Ok(SavedEvidenceDocumentInfo {
                     id: row.get(0)?,
                     saved_at_ms: row.get(1)?,
                     repository_path: row.get(2)?,
                     base_ref: row.get(3)?,
                     compare_ref: row.get(4)?,
+                    branch_refs,
                     template_label: row.get(5)?,
                     change_id: row.get(6)?,
                     environment: row.get(7)?,
@@ -438,8 +456,7 @@ pub fn save_document(
     app: &AppHandle,
     html: String,
     repository_path: String,
-    base_ref: String,
-    compare_ref: String,
+    branch_refs: Vec<String>,
     template_label: Option<String>,
     change_id: Option<String>,
     environment: Option<String>,
@@ -449,8 +466,7 @@ pub fn save_document(
     EvidenceDocumentsStore::for_app(app)?.save(
         html,
         repository_path,
-        base_ref,
-        compare_ref,
+        branch_refs,
         template_label,
         change_id,
         environment,
@@ -507,8 +523,7 @@ mod tests {
             .save(
                 "<html>x</html>".to_string(),
                 "/repo".to_string(),
-                "main".to_string(),
-                "feat".to_string(),
+                vec!["main".into(), "feat".into()],
                 Some("Tpl A".into()),
                 Some("CHG-1".into()),
                 Some("staging".into()),
@@ -523,8 +538,12 @@ mod tests {
         assert_eq!(list[0].id, r.id);
         assert!(!list[0].has_draft);
         assert_eq!(list[0].repository_path, "/repo");
-        assert_eq!(list[0].base_ref, "main");
-        assert_eq!(list[0].compare_ref, "feat");
+        assert_eq!(list[0].base_ref, "");
+        assert_eq!(list[0].compare_ref, "");
+        assert_eq!(
+            list[0].branch_refs,
+            Some(vec!["main".to_string(), "feat".to_string()])
+        );
         assert_eq!(list[0].template_label.as_deref(), Some("Tpl A"));
         assert_eq!(list[0].change_id.as_deref(), Some("CHG-1"));
         assert_eq!(list[0].environment.as_deref(), Some("staging"));
@@ -540,13 +559,12 @@ mod tests {
         let root = tmp.path().join(ROOT_DIR);
         let db = tmp.path().join("draft.sqlite3");
         let store = EvidenceDocumentsStore::with_paths(root, db, 10).unwrap();
-        let payload = r#"{"schemaVersion":1,"baseRef":"x"}"#;
+        let payload = r#"{"schemaVersion":2,"branchRefs":["x"]}"#;
         let r = store
             .save(
                 "<html/>".into(),
                 "/repo".into(),
-                "main".into(),
-                "feat".into(),
+                vec!["main".into(), "feat".into()],
                 None,
                 None,
                 None,
@@ -580,17 +598,17 @@ mod tests {
         let store = EvidenceDocumentsStore::with_paths(root, db, 2).unwrap();
 
         let first = store
-            .save("a".into(), "r".into(), "a".into(), "b".into(), None, None, None, None, None)
+            .save("a".into(), "r".into(), vec!["a".into(), "b".into()], None, None, None, None, None)
             .unwrap();
         thread::sleep(Duration::from_millis(12));
         let second = store
-            .save("b".into(), "r".into(), "a".into(), "b".into(), None, None, None, None, None)
+            .save("b".into(), "r".into(), vec!["a".into(), "b".into()], None, None, None, None, None)
             .unwrap();
         assert_eq!(count_subdirs(&store.root), 2);
 
         thread::sleep(Duration::from_millis(12));
         let third = store
-            .save("c".into(), "r".into(), "a".into(), "b".into(), None, None, None, None, None)
+            .save("c".into(), "r".into(), vec!["a".into(), "b".into()], None, None, None, None, None)
             .unwrap();
 
         assert!(!Path::new(&first.html_path).exists());
@@ -612,7 +630,7 @@ mod tests {
         let store = EvidenceDocumentsStore::with_paths(root, db, 10).unwrap();
 
         let r = store
-            .save("x".into(), "/r".into(), "a".into(), "b".into(), None, None, None, None, None)
+            .save("x".into(), "/r".into(), vec!["a".into(), "b".into()], None, None, None, None, None)
             .unwrap();
         assert!(Path::new(&r.html_path).exists());
 

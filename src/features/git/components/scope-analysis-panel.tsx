@@ -1,10 +1,10 @@
 import { EvidenceDocumentMetadataSection } from "@/features/document/components/evidence-document-metadata-section";
 
-import type { RepositoryScopeSummaryState } from "../hooks/use-repository-scope-summary";
+import type { MultiBranchScopeState } from "../hooks/use-multi-branch-scope";
 import { EvidenceNarrativeMetrics } from "./evidence-narrative-metrics";
 
 type ScopeAnalysisPanelProps = {
-  scope: RepositoryScopeSummaryState;
+  scope: MultiBranchScopeState;
 };
 
 export function ScopeAnalysisPanel({ scope }: ScopeAnalysisPanelProps) {
@@ -14,8 +14,9 @@ export function ScopeAnalysisPanel({ scope }: ScopeAnalysisPanelProps) {
     data,
     loading,
     error,
-    sameBranch,
+    noBranchesSelected,
     repositoryPath,
+    selectedBranches,
     technicalNarrative,
     technicalNarrativeIsCustomized,
     setTechnicalNarrative,
@@ -37,15 +38,21 @@ export function ScopeAnalysisPanel({ scope }: ScopeAnalysisPanelProps) {
             id={headingId}
             className="text-[13px] font-semibold text-[#18181B]"
           >
-            Escopo (base → compare)
+            Escopo (branches seleccionadas)
           </h2>
-          {sameBranch ? (
+          {noBranchesSelected ? (
             <p className="text-[12px] leading-snug text-[#71717A]">
-              Escolha duas refs Git distintas (branches, tags ou commits) para
-              ver commits e alterações cumulativas (do ancestral comum até a ref
-              de comparação).
+              Volte ao passo anterior e marque pelo menos uma branch local para
+              compor o escopo do documento.
             </p>
-          ) : null}
+          ) : (
+            <p className="text-[12px] leading-snug text-[#71717A]">
+              Branches:{" "}
+              <span className="font-medium text-[#18181B]">
+                {selectedBranches.join(", ")}
+              </span>
+            </p>
+          )}
           {loading ? (
             <p className="text-[12px] text-[#71717A]" aria-live="polite">
               Carregando análise…
@@ -60,12 +67,20 @@ export function ScopeAnalysisPanel({ scope }: ScopeAnalysisPanelProps) {
               {error}
             </p>
           ) : null}
-          {data && !sameBranch && !loading && !error ? (
+          {data && !noBranchesSelected && !loading && !error ? (
             <div className="flex flex-col gap-6">
               {data.commitsTruncated ? (
                 <p className="text-[12px] text-amber-600 dark:text-amber-400">
-                  Lista de commits truncada (limite de segurança). Refine o
-                  escopo nas próximas versões.
+                  Lista de commits truncada (limite de segurança) em pelo menos
+                  uma branch.
+                </p>
+              ) : null}
+              {data.commonAncestorHash ? (
+                <p className="text-[12px] text-[#71717A]">
+                  Ancestral comum calculado:{" "}
+                  <code className="rounded bg-[#F4F4F5] px-1 text-[#18181B]">
+                    {data.commonAncestorHash.slice(0, 7)}
+                  </code>
                 </p>
               ) : null}
 
@@ -85,7 +100,7 @@ export function ScopeAnalysisPanel({ scope }: ScopeAnalysisPanelProps) {
                 </div>
                 {data.files.length === 0 ? (
                   <p className="px-3.5 py-3 text-[12px] text-[#71717A]">
-                    Nenhuma alteração de arquivo no intervalo.
+                    Nenhuma alteração de arquivo no agregado.
                   </p>
                 ) : (
                   <ul className="flex max-h-48 flex-col overflow-y-auto text-[11px]">

@@ -1,4 +1,4 @@
-import type { FileChangeRow, RepositoryScopeSummary } from "../types/git";
+import type { CommitRow, FileChangeRow } from "../types/git";
 
 const STATUS_LABEL: Record<FileChangeRow["status"], string> = {
   added: "adicionados",
@@ -24,10 +24,16 @@ function countByStatus(files: FileChangeRow[]): Record<FileChangeRow["status"], 
   return out;
 }
 
+export type TechnicalSummaryInput = {
+  commits: CommitRow[];
+  files: FileChangeRow[];
+  commitsTruncated: boolean;
+};
+
 /**
  * Gera resumo técnico legível a partir dos dados de escopo (RF-006 subset MVP — sem LLM).
  */
-export function buildTechnicalSummary(data: RepositoryScopeSummary): string {
+export function buildTechnicalSummary(data: TechnicalSummaryInput): string {
   const lines: string[] = [];
 
   const { commits, files, commitsTruncated } = data;
@@ -35,18 +41,20 @@ export function buildTechnicalSummary(data: RepositoryScopeSummary): string {
   const nFiles = files.length;
 
   if (nCommits === 0 && nFiles === 0) {
-    return "Não há commits nem alterações de arquivo neste escopo entre as refs selecionadas.";
+    return "Não há commits nem alterações de arquivo neste escopo para as branches selecionadas.";
   }
 
   if (nCommits === 0) {
-    lines.push("Não há commits no intervalo entre base e comparação (as alterações de arquivo refletem o diff acumulado até a ref de comparação).");
+    lines.push(
+      "Não há commits listados para o intervalo calculado (as alterações de arquivo refletem o diff acumulado desde o ancestral comum até cada branch).",
+    );
   } else if (nCommits === 1) {
     lines.push(
       `Este escopo inclui 1 commit${commitsTruncated ? " (atenção: a lista de commits pode estar truncada pelo limite de segurança)." : "."}`,
     );
   } else {
     lines.push(
-      `Este escopo inclui ${nCommits} commits${commitsTruncated ? " (lista truncada pelo limite de segurança; refine as refs se necessário)." : "."}`,
+      `Este escopo inclui ${nCommits} commits${commitsTruncated ? " (lista truncada pelo limite de segurança; reduza o número de branches ou refine o histórico)." : "."}`,
     );
   }
 

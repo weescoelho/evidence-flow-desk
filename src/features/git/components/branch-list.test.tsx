@@ -1,23 +1,23 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import type { RepositoryScopeSummaryState } from "../hooks/use-repository-scope-summary";
+import type { MultiBranchScopeState } from "../hooks/use-multi-branch-scope";
 import { resetGitStore } from "../test/store-reset";
 import { useGitStore } from "../store/git-store";
 import { ScopeCommitsStep } from "./scope-commits-step";
 
 function idleScope(
-  partial: Partial<RepositoryScopeSummaryState> = {},
-): RepositoryScopeSummaryState {
+  partial: Partial<MultiBranchScopeState> = {},
+): MultiBranchScopeState {
   const noop = () => {};
   return {
     repositoryPath: null,
-    baseBranch: null,
-    compareBranch: null,
+    selectedBranches: [],
     data: null,
+    flattenedCommits: [],
     loading: false,
     error: null,
-    sameBranch: false,
+    noBranchesSelected: true,
     technicalNarrative: "",
     technicalNarrativeGenerated: "",
     technicalNarrativeIsCustomized: false,
@@ -44,7 +44,7 @@ describe("ScopeCommitsStep", () => {
     expect(screen.getByTestId("empty-filter")).toBeInTheDocument();
   });
 
-  it("permite indicar refs Git livres (input com datalist de branches)", () => {
+  it("mostra checkboxes para selecção de branches", () => {
     useGitStore.setState({
       repositoryPath: "/repo",
       branches: [
@@ -54,27 +54,50 @@ describe("ScopeCommitsStep", () => {
       headDisplay: "main",
       detached: false,
       branchFilter: "",
-      baseBranch: "main",
-      compareBranch: "dev",
+      selectedBranches: ["main"],
     });
-    render(<ScopeCommitsStep scope={idleScope({ sameBranch: false })} />);
-    expect(screen.getByTestId("scope-base-ref")).toHaveValue("main");
-    expect(screen.getByTestId("scope-compare-ref")).toHaveValue("dev");
+    render(
+      <ScopeCommitsStep scope={idleScope({ noBranchesSelected: false })} />,
+    );
+    expect(screen.getByTestId("branch-check-main")).toBeInTheDocument();
+    expect(screen.getByTestId("branch-check-dev")).toBeInTheDocument();
   });
 
-  it("avisa quando base e comparar são iguais", () => {
+  it("actualiza a lista ao mudar o filtro de branches", () => {
+    useGitStore.setState({
+      repositoryPath: "/repo",
+      branches: [
+        { name: "main", isHead: true },
+        { name: "feature/foo", isHead: false },
+      ],
+      headDisplay: "main",
+      detached: false,
+      branchFilter: "",
+      selectedBranches: [],
+    });
+    render(<ScopeCommitsStep scope={idleScope()} />);
+    expect(screen.getByTestId("branch-check-main")).toBeInTheDocument();
+    expect(screen.getByTestId("branch-check-feature/foo")).toBeInTheDocument();
+
+    fireEvent.change(
+      screen.getByPlaceholderText("Substring (sem maiúsculas)"),
+      { target: { value: "feature" } },
+    );
+
+    expect(screen.queryByTestId("branch-check-main")).not.toBeInTheDocument();
+    expect(screen.getByTestId("branch-check-feature/foo")).toBeInTheDocument();
+  });
+
+  it("avisa quando nenhuma branch está seleccionada", () => {
     useGitStore.setState({
       repositoryPath: "/repo",
       branches: [{ name: "main", isHead: true }],
       headDisplay: "main",
       detached: false,
       branchFilter: "",
-      baseBranch: "main",
-      compareBranch: "main",
+      selectedBranches: [],
     });
-    render(<ScopeCommitsStep scope={idleScope({ sameBranch: true })} />);
-    expect(
-      screen.getAllByTestId("compare-same-warning").length,
-    ).toBeGreaterThanOrEqual(1);
+    render(<ScopeCommitsStep scope={idleScope({ noBranchesSelected: true })} />);
+    expect(screen.getByTestId("no-branches-warning")).toBeInTheDocument();
   });
 });

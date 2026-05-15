@@ -35,7 +35,7 @@ export {
   buildEvidenceReportDraftJson,
   EVIDENCE_REPORT_DRAFT_SCHEMA_VERSION,
   parseEvidenceReportDraftJson,
-  type EvidenceReportDraftV1,
+  type EvidenceReportDraftV2,
 } from "./lib/evidence-report-draft";
 export { applyEvidenceReportDraft } from "./lib/apply-evidence-report-draft";
 export {

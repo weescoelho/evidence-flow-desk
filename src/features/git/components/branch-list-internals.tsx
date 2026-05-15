@@ -1,15 +1,15 @@
 import { cn } from "@/lib/utils";
 
-export function BranchRow({
+export function BranchSelectRow({
   name,
   isHead,
-  onPickBase,
-  onPickCompare,
+  selected,
+  onToggle,
 }: {
   name: string;
   isHead: boolean;
-  onPickBase: () => void;
-  onPickCompare: () => void;
+  selected: boolean;
+  onToggle: () => void;
 }) {
   return (
     <li
@@ -19,30 +19,23 @@ export function BranchRow({
       )}
       data-current={isHead ? "true" : "false"}
     >
-      <span className="min-w-0 flex-1 truncate font-mono text-[12px] text-[#18181B]">
-        {name}
-      </span>
+      <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2">
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={onToggle}
+          className="size-4 shrink-0 rounded border-[#E4E4E7] accent-[#5946DB]"
+          data-testid={`branch-check-${name}`}
+        />
+        <span className="min-w-0 flex-1 truncate font-mono text-[12px] text-[#18181B]">
+          {name}
+        </span>
+      </label>
       {isHead ? (
         <span className="rounded-md bg-[#5946DB]/15 px-2 py-0.5 font-mono text-[10px] font-semibold text-[#5946DB]">
           HEAD
         </span>
       ) : null}
-      <div className="flex gap-1">
-        <button
-          type="button"
-          className="rounded-[6px] border border-[#E4E4E7] px-2 py-0.5 font-mono text-[11px] font-medium text-[#71717A] hover:bg-[#F4F4F5]"
-          onClick={onPickBase}
-        >
-          Base
-        </button>
-        <button
-          type="button"
-          className="rounded-[6px] border border-[#E4E4E7] px-2 py-0.5 font-mono text-[11px] font-medium text-[#71717A] hover:bg-[#F4F4F5]"
-          onClick={onPickCompare}
-        >
-          Comparar
-        </button>
-      </div>
     </li>
   );
 }

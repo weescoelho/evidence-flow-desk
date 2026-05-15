@@ -72,8 +72,8 @@ export type EvidenceScreenshotPayload = {
 
 export type EvidenceDocumentPayload = {
   repositoryPath: string;
-  baseRef: string;
-  compareRef: string;
+  /** Branches incluídas no escopo (ancestral comum automático no backend). */
+  branchRefs: string[];
   /** Rótulo do template no documento. */
   templateLabel: string;
   /**
@@ -220,7 +220,7 @@ ${rows}
 
 function buildClassicCommitRows(p: EvidenceDocumentPayload): string {
   if (p.commits.length === 0) {
-    return `<tr><td colspan="4">Nenhum commit no intervalo.</td></tr>`;
+    return `<tr><td colspan="4">Nenhum commit listado no escopo.</td></tr>`;
   }
   return p.commits
     .map((c) => {
@@ -402,7 +402,7 @@ function buildMarketStandardBodyHtml(p: EvidenceDocumentPayload): string {
     <dt>Responsável técnico</dt><dd>${ownerLine}</dd>
     <dt>Aprovador</dt><dd>${approverLine}</dd>
     <dt>Gerado em</dt><dd>${generatedAt}</dd>
-    <dt>Escopo Git (base → compare)</dt><dd>${escapeHtml(p.baseRef)} → ${escapeHtml(p.compareRef)}</dd>
+    <dt>Escopo Git (branches)</dt><dd>${escapeHtml(p.branchRefs.join(", "))}</dd>
   </dl>
 </section>
 

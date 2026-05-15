@@ -117,12 +117,16 @@ export function EvidenceDocumentPreview({
     [payload.documentRevisionHistory],
   );
 
+  const branchRefsFingerprint = useMemo(
+    () => JSON.stringify(payload.branchRefs),
+    [payload.branchRefs],
+  );
+
   const printReadyHtml = useMemo(
     () => buildEvidencePrintHtml(payload, printOptions),
     [
       payload.repositoryPath,
-      payload.baseRef,
-      payload.compareRef,
+      branchRefsFingerprint,
       payload.templateLabel,
       payload.templateLayoutKey,
       payload.changeId,
@@ -178,8 +182,7 @@ export function EvidenceDocumentPreview({
     return saveEvidenceDocument({
       html: printReadyHtml,
       repositoryPath: payload.repositoryPath,
-      baseRef: payload.baseRef,
-      compareRef: payload.compareRef,
+      branchRefs: payload.branchRefs,
       templateLabel: payload.templateLabel,
       changeId: payload.changeId,
       environment: payload.environment,
@@ -212,7 +215,7 @@ export function EvidenceDocumentPreview({
     const fileName =
       stem && stem !== "projeto"
         ? `${stem}-evidencia.pdf`
-        : defaultEvidenceHtmlFileName(payload.baseRef, payload.compareRef).replace(
+        : defaultEvidenceHtmlFileName(payload.branchRefs).replace(
             /\.html$/i,
             ".pdf",
           );
@@ -312,7 +315,7 @@ export function EvidenceDocumentPreview({
     const fileName =
       stem && stem !== "projeto"
         ? `${stem}-evidencia.html`
-        : defaultEvidenceHtmlFileName(payload.baseRef, payload.compareRef);
+        : defaultEvidenceHtmlFileName(payload.branchRefs);
     if (!exportDirPath?.trim()) {
       return fileName;
     }

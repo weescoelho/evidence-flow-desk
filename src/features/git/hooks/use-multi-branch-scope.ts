@@ -2,20 +2,22 @@ import { useEffect, useMemo, useState } from "react";
 
 import { usePendingEvidenceNarrativesStore } from "@/features/document/store/pending-evidence-narratives-store";
 
-import { getRepositoryScopeSummary } from "../api/git.commands";
+import { getMultiBranchScopeSummary } from "../api/git.commands";
 import { parseGitCommandError } from "../api/parse-git-error";
+import { flattenScopeCommits } from "../lib/flatten-scope-commits";
 import { buildTechnicalSummary } from "../lib/technical-summary";
-import type { RepositoryScopeSummary } from "../types/git";
+import type { CommitRow, MultiBranchScopeSummary } from "../types/git";
 import { useGitStore } from "../store/git-store";
 
-export type RepositoryScopeSummaryState = {
+export type MultiBranchScopeState = {
   repositoryPath: string | null;
-  baseBranch: string | null;
-  compareBranch: string | null;
-  data: RepositoryScopeSummary | null;
+  selectedBranches: string[];
+  data: MultiBranchScopeSummary | null;
+  /** Commits todas as branches, deduplicados por hash. */
+  flattenedCommits: CommitRow[];
   loading: boolean;
   error: string | null;
-  sameBranch: boolean;
+  noBranchesSelected: boolean;
   /** Texto efectivo no documento (gerado automaticamente ou editado pelo utilizador). */
   technicalNarrative: string;
   /** Texto produzido apenas por `buildTechnicalSummary` (sem edição manual activa). */
@@ -28,28 +30,18 @@ export type RepositoryScopeSummaryState = {
   setCorporateNarrative: (value: string) => void;
 };
 
-export function useRepositoryScopeSummary(): RepositoryScopeSummaryState {
+export function useMultiBranchScope(): MultiBranchScopeState {
   const repositoryPath = useGitStore((s) => s.repositoryPath);
-  const baseBranch = useGitStore((s) => s.baseBranch);
-  const compareBranch = useGitStore((s) => s.compareBranch);
+  const selectedBranches = useGitStore((s) => s.selectedBranches);
 
-  const [data, setData] = useState<RepositoryScopeSummary | null>(null);
+  const [data, setData] = useState<MultiBranchScopeSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const sameBranch =
-    !!baseBranch &&
-    !!compareBranch &&
-    baseBranch.length > 0 &&
-    baseBranch === compareBranch;
+  const noBranchesSelected = selectedBranches.length === 0;
 
   useEffect(() => {
-    if (
-      !repositoryPath ||
-      !baseBranch ||
-      !compareBranch ||
-      sameBranch
-    ) {
+    if (!repositoryPath || noBranchesSelected) {
       setData(null);
       setError(null);
       setLoading(false);
@@ -60,7 +52,7 @@ export function useRepositoryScopeSummary(): RepositoryScopeSummaryState {
     setLoading(true);
     setError(null);
 
-    void getRepositoryScopeSummary(repositoryPath, baseBranch, compareBranch)
+    void getMultiBranchScopeSummary(repositoryPath, selectedBranches)
       .then((summary) => {
         if (!cancelled) {
           setData(summary);
@@ -84,36 +76,41 @@ export function useRepositoryScopeSummary(): RepositoryScopeSummaryState {
     return () => {
       cancelled = true;
     };
-  }, [repositoryPath, baseBranch, compareBranch, sameBranch]);
+  }, [repositoryPath, selectedBranches, noBranchesSelected]);
 
-  const technicalNarrativeGenerated = useMemo(
-    () => (data ? buildTechnicalSummary(data) : ""),
+  const flattenedCommits = useMemo(
+    () => (data ? flattenScopeCommits(data) : []),
     [data],
   );
 
-  /** Reconstrói o rascunho manual quando o intervalo Git ou o conteúdo agregado mudam. */
+  const technicalNarrativeGenerated = useMemo(
+    () =>
+      data
+        ? buildTechnicalSummary({
+            commits: flattenedCommits,
+            files: data.files,
+            commitsTruncated: data.commitsTruncated,
+          })
+        : "",
+    [data, flattenedCommits],
+  );
+
   const narrativeSourceKey = useMemo(() => {
-    if (
-      !repositoryPath ||
-      !baseBranch ||
-      !compareBranch ||
-      sameBranch ||
-      !data
-    ) {
+    if (!repositoryPath || noBranchesSelected || !data) {
       return "";
     }
     return [
       repositoryPath,
-      baseBranch,
-      compareBranch,
+      ...selectedBranches,
       data.commitsTruncated ? "trunc" : "full",
-      ...data.commits.map((c) => c.hash),
+      data.commonAncestorHash ?? "",
+      ...flattenedCommits.map((c) => c.hash),
       ...data.files.map(
         (f) =>
           `${f.path}\0${f.status}\0${f.linesAdded}\0${f.linesRemoved}`,
       ),
     ].join("\n");
-  }, [repositoryPath, baseBranch, compareBranch, sameBranch, data]);
+  }, [repositoryPath, selectedBranches, noBranchesSelected, data, flattenedCommits]);
 
   const [draftNarrative, setDraftNarrative] = useState<string | null>(null);
 
@@ -141,12 +138,12 @@ export function useRepositoryScopeSummary(): RepositoryScopeSummaryState {
 
   return {
     repositoryPath,
-    baseBranch,
-    compareBranch,
+    selectedBranches,
     data,
+    flattenedCommits,
     loading,
     error,
-    sameBranch,
+    noBranchesSelected,
     technicalNarrative,
     technicalNarrativeGenerated,
     technicalNarrativeIsCustomized: draftNarrative !== null,

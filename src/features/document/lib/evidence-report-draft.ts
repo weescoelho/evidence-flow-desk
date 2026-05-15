@@ -1,14 +1,13 @@
 import type { DocumentRevisionRow } from "./document-revision-history";
 import type { EvidenceDocumentPayload } from "./build-evidence-html";
 
-export const EVIDENCE_REPORT_DRAFT_SCHEMA_VERSION = 1 as const;
+export const EVIDENCE_REPORT_DRAFT_SCHEMA_VERSION = 2 as const;
 
 /** Rascunho serializado junto ao HTML para reabrir a sessão de edição. */
-export type EvidenceReportDraftV1 = {
+export type EvidenceReportDraftV2 = {
   schemaVersion: typeof EVIDENCE_REPORT_DRAFT_SCHEMA_VERSION;
   repositoryPath: string;
-  baseRef: string;
-  compareRef: string;
+  branchRefs: string[];
   activeTemplateId: string;
   /** Preservados para referência se o template deixar de existir. */
   templateLabel: string;
@@ -49,11 +48,10 @@ export function buildEvidenceReportDraftJson(args: {
   }>;
 }): string {
   const p = args.payload;
-  const draft: EvidenceReportDraftV1 = {
+  const draft: EvidenceReportDraftV2 = {
     schemaVersion: EVIDENCE_REPORT_DRAFT_SCHEMA_VERSION,
     repositoryPath: p.repositoryPath,
-    baseRef: p.baseRef,
-    compareRef: p.compareRef,
+    branchRefs: p.branchRefs,
     activeTemplateId: args.activeTemplateId,
     templateLabel: p.templateLabel,
     templateLayoutKey: p.templateLayoutKey,
@@ -90,7 +88,7 @@ function isRevisionRow(v: unknown): v is DocumentRevisionRow {
   );
 }
 
-function isScreenshot(v: unknown): v is EvidenceReportDraftV1["screenshots"][number] {
+function isScreenshot(v: unknown): v is EvidenceReportDraftV2["screenshots"][number] {
   if (typeof v !== "object" || v === null) return false;
   const o = v as Record<string, unknown>;
   return (
@@ -102,7 +100,7 @@ function isScreenshot(v: unknown): v is EvidenceReportDraftV1["screenshots"][num
 }
 
 /** Parse e validação mínima do JSON guardado em `draft.json`. */
-export function parseEvidenceReportDraftJson(raw: string): EvidenceReportDraftV1 {
+export function parseEvidenceReportDraftJson(raw: string): EvidenceReportDraftV2 {
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw) as unknown;
@@ -113,13 +111,24 @@ export function parseEvidenceReportDraftJson(raw: string): EvidenceReportDraftV1
     throw new Error("Rascunho inválido.");
   }
   const o = parsed as Record<string, unknown>;
+  if (o.schemaVersion === 1) {
+    throw new Error(
+      "Este rascunho foi criado com a versão anterior do escopo (base → compare). Crie um novo documento com a seleção de branches.",
+    );
+  }
   if (o.schemaVersion !== EVIDENCE_REPORT_DRAFT_SCHEMA_VERSION) {
     throw new Error("Versão de rascunho não suportada.");
   }
+  if (!Array.isArray(o.branchRefs)) {
+    throw new Error("Rascunho inválido: branchRefs.");
+  }
+  for (const br of o.branchRefs) {
+    if (typeof br !== "string") {
+      throw new Error("Rascunho inválido: branchRefs.");
+    }
+  }
   const strings = [
     "repositoryPath",
-    "baseRef",
-    "compareRef",
     "activeTemplateId",
     "templateLabel",
     "templateLayoutKey",
@@ -161,5 +170,5 @@ export function parseEvidenceReportDraftJson(raw: string): EvidenceReportDraftV1
       throw new Error("Rascunho inválido: screenshot.");
     }
   }
-  return o as unknown as EvidenceReportDraftV1;
+  return o as unknown as EvidenceReportDraftV2;
 }

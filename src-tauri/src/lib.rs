@@ -12,7 +12,7 @@ use commands::evidence::{
 };
 use commands::llm::{llm_generate_corporate_summary, llm_rewrite_technical_summary};
 use commands::git::{
-    get_repository_scope_summary, list_branches, recent_repositories_add,
+    get_multi_branch_scope_summary, list_branches, recent_repositories_add,
     recent_repositories_list, recent_repositories_remove, validate_git_repository,
 };
 use commands::io::{write_binary_file_base64, write_text_file};
@@ -25,7 +25,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             validate_git_repository,
             list_branches,
-            get_repository_scope_summary,
+            get_multi_branch_scope_summary,
             recent_repositories_list,
             recent_repositories_add,
             recent_repositories_remove,

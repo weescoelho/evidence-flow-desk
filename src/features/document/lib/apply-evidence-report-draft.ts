@@ -8,9 +8,9 @@ import { useEvidenceAttachmentsStore } from "@/features/evidence/store/attachmen
 import { resetEvidenceSession } from "@/features/git/lib/reset-evidence-session";
 import { useGitStore } from "@/features/git/store/git-store";
 
-import type { EvidenceReportDraftV1 } from "./evidence-report-draft";
+import type { EvidenceReportDraftV2 } from "./evidence-report-draft";
 
-function applyMetadataFromDraft(d: EvidenceReportDraftV1): void {
+function applyMetadataFromDraft(d: EvidenceReportDraftV2): void {
   const s = useEvidenceMetadataStore.getState();
   const templates = s.templates;
   let activeId = d.activeTemplateId.trim();
@@ -38,7 +38,7 @@ function applyMetadataFromDraft(d: EvidenceReportDraftV1): void {
  * Assíncrono devido a `selectRepository`.
  */
 export async function applyEvidenceReportDraft(
-  draft: EvidenceReportDraftV1,
+  draft: EvidenceReportDraftV2,
 ): Promise<void> {
   resetEvidenceSession();
   usePendingEvidenceNarrativesStore
@@ -48,8 +48,7 @@ export async function applyEvidenceReportDraft(
 
   await useGitStore.getState().selectRepository(draft.repositoryPath);
   useGitStore.setState({
-    baseBranch: draft.baseRef,
-    compareBranch: draft.compareRef,
+    selectedBranches: [...draft.branchRefs],
   });
 
   const shots = draft.screenshots.map((x) => ({

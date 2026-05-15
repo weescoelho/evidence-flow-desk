@@ -34,7 +34,7 @@ pub struct CommitRow {
     pub conventional_type: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum FileChangeStatus {
     Added,
@@ -58,8 +58,20 @@ pub struct FileChangeRow {
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct RepositoryScopeSummary {
+pub struct BranchScopeEntry {
+    pub branch_ref: String,
     pub commits: Vec<CommitRow>,
+    pub commits_truncated: bool,
+}
+
+/// Escopo agregado a partir de N branches (ancestral comum automático).
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MultiBranchScopeSummary {
+    pub branches: Vec<BranchScopeEntry>,
     pub files: Vec<FileChangeRow>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub common_ancestor_hash: Option<String>,
+    /// `true` se qualquer entrada de branch atingiu o limite de commits.
     pub commits_truncated: bool,
 }

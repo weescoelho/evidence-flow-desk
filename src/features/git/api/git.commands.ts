@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 import type {
   ListBranchesResponse,
-  RepositoryScopeSummary,
+  MultiBranchScopeSummary,
   ValidateGitRepositoryResponse,
 } from "../types/git";
 
@@ -16,15 +16,13 @@ export function listBranches(path: string) {
   return invoke<ListBranchesResponse>("list_branches", { path });
 }
 
-export function getRepositoryScopeSummary(
+export function getMultiBranchScopeSummary(
   path: string,
-  baseRef: string,
-  compareRef: string,
+  branchRefs: string[],
 ) {
-  return invoke<RepositoryScopeSummary>("get_repository_scope_summary", {
+  return invoke<MultiBranchScopeSummary>("get_multi_branch_scope_summary", {
     path,
-    baseRef,
-    compareRef,
+    branchRefs,
   });
 }
 

@@ -7,8 +7,7 @@ import { escapeHtml } from "./escape-html";
 function basePayload(over: Partial<EvidenceDocumentPayload> = {}): EvidenceDocumentPayload {
   return {
     repositoryPath: "/tmp/repo",
-    baseRef: "main",
-    compareRef: "dev",
+    branchRefs: ["main", "dev"],
     templateLabel: "Homologação — padrão enterprise",
     templateLayoutKey: "enterprise",
     changeId: "CHG-1",

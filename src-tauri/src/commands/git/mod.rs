@@ -1,18 +1,17 @@
 use tauri::AppHandle;
 
 use crate::models::git::{
-    ListBranchesResponse, RepositoryScopeSummary, ValidateGitRepositoryResponse,
+    ListBranchesResponse, MultiBranchScopeSummary, ValidateGitRepositoryResponse,
 };
 use crate::models::GitCommandError;
 use crate::services::{git_history, git_repository, recent_repos};
 
 #[tauri::command]
-pub fn get_repository_scope_summary(
+pub fn get_multi_branch_scope_summary(
     path: String,
-    base_ref: String,
-    compare_ref: String,
-) -> Result<RepositoryScopeSummary, GitCommandError> {
-    git_history::repository_scope_summary(&path, &base_ref, &compare_ref)
+    branch_refs: Vec<String>,
+) -> Result<MultiBranchScopeSummary, GitCommandError> {
+    git_history::multi_branch_scope_summary(&path, branch_refs)
 }
 
 #[tauri::command]

@@ -15,7 +15,7 @@ import { ScopeCommitsStep } from "./scope-commits-step";
 import { RepositorySection } from "./repository-section";
 import { ScopeAnalysisPanel } from "./scope-analysis-panel";
 import { ScopeDocumentPreviewPanel } from "./scope-document-preview-panel";
-import { useRepositoryScopeSummary } from "../hooks/use-repository-scope-summary";
+import { useMultiBranchScope } from "../hooks/use-multi-branch-scope";
 import { resetEvidenceSession } from "../lib/reset-evidence-session";
 import { useEvidenceWizardUiStore } from "../store/evidence-wizard-ui-store";
 
@@ -31,7 +31,7 @@ const STEP_PAGE = [
   {
     title: "Defina escopo e commits",
     subtitle:
-      "Branches, intervalo SHA, tags ou merge requests. Pré-visualize as alterações antes de consolidar a evidência.",
+      "Seleccione as branches que entram no documento. O ancestral comum e o histórico são calculados automaticamente.",
   },
   {
     title: "Resumo, arquivos e capturas",
@@ -60,14 +60,10 @@ const PRIMARY_CTA = [
 ] as const;
 
 function highestAccessibleStep(
-  scope: ReturnType<typeof useRepositoryScopeSummary>,
+  scope: ReturnType<typeof useMultiBranchScope>,
 ): number {
   if (!scope.repositoryPath) return 1;
-  if (
-    !scope.baseBranch ||
-    !scope.compareBranch ||
-    scope.sameBranch
-  ) {
+  if (scope.noBranchesSelected) {
     return 2;
   }
   if (!scope.data || scope.error || scope.loading) return 3;
@@ -75,7 +71,7 @@ function highestAccessibleStep(
 }
 
 export function EvidenceCreationWizard() {
-  const scope = useRepositoryScopeSummary();
+  const scope = useMultiBranchScope();
   const [step, setStep] = useState(1);
   const [savedEvidenceRefreshKey, setSavedEvidenceRefreshKey] = useState(0);
   const exportPdfTriggerRef = useRef<HTMLButtonElement>(null);
@@ -267,10 +263,9 @@ export function EvidenceCreationWizard() {
                 setSavedEvidenceRefreshKey((k) => k + 1)
               }
             />
-            {!scope.data && scope.repositoryPath ? (
+            {!scope.data && scope.repositoryPath && !scope.noBranchesSelected ? (
               <p className="text-xs text-muted-foreground">
-                Defina duas refs distintas no passo «Escopo e commits» e aguarde
-                o carregamento para ver o documento.
+                Aguarde o carregamento do escopo no passo «Escopo e commits» para ver o documento.
               </p>
             ) : null}
             <SavedEvidenceDocumentsPanel
@@ -291,10 +286,9 @@ export function EvidenceCreationWizard() {
             <SavedEvidenceDocumentsPanel
               refreshKey={savedEvidenceRefreshKey}
             />
-            {!scope.data && scope.repositoryPath ? (
+            {!scope.data && scope.repositoryPath && !scope.noBranchesSelected ? (
               <p className="text-xs text-muted-foreground">
-                Defina duas refs distintas no passo «Escopo e commits» e aguarde
-                o carregamento antes de exportar.
+                Aguarde o carregamento do escopo antes de exportar.
               </p>
             ) : null}
           </section>

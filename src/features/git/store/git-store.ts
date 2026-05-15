@@ -2,7 +2,6 @@ import { create } from "zustand";
 
 import * as api from "../api/git.commands";
 import { parseGitCommandError } from "../api/parse-git-error";
-import { filterBranchNames } from "../lib/branch-filter";
 import type { GitBranchRow } from "../types/git";
 
 type SelectOptions = {
@@ -18,18 +17,14 @@ type GitStore = {
   detached: boolean;
   recentRepos: string[];
   branchFilter: string;
-  /** Ref Git resolvível (branch, tag, SHA, etc.) — ver RF-003. */
-  baseBranch: string | null;
-  /** Ref Git resolvível (branch, tag, SHA, etc.) — ver RF-003. */
-  compareBranch: string | null;
-
-  filteredBranchNames: () => string[];
+  /** Branches incluídas no documento (escopo multi-branch). */
+  selectedBranches: string[];
 
   refreshRecentRepos: () => Promise<void>;
   selectRepository: (path: string, opts?: SelectOptions) => Promise<void>;
   setBranchFilter: (value: string) => void;
-  setBaseBranch: (name: string | null) => void;
-  setCompareBranch: (name: string | null) => void;
+  setSelectedBranches: (names: string[]) => void;
+  toggleBranch: (name: string) => void;
 };
 
 export const useGitStore = create<GitStore>((set, get) => ({
@@ -41,14 +36,7 @@ export const useGitStore = create<GitStore>((set, get) => ({
   detached: false,
   recentRepos: [],
   branchFilter: "",
-  baseBranch: null,
-  compareBranch: null,
-
-  filteredBranchNames: () => {
-    const { branches, branchFilter } = get();
-    const names = branches.map((b) => b.name);
-    return filterBranchNames(names, branchFilter);
-  },
+  selectedBranches: [],
 
   refreshRecentRepos: async () => {
     const list = await api.recentRepositoriesList();
@@ -57,9 +45,18 @@ export const useGitStore = create<GitStore>((set, get) => ({
 
   setBranchFilter: (branchFilter) => set({ branchFilter }),
 
-  setBaseBranch: (baseBranch) => set({ baseBranch }),
+  setSelectedBranches: (selectedBranches) => set({ selectedBranches }),
 
-  setCompareBranch: (compareBranch) => set({ compareBranch }),
+  toggleBranch: (name) => {
+    const { selectedBranches } = get();
+    if (selectedBranches.includes(name)) {
+      set({
+        selectedBranches: selectedBranches.filter((n) => n !== name),
+      });
+    } else {
+      set({ selectedBranches: [...selectedBranches, name] });
+    }
+  },
 
   selectRepository: async (path: string, opts?: SelectOptions) => {
     set({
@@ -74,18 +71,13 @@ export const useGitStore = create<GitStore>((set, get) => ({
       const listed = await api.listBranches(nextPath);
       const headName =
         listed.branches.find((b) => b.isHead)?.name ?? null;
-      const compareCandidate =
-        listed.branches.find((b) => b.name !== headName)?.name ??
-        listed.branches[0]?.name ??
-        null;
 
       set({
         repositoryPath: nextPath,
         branches: listed.branches,
         headDisplay: listed.headDisplay,
         detached: listed.detached,
-        baseBranch: headName,
-        compareBranch: compareCandidate,
+        selectedBranches: headName ? [headName] : [],
       });
 
       await api.recentRepositoriesAdd(nextPath);

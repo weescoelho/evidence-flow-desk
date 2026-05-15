@@ -3,13 +3,13 @@ import { describe, expect, it } from "vitest";
 import type { EvidenceDocumentPayload } from "./build-evidence-html";
 import {
   buildEvidenceReportDraftJson,
+  EVIDENCE_REPORT_DRAFT_SCHEMA_VERSION,
   parseEvidenceReportDraftJson,
 } from "./evidence-report-draft";
 
 const minimalPayload: EvidenceDocumentPayload = {
   repositoryPath: "/repo/x",
-  baseRef: "main",
-  compareRef: "feat",
+  branchRefs: ["main", "feat"],
   templateLabel: "T",
   templateLayoutKey: "market_standard",
   changeId: "CHG-1",
@@ -36,7 +36,7 @@ const minimalPayload: EvidenceDocumentPayload = {
 };
 
 describe("evidence-report-draft", () => {
-  it("preserva campos na serialização e parse v1", () => {
+  it("preserva campos na serialização e parse v2", () => {
     const raw = buildEvidenceReportDraftJson({
       payload: minimalPayload,
       activeTemplateId: "tpl-1",
@@ -50,8 +50,9 @@ describe("evidence-report-draft", () => {
       ],
     });
     const d = parseEvidenceReportDraftJson(raw);
-    expect(d.schemaVersion).toBe(1);
+    expect(d.schemaVersion).toBe(EVIDENCE_REPORT_DRAFT_SCHEMA_VERSION);
     expect(d.repositoryPath).toBe("/repo/x");
+    expect(d.branchRefs).toEqual(["main", "feat"]);
     expect(d.technicalSummary).toBe("tech");
     expect(d.corporateSummary).toBe("corp");
     expect(d.activeTemplateId).toBe("tpl-1");
@@ -63,5 +64,11 @@ describe("evidence-report-draft", () => {
     expect(() =>
       parseEvidenceReportDraftJson('{"schemaVersion":999,"repositoryPath":"x"}'),
     ).toThrow(/não suportada/i);
+  });
+
+  it("rejeita rascunho v1 legado", () => {
+    const legacy =
+      '{"schemaVersion":1,"repositoryPath":"/r","baseRef":"a","compareRef":"b"}';
+    expect(() => parseEvidenceReportDraftJson(legacy)).toThrow(/versão anterior/i);
   });
 });

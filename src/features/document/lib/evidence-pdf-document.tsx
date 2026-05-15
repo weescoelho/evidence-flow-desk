@@ -848,10 +848,8 @@ function MarketBody({
           <Text style={styles.coverDd}>{formatGeneratedAtLong()}</Text>
         </View>
         <View style={styles.coverRow}>
-          <Text style={styles.coverDt}>Escopo Git (base → compare)</Text>
-          <Text style={styles.coverDd}>
-            {p.baseRef} → {p.compareRef}
-          </Text>
+          <Text style={styles.coverDt}>Escopo Git (branches)</Text>
+          <Text style={styles.coverDd}>{p.branchRefs.join(", ")}</Text>
         </View>
       </View>
 

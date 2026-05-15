@@ -11,7 +11,7 @@ describe("evidence-export-filename", () => {
   });
 
   it("monta nome por omissão com refs", () => {
-    expect(defaultEvidenceHtmlFileName("main", "v1.0.0")).toBe(
+    expect(defaultEvidenceHtmlFileName(["main", "v1.0.0"])).toBe(
       "evidencia-main-v1.0.0.html",
     );
   });

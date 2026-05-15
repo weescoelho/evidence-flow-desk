@@ -20,6 +20,16 @@ function ellipsizePath(p: string, max = 52): string {
   return `${p.slice(0, head)}…${p.slice(-tail)}`;
 }
 
+function gitScopeLabel(doc: SavedEvidenceDocumentInfo): string {
+  if (doc.branchRefs?.length) {
+    return doc.branchRefs.join(", ");
+  }
+  if (doc.baseRef?.trim() && doc.compareRef?.trim()) {
+    return `${doc.baseRef} → ${doc.compareRef}`;
+  }
+  return "—";
+}
+
 function textOrEmpty(v: string | null | undefined): string {
   return v?.trim() ? v.trim() : "";
 }
@@ -47,8 +57,8 @@ function matchesFilter(
   if (!q) return true;
   const blobs = [
     doc.repositoryPath,
-    doc.baseRef,
-    doc.compareRef,
+    gitScopeLabel(doc),
+    ...(doc.branchRefs ?? []),
     doc.htmlPath,
     textOrEmpty(doc.templateLabel),
     textOrEmpty(doc.changeId),
@@ -263,9 +273,7 @@ export function SavedEvidenceDocumentsPanel({
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <span className="text-foreground">{formatSavedAt(doc.savedAtMs)}</span>
                 <span className="text-muted-foreground">
-                  {doc.baseRef}
-                  <span aria-hidden> → </span>
-                  {doc.compareRef}
+                  {gitScopeLabel(doc)}
                 </span>
               </div>
               {textOrEmpty(doc.documentTitle) ? (

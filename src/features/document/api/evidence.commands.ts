@@ -9,8 +9,10 @@ export type SavedEvidenceDocumentInfo = {
   id: string;
   savedAtMs: number;
   repositoryPath: string;
+  /** Legado escopo base→compare; vazio em registos novos. */
   baseRef: string;
   compareRef: string;
+  branchRefs?: string[];
   htmlPath: string;
   templateLabel?: string | null;
   changeId?: string | null;
@@ -27,8 +29,7 @@ export type LoadEvidenceDocumentDraftResult = {
 export function saveEvidenceDocument(args: {
   html: string;
   repositoryPath: string;
-  baseRef: string;
-  compareRef: string;
+  branchRefs: string[];
   templateLabel?: string | null;
   changeId?: string | null;
   environment?: string | null;
@@ -38,8 +39,7 @@ export function saveEvidenceDocument(args: {
   return invoke<SaveEvidenceDocumentResult>("save_evidence_document", {
     html: args.html,
     repositoryPath: args.repositoryPath,
-    baseRef: args.baseRef,
-    compareRef: args.compareRef,
+    branchRefs: args.branchRefs,
     templateLabel: args.templateLabel ?? null,
     changeId: args.changeId ?? null,
     environment: args.environment ?? null,

@@ -46,8 +46,15 @@ export type FileChangeRow = {
   linesRemoved: number;
 };
 
-export type RepositoryScopeSummary = {
+export type BranchScopeEntry = {
+  branchRef: string;
   commits: CommitRow[];
+  commitsTruncated: boolean;
+};
+
+export type MultiBranchScopeSummary = {
+  branches: BranchScopeEntry[];
   files: FileChangeRow[];
+  commonAncestorHash?: string;
   commitsTruncated: boolean;
 };
