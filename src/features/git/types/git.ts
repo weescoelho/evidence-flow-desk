@@ -10,6 +10,7 @@ export type ValidateGitRepositoryResponse = {
 export type GitBranchRow = {
   name: string;
   isHead: boolean;
+  isRemote: boolean;
 };
 
 export type ListBranchesResponse = {

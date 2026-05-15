@@ -112,6 +112,7 @@ export function ScopeCommitsStep({ scope }: ScopeCommitsStepProps) {
                     key={name}
                     name={name}
                     isHead={isHead}
+                    isRemote={row?.isRemote ?? false}
                     selected={selectedBranches.includes(name)}
                     onToggle={() => toggleBranch(name)}
                   />

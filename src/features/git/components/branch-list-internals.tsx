@@ -3,11 +3,13 @@ import { cn } from "@/lib/utils";
 export function BranchSelectRow({
   name,
   isHead,
+  isRemote,
   selected,
   onToggle,
 }: {
   name: string;
   isHead: boolean;
+  isRemote: boolean;
   selected: boolean;
   onToggle: () => void;
 }) {
@@ -34,6 +36,10 @@ export function BranchSelectRow({
       {isHead ? (
         <span className="rounded-md bg-[#5946DB]/15 px-2 py-0.5 font-mono text-[10px] font-semibold text-[#5946DB]">
           HEAD
+        </span>
+      ) : isRemote ? (
+        <span className="rounded-md bg-[#F4F4F5] px-2 py-0.5 font-mono text-[10px] font-semibold text-[#71717A]">
+          remote
         </span>
       ) : null}
     </li>

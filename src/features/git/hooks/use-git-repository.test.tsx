@@ -27,8 +27,8 @@ describe("useGitRepository", () => {
       if (cmd === "list_branches") {
         return {
           branches: [
-            { name: "main", isHead: true },
-            { name: "dev", isHead: false },
+            { name: "main", isHead: true, isRemote: false },
+            { name: "dev", isHead: false, isRemote: false },
           ],
           headDisplay: "main",
           detached: false,

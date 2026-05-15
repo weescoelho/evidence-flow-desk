@@ -1,3 +1,6 @@
+use std::cmp::Ordering;
+use std::collections::HashSet;
+
 use git2::{BranchType, ErrorClass, ErrorCode, Repository};
 
 use crate::models::git::{GitBranchRow, ListBranchesResponse, ValidateGitRepositoryResponse};
@@ -89,6 +92,7 @@ fn list_branches_inner(repo: Repository) -> Result<ListBranchesResponse, GitComm
     };
 
     let mut branches = Vec::new();
+    let mut local_names = HashSet::<String>::new();
 
     for br in repo
         .branches(Some(BranchType::Local))
@@ -103,17 +107,56 @@ fn list_branches_inner(repo: Repository) -> Result<ListBranchesResponse, GitComm
         if name.is_empty() {
             continue;
         }
+        local_names.insert(name.clone());
         let is_head = head_branch_name.as_ref() == Some(&name);
-        branches.push(GitBranchRow { name, is_head });
+        branches.push(GitBranchRow {
+            name,
+            is_head,
+            is_remote: false,
+        });
     }
 
-    branches.sort_by(|a, b| a.name.cmp(&b.name));
+    for br in repo
+        .branches(Some(BranchType::Remote))
+        .map_err(|e| GitCommandError::io(e.message().to_string()))?
+    {
+        let (branch, _) = br.map_err(|e| GitCommandError::io(e.message().to_string()))?;
+        let name = branch
+            .name()
+            .map_err(|e| GitCommandError::io(e.message().to_string()))?
+            .unwrap_or("")
+            .to_string();
+        if name.is_empty() || name.ends_with("/HEAD") {
+            continue;
+        }
+        if remote_tracks_existing_local(&name, &local_names) {
+            continue;
+        }
+        branches.push(GitBranchRow {
+            name,
+            is_head: false,
+            is_remote: true,
+        });
+    }
+
+    branches.sort_by(|a, b| match a.is_remote.cmp(&b.is_remote) {
+        Ordering::Equal => a.name.cmp(&b.name),
+        o => o,
+    });
 
     Ok(ListBranchesResponse {
         branches,
         head_display,
         detached,
     })
+}
+
+/// `origin/main` não é listado se já existir branch local `main`.
+fn remote_tracks_existing_local(remote_shorthand: &str, locals: &HashSet<String>) -> bool {
+    let Some((_remote, rest)) = remote_shorthand.split_once('/') else {
+        return false;
+    };
+    !rest.is_empty() && locals.contains(rest)
 }
 
 #[cfg(test)]
@@ -183,6 +226,62 @@ mod tests {
         let res = list_branches(&path).unwrap();
         assert!(res.branches.iter().any(|b| b.name == "feature-x"));
         assert!(res.branches.iter().any(|b| b.is_head));
+        assert!(res.branches.iter().all(|b| !b.is_remote));
         assert!(!res.detached);
+    }
+
+    #[test]
+    fn list_branches_includes_remotes_without_duplicating_locals() {
+        let tmp = tempfile::tempdir().unwrap();
+        init_repo(tmp.path());
+        let path = tmp.path().to_string_lossy().to_string();
+
+        let out = Command::new("git")
+            .args(["rev-parse", "HEAD"])
+            .current_dir(tmp.path())
+            .output()
+            .unwrap();
+        assert!(out.status.success());
+        let oid = String::from_utf8(out.stdout).unwrap().trim().to_string();
+
+        for spec in [
+            "refs/remotes/origin/feature-x",
+            "refs/remotes/origin/only-on-remote",
+        ] {
+            let status = Command::new("git")
+                .args(["update-ref", spec, &oid])
+                .current_dir(tmp.path())
+                .status()
+                .unwrap();
+            assert!(status.success(), "update-ref {spec}");
+        }
+
+        let res = list_branches(&path).unwrap();
+        assert!(
+            !res.branches.iter().any(|b| b.name == "origin/feature-x"),
+            "não duplicar remote quando já existe branch local com o mesmo nome curto"
+        );
+        let remote_row = res
+            .branches
+            .iter()
+            .find(|b| b.name == "origin/only-on-remote");
+        assert!(
+            remote_row.is_some_and(|b| b.is_remote),
+            "branch só-remota deve aparecer marcada como remote"
+        );
+
+        let first_remote_idx = res.branches.iter().position(|b| b.is_remote);
+        let last_local_idx = res
+            .branches
+            .iter()
+            .rposition(|b| !b.is_remote);
+        assert!(
+            first_remote_idx.is_some() && last_local_idx.is_some(),
+            "espera-se locais e remotas"
+        );
+        assert!(
+            first_remote_idx.unwrap() > last_local_idx.unwrap(),
+            "locais devem preceder remotas na ordenação"
+        );
     }
 }

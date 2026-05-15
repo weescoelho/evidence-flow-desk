@@ -11,6 +11,7 @@ pub struct ValidateGitRepositoryResponse {
 pub struct GitBranchRow {
     pub name: String,
     pub is_head: bool,
+    pub is_remote: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]

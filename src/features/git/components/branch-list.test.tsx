@@ -35,7 +35,7 @@ describe("ScopeCommitsStep", () => {
   it("indica lista vazia por filtro de branches", () => {
     useGitStore.setState({
       repositoryPath: "/repo",
-      branches: [{ name: "main", isHead: true }],
+      branches: [{ name: "main", isHead: true, isRemote: false }],
       headDisplay: "main",
       detached: false,
       branchFilter: "zzz",
@@ -48,8 +48,8 @@ describe("ScopeCommitsStep", () => {
     useGitStore.setState({
       repositoryPath: "/repo",
       branches: [
-        { name: "main", isHead: true },
-        { name: "dev", isHead: false },
+        { name: "main", isHead: true, isRemote: false },
+        { name: "dev", isHead: false, isRemote: false },
       ],
       headDisplay: "main",
       detached: false,
@@ -67,8 +67,8 @@ describe("ScopeCommitsStep", () => {
     useGitStore.setState({
       repositoryPath: "/repo",
       branches: [
-        { name: "main", isHead: true },
-        { name: "feature/foo", isHead: false },
+        { name: "main", isHead: true, isRemote: false },
+        { name: "feature/foo", isHead: false, isRemote: false },
       ],
       headDisplay: "main",
       detached: false,
@@ -91,7 +91,7 @@ describe("ScopeCommitsStep", () => {
   it("avisa quando nenhuma branch está seleccionada", () => {
     useGitStore.setState({
       repositoryPath: "/repo",
-      branches: [{ name: "main", isHead: true }],
+      branches: [{ name: "main", isHead: true, isRemote: false }],
       headDisplay: "main",
       detached: false,
       branchFilter: "",
